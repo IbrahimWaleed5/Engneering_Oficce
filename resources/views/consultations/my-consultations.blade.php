@@ -1,0 +1,288 @@
+<x-app-layout>
+
+    <div
+        class="relative py-12"
+        dir="rtl"
+    >
+
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+
+            <x-page-header
+                title="استشاراتي"
+                description="تابع حالة الطلب والدفع والمهندس والملفات النهائية"
+                icon="📋"
+            >
+                <x-slot name="actions">
+
+                    <a
+                        href="{{ route('consultations.create') }}"
+                        class="primary-button"
+                    >
+                        <span>➕</span>
+                        استشارة جديدة
+                    </a>
+
+                </x-slot>
+            </x-page-header>
+
+            <x-alerts />
+
+            <div class="grid gap-6">
+
+                @forelse ($consultations as $consultation)
+                 @if(
+    $consultation->payment_status === 'paid'
+    && $consultation->engineer_id
+)
+    <a
+        href="{{ route(
+            'consultations.messages.index',
+            $consultation
+        ) }}"
+        class="secondary-button"
+    >
+        المحادثة
+    </a>
+@endif
+
+                    <article
+                        class="p-6 glass-card rounded-[2rem] fade-up"
+                    >
+
+                        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+
+                            <div class="flex-1">
+
+                                <div class="flex flex-wrap items-center gap-3">
+
+                                    <span
+                                        class="px-3 py-2 text-xs font-bold border rounded-full border-white/10 bg-white/5 text-slate-300"
+                                    >
+                                        {{ $consultation->consultation_number }}
+                                    </span>
+
+                                    @if ($consultation->status === 'waiting_payment')
+
+                                        <span
+                                            class="text-orange-200 status-badge bg-orange-500/10"
+                                        >
+                                            بانتظار الدفع
+                                        </span>
+
+                                    @elseif ($consultation->status === 'pending')
+
+                                        <span
+                                            class="text-yellow-200 status-badge bg-yellow-500/10"
+                                        >
+                                            قيد المراجعة
+                                        </span>
+
+                                    @elseif ($consultation->status === 'in_progress')
+
+                                        <span
+                                            class="text-blue-200 status-badge bg-blue-500/10"
+                                        >
+                                            قيد التنفيذ
+                                        </span>
+
+                                    @elseif ($consultation->status === 'completed')
+
+                                        <span
+                                            class="text-green-200 status-badge bg-green-500/10"
+                                        >
+                                            مكتملة
+                                        </span>
+
+                                    @elseif ($consultation->status === 'cancelled')
+
+                                        <span
+                                            class="text-red-200 status-badge bg-red-500/10"
+                                        >
+                                            ملغاة
+                                        </span>
+
+                                    @endif
+
+                                </div>
+
+                                <h2 class="mt-5 text-2xl font-black text-white">
+                                    {{ $consultation->title }}
+                                </h2>
+
+                                <div class="flex flex-wrap mt-5 text-sm gap-x-7 gap-y-3 text-slate-400">
+
+                                    <p class="flex items-center gap-2">
+
+                                        <span>📐</span>
+
+                                        {{ $consultation->consultationType?->name
+                                            ?? 'غير محدد' }}
+
+                                    </p>
+
+                                    <p class="flex items-center gap-2">
+
+                                        <span>👷</span>
+
+                                        {{ $consultation->engineer?->name
+                                            ?? 'لم يتم تعيين مهندس' }}
+
+                                    </p>
+
+                                    <p class="flex items-center gap-2">
+
+                                        <span>💰</span>
+
+                                        {{ number_format(
+                                            $consultation->final_price,
+                                            2
+                                        ) }}
+                                        شيكل
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <div class="flex flex-col gap-4 lg:min-w-[260px]">
+
+                                {{-- حالة الدفع --}}
+
+                                <div
+                                    class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.04]"
+                                >
+
+                                    <span class="text-sm text-slate-400">
+                                        حالة الدفع
+                                    </span>
+
+                                    @if ($consultation->payment_status === 'unpaid')
+
+                                        <span
+                                            class="text-red-200 status-badge bg-red-500/10"
+                                        >
+                                            غير مدفوع
+                                        </span>
+
+                                    @elseif ($consultation->payment_status === 'pending')
+
+                                        <span
+                                            class="text-yellow-200 status-badge bg-yellow-500/10"
+                                        >
+                                            قيد الفحص
+                                        </span>
+
+                                    @elseif ($consultation->payment_status === 'paid')
+
+                                        <span
+                                            class="text-green-200 status-badge bg-green-500/10"
+                                        >
+                                            تم الدفع
+                                        </span>
+
+                                    @endif
+
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+
+                                    @if ($consultation->payment_status === 'unpaid')
+
+                                        <a
+                                            href="{{ route(
+                                                'payments.create',
+                                                $consultation
+                                            ) }}"
+                                            class="primary-button"
+                                        >
+                                            أكمل الدفع
+                                        </a>
+
+                                    @elseif ($consultation->payment_status === 'pending')
+
+                                        <div
+                                            class="px-4 py-3 text-sm font-bold text-center text-yellow-100 border rounded-xl border-yellow-500/20 bg-yellow-500/10"
+                                        >
+                                            الإيصال تحت المراجعة
+                                        </div>
+
+                                    @endif
+
+                                    @if ($consultation->engineer_file)
+
+    <a
+        href="{{ asset(
+            'storage/' .
+            $consultation->engineer_file
+        ) }}"
+        target="_blank"
+        class="secondary-button"
+    >
+        تحميل الملف النهائي
+    </a>
+
+@endif
+
+@if (
+    $consultation->payment_status === 'paid'
+    && $consultation->engineer_id
+)
+
+    <a
+        href="{{ route(
+            'consultations.messages.index',
+            $consultation
+        ) }}"
+        class="secondary-button"
+    >
+        المحادثة مع المهندس
+    </a>
+
+@endif
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                @empty
+
+                    <div
+                        class="p-14 text-center glass-panel rounded-[2rem]"
+                    >
+
+                        <div class="mb-5 text-6xl">
+                            📭
+                        </div>
+
+                        <h2 class="text-2xl font-black text-white">
+                            لا توجد استشارات حتى الآن
+                        </h2>
+
+                        <p class="mt-3 text-slate-400">
+                            أرسل أول طلب استشارة وابدأ متابعة مشروعك.
+                        </p>
+
+                        <a
+                            href="{{ route('consultations.create') }}"
+                            class="mt-7 primary-button"
+                        >
+                            إنشاء استشارة
+                        </a>
+
+                    </div>
+
+                @endforelse
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</x-app-layout>
