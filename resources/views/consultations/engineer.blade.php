@@ -67,10 +67,10 @@
                                 </h2>
 
                                 <p class="mt-4 leading-7 text-slate-400">
-                                    {{ Str::limit(
-                                        $consultation->description,
-                                        180
-                                    ) }}
+                                    {{ \Illuminate\Support\Str::limit(
+    $consultation->description,
+    180
+) }}
                                 </p>
 
                                 <div class="flex flex-wrap gap-5 mt-5 text-sm text-slate-400">
@@ -275,6 +275,6 @@
         </div>
 
     </div>
-   
+
 
 </x-app-layout>
