@@ -35,7 +35,10 @@ RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
+    storage/app/public \
     bootstrap/cache
+
+RUN php artisan storage:link || true
 
 RUN chmod -R 775 storage bootstrap/cache
 
