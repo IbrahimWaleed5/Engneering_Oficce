@@ -145,7 +145,7 @@ public function create()
     );
 }
 
-  public function store(Request $request)
+public function store(Request $request)
 {
     $validated = $request->validate([
         'consultation_type_id' => [

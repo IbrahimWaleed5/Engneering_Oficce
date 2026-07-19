@@ -419,6 +419,10 @@ Route::patch(
     '/payments/{payment}/reject',
     [PaymentController::class, 'reject']
 )->name('payments.reject');
+Route::post(
+    '/consultations/{consultation}/upload-engineer-file',
+    [ConsultationController::class, 'uploadEngineerFile']
+)->name('consultations.upload-engineer-file');
 require __DIR__.'/auth.php';
 
 
