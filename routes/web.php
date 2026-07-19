@@ -423,6 +423,19 @@ Route::post(
     '/consultations/{consultation}/upload-engineer-file',
     [ConsultationController::class, 'uploadEngineerFile']
 )->name('consultations.upload-engineer-file');
+Route::middleware(['auth', 'role:customer,admin'])->group(function () {
+
+    Route::get(
+        '/consultations/create/{engineer}',
+        [ConsultationController::class, 'create']
+    )->name('consultations.create-for-engineer');
+
+    Route::get('/consultations/create', [ConsultationController::class, 'create'])
+        ->name('consultations.create');
+
+    Route::post('/consultations', [ConsultationController::class, 'store'])
+        ->name('consultations.store');
+});
 require __DIR__.'/auth.php';
 
 
