@@ -58,38 +58,54 @@
 
         @isset($header)
 
-            <header class="border-b border-white/5 bg-slate-950/40 backdrop-blur-xl">
+            <header
+                class="border-b border-white/5 bg-slate-950/40 backdrop-blur-xl"
+            >
 
                 <div class="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+
                     {{ $header }}
+
                 </div>
 
             </header>
 
         @endisset
-        @if(auth()->user()->role === 'engineer')
 
-    <a
-        href="{{ route('engineer.works.mine') }}"
-        class="nav-link"
-    >
-        أعمالي
-    </a>
+        @auth
 
-@endif
+            @if (auth()->user()->role === 'engineer')
 
-      <main class="relative z-10">
+                <div class="relative z-10 px-4 pt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-    @if(isset($slot))
-        {{ $slot }}
-    @else
-        @yield('content')
-    @endif
+                    <a
+                        href="{{ route('engineer.works.mine') }}"
+                        class="inline-block px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                    >
+                        أعمالي
+                    </a>
 
-</main>
+                </div>
+
+            @endif
+
+        @endauth
+
+        <main class="relative z-10">
+
+            @if (isset($slot))
+
+                {{ $slot }}
+
+            @else
+
+                @yield('content')
+
+            @endif
+
+        </main>
 
     </div>
-
 
 </body>
 
