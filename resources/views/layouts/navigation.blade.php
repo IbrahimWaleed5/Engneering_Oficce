@@ -352,14 +352,18 @@
 
         </div>
     </div>
-@if (auth()->user()->role === 'admin')
+@auth
 
-    <x-nav-link
-        :href="route('users.index')"
-        :active="request()->routeIs('users.*')"
-    >
-        إدارة المستخدمين
-    </x-nav-link>
+    @if (auth()->user()->role === 'admin')
 
-@endif
+        <x-nav-link
+            :href="route('users.index')"
+            :active="request()->routeIs('users.*')"
+        >
+            إدارة المستخدمين
+        </x-nav-link>
+
+    @endif
+
+@endauth
 </nav>
