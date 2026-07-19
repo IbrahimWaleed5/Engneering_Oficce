@@ -256,19 +256,19 @@ class EngineerWorkController extends Controller
     */
 
     public function index()
-    {
-        $works = EngineerWork::with([
-            'engineer',
-            'coverImage',
-        ])
-            ->latest()
-            ->get();
+{
+    $works = EngineerWork::with([
+        'engineer',
+        'coverImage',
+    ])
+        ->latest()
+        ->get();
 
-        return view(
-            'engineer-works.index',
-            compact('works')
-        );
-    }
+    return view(
+        'engineer-works.admin-index',
+        compact('works')
+    );
+}
 
     /*
     |--------------------------------------------------------------------------
