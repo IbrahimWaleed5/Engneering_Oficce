@@ -34,6 +34,12 @@
 
                         @method('PATCH')
 
+                        <input
+                            type="hidden"
+                            name="status"
+                            value="in_progress"
+                        >
+
                         <div class="space-y-4">
 
                             @forelse ($engineers as $engineer)
@@ -110,6 +116,14 @@
                         </div>
 
                         @error('engineer_id')
+
+                            <p class="mt-4 text-sm text-red-300">
+                                {{ $message }}
+                            </p>
+
+                        @enderror
+
+                        @error('status')
 
                             <p class="mt-4 text-sm text-red-300">
                                 {{ $message }}
