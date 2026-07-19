@@ -4,18 +4,16 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     zip \
+    curl \
     libzip-dev \
-    libpq-dev \
     default-mysql-client \
-    && docker-php-ext-install \
-        pdo \
-        pdo_mysql \
-        pdo_pgsql \
-        zip \
+    && docker-php-ext-install pdo pdo_mysql zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN php -m | grep -i pdo_mysql
+# تثبيت Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -27,6 +25,10 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction
+
+# بناء ملفات CSS و JavaScript
+RUN npm install
+RUN npm run build
 
 RUN mkdir -p \
     storage/framework/cache \
