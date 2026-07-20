@@ -64,7 +64,7 @@ class ConsultationMessageController extends Controller
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,webp,dwg,doc,docx,xls,xlsx,zip',
-                'max:10240',
+                'max:512000',
                 'required_without:message',
             ],
         ], [

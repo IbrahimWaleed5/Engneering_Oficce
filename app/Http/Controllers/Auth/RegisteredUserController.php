@@ -63,7 +63,7 @@ class RegisteredUserController extends Controller
                 'required',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:2048',
+                'max:512000',
             ],
         ]);
 

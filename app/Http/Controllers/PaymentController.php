@@ -105,7 +105,7 @@ class PaymentController extends Controller
                 'required',
                 'file',
                 'mimes:jpg,jpeg,png,webp,pdf',
-                'max:5120',
+                'max:512000',
             ],
         ]);
 

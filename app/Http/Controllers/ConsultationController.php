@@ -173,7 +173,7 @@ public function store(Request $request)
             'nullable',
             'file',
             'mimes:pdf,jpg,jpeg,png,dwg',
-            'max:10240',
+            'max:512000',
         ],
     ]);
 
@@ -367,7 +367,7 @@ public function store(Request $request)
                 'required',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,dwg',
-                'max:10240',
+                'max:512000',
             ],
             'engineer_id' => [
     'nullable',

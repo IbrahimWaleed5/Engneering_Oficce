@@ -151,7 +151,7 @@ class EngineerWorkController extends Controller
                 'required',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:5120',
+                'max:512000',
             ],
         ]);
 
