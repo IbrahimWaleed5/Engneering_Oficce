@@ -163,6 +163,38 @@
                 </p>
             @endif
         </div>
+        @if (auth()->user()->role === 'engineer')
+
+    <div
+        class="p-5 mt-6 border rounded-2xl border-cyan-500/20 bg-cyan-500/5"
+    >
+
+        <p class="text-sm text-slate-400">
+            التخصص الهندسي
+        </p>
+
+        <p class="mt-2 text-lg font-black text-cyan-300">
+
+            {{
+                auth()->user()
+                    ->employeeProfile
+                    ?->specialty
+                    ?->name
+                ?? 'لم يتم اختيار التخصص'
+            }}
+
+        </p>
+
+        <a
+            href="{{ route('engineer.specialty.edit') }}"
+            class="inline-block mt-4 text-sm font-bold text-blue-300 hover:text-blue-200"
+        >
+            تعديل التخصص
+        </a>
+
+    </div>
+
+@endif
     </form>
 
 </section>
