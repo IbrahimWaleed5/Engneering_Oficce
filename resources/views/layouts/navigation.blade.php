@@ -84,6 +84,16 @@
                                 أعمالي
                             </a>
 
+                            <a
+                                href="{{ route('engineer.specialty.edit') }}"
+                                class="px-3 py-2 text-sm rounded-lg
+                                {{ request()->routeIs('engineer.specialty.*')
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                            >
+                                تخصصي
+                            </a>
+
                         @endif
 
                         @if (auth()->user()->role === 'admin')
@@ -163,9 +173,31 @@
                                         {{ auth()->user()->name }}
                                     </p>
 
-                                    <p class="text-xs text-slate-400">
-                                        {{ auth()->user()->role }}
-                                    </p>
+                                   <p class="text-xs text-slate-400">
+
+    @if (
+        auth()->user()->role === 'engineer'
+        && auth()->user()->employeeProfile?->specialty
+    )
+
+        مهندس
+        {{ auth()->user()->employeeProfile->specialty->name }}
+
+    @elseif (auth()->user()->role === 'admin')
+
+        مدير النظام
+
+    @elseif (auth()->user()->role === 'customer')
+
+        عميل
+
+    @else
+
+        {{ auth()->user()->role }}
+
+    @endif
+
+</p>
 
                                 </div>
 
@@ -291,6 +323,13 @@
                         class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
                     >
                         أعمالي
+                    </a>
+
+                    <a
+                        href="{{ route('engineer.specialty.edit') }}"
+                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                    >
+                        اختيار التخصص الهندسي
                     </a>
 
                 @endif

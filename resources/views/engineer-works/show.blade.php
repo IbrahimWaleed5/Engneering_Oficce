@@ -194,7 +194,26 @@
                                     مهندس فعّال ومعتمد
                                 </p>
 
-                                <div class="flex mt-2 text-sm text-yellow-300">
+                                <div class="mt-3">
+                                    <p class="text-xs text-slate-500">
+                                        التخصص الهندسي
+                                    </p>
+
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 mt-1 text-xs font-bold border rounded-full border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
+                                    >
+                                        {{
+                                            $engineerWork
+                                                ->engineer
+                                                ?->employeeProfile
+                                                ?->specialty
+                                                ?->name
+                                            ?? 'لم يحدد التخصص'
+                                        }}
+                                    </span>
+                                </div>
+
+                                <div class="flex mt-3 text-sm text-yellow-300">
                                     ★★★★★
                                 </div>
 
@@ -314,4 +333,4 @@
 
     </div>
 
-</x-app-layout>
+</x-app-

@@ -263,6 +263,22 @@
                                             مهندس معتمد في المنصة
                                         </p>
 
+                                        @if ($work->engineer?->employeeProfile?->specialty)
+
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 mt-2 text-xs font-bold border rounded-full border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
+                                            >
+                                                {{ $work->engineer->employeeProfile->specialty->name }}
+                                            </span>
+
+                                        @else
+
+                                            <p class="mt-2 text-xs text-slate-500">
+                                                لم يحدد التخصص بعد
+                                            </p>
+
+                                        @endif
+
                                     </div>
 
                                 </div>

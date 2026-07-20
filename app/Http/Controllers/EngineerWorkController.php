@@ -18,20 +18,20 @@ class EngineerWorkController extends Controller
     */
 
     public function publicIndex()
-    {
-        $works = EngineerWork::with([
-            'engineer',
-            'coverImage',
-        ])
-            ->where('status', 'approved')
-            ->latest()
-            ->paginate(12);
+{
+    $works = EngineerWork::with([
+        'engineer.employeeProfile.specialty',
+        'coverImage',
+    ])
+        ->where('status', 'approved')
+        ->latest()
+        ->paginate(12);
 
-        return view(
-            'engineer-works.public-index',
-            compact('works')
-        );
-    }
+    return view(
+        'engineer-works.public-index',
+        compact('works')
+    );
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class EngineerWorkController extends Controller
         abort_unless($isAllowed, 404);
 
         $engineerWork->load([
-            'engineer',
+            'engineer.employeeProfile.specialty',
             'images',
         ]);
 
@@ -66,6 +66,7 @@ class EngineerWorkController extends Controller
             'engineer-works.show',
             compact('engineerWork')
         );
+
     }
 
     /*
@@ -75,20 +76,20 @@ class EngineerWorkController extends Controller
     */
 
     public function myWorks(Request $request)
-    {
-        $works = EngineerWork::with('coverImage')
-            ->where(
-                'engineer_id',
-                $request->user()->id
-            )
-            ->latest()
-            ->get();
+{
+    $works = EngineerWork::with([
+        'coverImage',
+        'engineer.employeeProfile.specialty',
+    ])
+        ->where('engineer_id', $request->user()->id)
+        ->latest()
+        ->get();
 
-        return view(
-            'engineer-works.my-works',
-            compact('works')
-        );
-    }
+    return view(
+        'engineer-works.my-works',
+        compact('works')
+    );
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -255,10 +256,10 @@ class EngineerWorkController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
+public function index()
 {
     $works = EngineerWork::with([
-        'engineer',
+        'engineer.employeeProfile.specialty',
         'coverImage',
     ])
         ->latest()
