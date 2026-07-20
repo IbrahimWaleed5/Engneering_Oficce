@@ -194,6 +194,7 @@
                                 autocomplete="tel"
                                 placeholder="مثال: 0590000000"
                                 class="pr-12 form-control"
+                                dir="ltr"
                             >
 
                         </div>
@@ -234,6 +235,7 @@
                             autocomplete="username"
                             placeholder="example@email.com"
                             class="pr-12 form-control"
+                            dir="ltr"
                         >
 
                     </div>
@@ -273,6 +275,7 @@
                                 autocomplete="new-password"
                                 placeholder="أدخل كلمة المرور"
                                 class="pr-12 form-control pl-14"
+                                dir="ltr"
                             >
 
                             <button

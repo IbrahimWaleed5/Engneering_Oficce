@@ -85,6 +85,7 @@
                             autocomplete="username"
                             placeholder="example@email.com"
                             class="pr-12 form-control"
+                            dir="ltr"
                         >
 
                     </div>
@@ -122,6 +123,7 @@
                             autocomplete="current-password"
                             placeholder="أدخل كلمة المرور"
                             class="pr-12 form-control pl-14"
+                            dir="ltr"
                         >
 
                         <button

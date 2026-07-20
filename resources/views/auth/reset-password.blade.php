@@ -59,7 +59,7 @@
                 <input
                     type="hidden"
                     name="token"
-                    value="{{ $request->route('token') }}"
+                    value="{{ request()->route('token') }}"
                 >
 
                 <div>
@@ -83,12 +83,13 @@
                             id="email"
                             type="email"
                             name="email"
-                            value="{{ old('email', $request->email) }}"
+                            value="{{ old('email', request('email')) }}"
                             required
                             autofocus
                             autocomplete="username"
                             placeholder="example@email.com"
                             class="pr-12 form-control"
+                            dir="ltr"
                         >
 
                     </div>
