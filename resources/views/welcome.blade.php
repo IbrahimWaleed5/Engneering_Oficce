@@ -97,7 +97,7 @@
                     <div>
 
                         <p class="text-lg font-extrabold text-white">
-                            المكتب الهندسي
+                            مكتب الوليد الهندسي
                         </p>
 
                         <p class="text-xs text-slate-400">
