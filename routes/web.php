@@ -12,6 +12,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ConsultationMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EngineerSpecialtyController;
+
 
 
 /*
@@ -436,6 +438,22 @@ Route::middleware(['auth', 'role:customer,admin'])->group(function () {
     Route::post('/consultations', [ConsultationController::class, 'store'])
         ->name('consultations.store');
 });
+
+    Route::middleware(['auth', 'role:engineer,admin'])
+    ->prefix('engineer')
+    ->name('engineer.')
+    ->group(function () {
+
+        Route::get(
+            '/specialty',
+            [EngineerSpecialtyController::class, 'edit']
+        )->name('specialty.edit');
+
+        Route::put(
+            '/specialty',
+            [EngineerSpecialtyController::class, 'update']
+        )->name('specialty.update');
+    });
 require __DIR__.'/auth.php';
 
 
