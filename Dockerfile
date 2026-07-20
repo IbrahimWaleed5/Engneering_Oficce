@@ -42,6 +42,10 @@ RUN php artisan storage:link || true
 
 RUN chmod -R 775 storage bootstrap/cache
 
+# السماح برفع ملفات حتى 500MB
+RUN printf "upload_max_filesize=500M\npost_max_size=520M\nmemory_limit=768M\nmax_execution_time=600\nmax_input_time=600\n" \
+    > /usr/local/etc/php/conf.d/uploads.ini
+
 EXPOSE 10000
 
 CMD php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
