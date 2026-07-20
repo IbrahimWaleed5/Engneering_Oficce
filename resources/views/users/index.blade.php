@@ -270,29 +270,58 @@
 
                                         <div class="flex items-center gap-3">
 
-                                            <div
-                                                class="flex items-center justify-center font-black text-white rounded-full w-11 h-11 bg-cyan-600"
-                                            >
-                                                {{ mb_substr($user->name, 0, 1) }}
-                                            </div>
+    <div class="overflow-hidden rounded-full w-11 h-11">
 
-                                            <div>
-                                                <p class="font-bold text-white">
-                                                    {{ $user->name }}
+        @if ($user->profile_photo_path)
 
-                                                    @if ($user->id === auth()->id())
-                                                        <span class="text-xs text-cyan-300">
-                                                            (أنت)
-                                                        </span>
-                                                    @endif
-                                                </p>
+            <img
+                src="{{ asset('storage/' . $user->profile_photo_path) }}"
+                alt="{{ $user->name }}"
+                class="object-cover w-full h-full"
+            >
 
-                                                <p class="mt-1 text-xs text-slate-400">
-                                                    {{ $user->email }}
-                                                </p>
-                                            </div>
+        @else
 
-                                        </div>
+            <div
+                class="flex items-center justify-center w-full h-full font-black text-white bg-cyan-600"
+            >
+                {{ mb_substr($user->name, 0, 1) }}
+            </div>
+
+        @endif
+
+    </div>
+
+    <div>
+
+        <p class="font-bold text-white">
+            {{ $user->name }}
+
+            @if ($user->id === auth()->id())
+                <span class="text-xs text-cyan-300">
+                    (أنت)
+                </span>
+            @endif
+        </p>
+
+        @if (
+            $user->role === 'engineer'
+            && $user->employeeProfile?->specialty
+        )
+
+            <p class="mt-1 text-xs text-cyan-300">
+                {{ $user->employeeProfile->specialty->name }}
+            </p>
+
+        @endif
+
+        <p class="mt-1 text-xs text-slate-400">
+            {{ $user->email }}
+        </p>
+
+    </div>
+
+</div>
 
                                     </td>
 

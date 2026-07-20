@@ -23,7 +23,9 @@ class UserController extends Controller
     {
         $this->ensureAdmin($request);
 
-        $query = User::query();
+       $query = User::with([
+    'employeeProfile.specialty',
+]);
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
