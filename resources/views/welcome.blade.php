@@ -1164,15 +1164,31 @@
                                 class="p-6 text-center glass-card rounded-3xl"
                             >
 
-                                <div
-                                    class="relative flex items-center justify-center w-24 h-24 mx-auto text-3xl font-black border rounded-full shadow-xl border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500 shadow-blue-600/20"
-                                >
-                                    {{ mb_substr($engineer->name, 0, 1) }}
+                                <div class="relative w-24 h-24 mx-auto">
 
-                                    <span
-                                        class="absolute w-5 h-5 bg-green-400 border-4 rounded-full bottom-1 left-1 border-slate-900"
-                                    ></span>
-                                </div>
+    @if ($engineer->profile_photo_path)
+
+        <img
+            src="{{ asset('storage/' . $engineer->profile_photo_path) }}"
+            alt="{{ $engineer->name }}"
+            class="object-cover w-24 h-24 border rounded-full shadow-xl border-cyan-400/20"
+        >
+
+    @else
+
+        <div
+            class="flex items-center justify-center w-24 h-24 text-3xl font-black border rounded-full shadow-xl border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500 shadow-blue-600/20"
+        >
+            {{ mb_substr($engineer->name, 0, 1) }}
+        </div>
+
+    @endif
+
+    <span
+        class="absolute w-5 h-5 bg-green-400 border-4 rounded-full bottom-1 left-1 border-slate-900"
+    ></span>
+
+</div>
 
                                 <h3 class="mt-5 text-lg font-extrabold">
                                     {{ $engineer->name }}
