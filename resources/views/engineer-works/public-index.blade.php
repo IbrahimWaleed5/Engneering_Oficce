@@ -243,15 +243,27 @@
 
                                 <div class="flex items-center gap-3">
 
-                                    <div
-                                        class="flex items-center justify-center flex-none w-12 h-12 font-black border rounded-full border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500"
-                                    >
-                                        {{ mb_substr(
-                                            $work->engineer?->name ?? 'م',
-                                            0,
-                                            1
-                                        ) }}
-                                    </div>
+                                    @if ($work->engineer?->profile_photo)
+
+    <img
+        src="{{ asset('storage/' . $work->engineer->profile_photo) }}"
+        alt="{{ $work->engineer->name }}"
+        class="flex-none object-cover w-12 h-12 border rounded-full border-cyan-400/20"
+    >
+
+@else
+
+    <div
+        class="flex items-center justify-center flex-none w-12 h-12 font-black border rounded-full border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500"
+    >
+        {{ mb_substr(
+            $work->engineer?->name ?? 'م',
+            0,
+            1
+        ) }}
+    </div>
+
+@endif
 
                                     <div>
 

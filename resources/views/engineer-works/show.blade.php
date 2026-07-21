@@ -186,9 +186,22 @@
 
                             <div>
 
-                                <h2 class="text-xl font-extrabold text-white">
-                                    {{ $engineerWork->engineer?->name ?? 'مهندس المكتب' }}
-                                </h2>
+                                @if ($engineerWork->engineer)
+
+    <a
+        href="{{ route('engineers.show', $engineerWork->engineer) }}"
+        class="text-xl font-extrabold text-white transition hover:text-cyan-300"
+    >
+        {{ $engineerWork->engineer->name }}
+    </a>
+
+@else
+
+    <h2 class="text-xl font-extrabold text-white">
+        مهندس المكتب
+    </h2>
+
+@endif
 
                                 <p class="mt-1 text-sm text-slate-400">
                                     مهندس فعّال ومعتمد
