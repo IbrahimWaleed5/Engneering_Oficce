@@ -28,26 +28,33 @@ class EngineerSpecialtyController extends Controller
     }
 
     public function update(Request $request)
-    {
-        $validated = $request->validate([
-            'specialty_id' => [
-                'required',
-                'integer',
-                'exists:engineering_specialties,id',
-            ],
-        ]);
+{
+    $validated = $request->validate([
+        'specialty_id' => [
+            'required',
+            'integer',
+            'exists:engineering_specialties,id',
+        ],
 
-        EmployeeProfile::updateOrCreate(
-            [
-                'user_id' => $request->user()->id,
-            ],
-            [
-                'specialty_id' => $validated['specialty_id'],
-            ]
-        );
+        'bio' => [
+            'nullable',
+            'string',
+            'max:2000',
+        ],
+    ]);
 
-        return redirect()
-            ->route('engineer.specialty.edit')
-            ->with('success', 'تم حفظ التخصص بنجاح');
-    }
+    EmployeeProfile::updateOrCreate(
+        [
+            'user_id' => $request->user()->id,
+        ],
+        [
+            'specialty_id' => $validated['specialty_id'],
+            'bio' => $validated['bio'] ?? null,
+        ]
+    );
+
+    return redirect()
+        ->route('engineer.specialty.edit')
+        ->with('success', 'تم حفظ التخصص والنبذة بنجاح');
+}
 }
