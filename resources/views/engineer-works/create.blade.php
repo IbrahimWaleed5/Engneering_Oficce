@@ -198,10 +198,9 @@
 
                     </div>
 @php
-    $specialty = auth()->user()
+    $specialtyId = auth()->user()
         ->employeeProfile
-        ?->specialty
-        ?->name;
+        ?->specialty_id;
 @endphp
                     <div class="grid gap-6 md:grid-cols-2">
 
@@ -240,10 +239,10 @@
 
     </div>
 
-   @if (in_array($specialty, [
-    'معماري',
-    'إنشائي',
-    'كهربائي',
+@if (in_array($specialtyId, [
+    1,
+    2,
+    3,
 ]))
 
     <div>
