@@ -159,111 +159,92 @@
 
                     </div>
 
-                @elseif (auth()->user()->role === 'admin')
+              @elseif (auth()->user()->role === 'admin')
 
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
 
-                        <a
-                            href="{{ route('consultations.index') }}"
-                            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-blue-500"
-                        >
-                            <div class="mb-3 text-3xl">📄</div>
-
-                            <h2 class="font-bold text-white">
-                                جميع الاستشارات
-                            </h2>
-                        </a>
-
-                        <a
-                            href="{{ route('payments.index') }}"
-                            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-green-500"
-                        >
-                            <div class="mb-3 text-3xl">💳</div>
-
-                            <h2 class="font-bold text-white">
-                                مراجعة الدفعات
-                            </h2>
-                        </a>
-
-                        <a
-                            href="{{ route('employees.index') }}"
-                            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-cyan-500"
-                        >
-                            <div class="mb-3 text-3xl">👷</div>
-
-                            <h2 class="font-bold text-white">
-                                الموظفون
-                            </h2>
-                        </a>
-
-                        <a
-                            href="{{ route('admin.engineer-works.index') }}"
-                            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-purple-500"
-                        >
-                            <div class="mb-3 text-3xl">🏗️</div>
-
-                            <h2 class="font-bold text-white">
-                                أعمال المهندسين
-                            </h2>
-                        </a>
-
-                    </div>
-
-                @else
-
-                    <div class="p-6 border rounded-2xl bg-slate-900 border-slate-800">
-
-                        <h2 class="text-xl font-bold text-white">
-                            حساب موظف
-                        </h2>
-
-                        <p class="mt-2 text-slate-400">
-                            يمكنك متابعة الاستشارات والطلبات حسب صلاحياتك.
-                        </p>
-
-                        <a
-                            href="{{ route('consultations.index') }}"
-                            class="inline-block px-5 py-2 mt-5 text-white bg-blue-600 rounded-lg"
-                        >
-                            عرض الاستشارات
-                        </a>
-
-                    </div>
-
-                @endif
-
-            </div>
-
-        </div>
-
-    @else
-
-        <div
-            class="py-10"
-            dir="rtl"
+        <a
+            href="{{ route('consultations.index') }}"
+            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-blue-500"
         >
-            <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="mb-3 text-3xl">📄</div>
 
-                <div class="p-8 text-center border rounded-2xl bg-slate-900 border-slate-800">
+            <h2 class="font-bold text-white">
+                جميع الاستشارات
+            </h2>
+        </a>
 
-                    <h1 class="mb-4 text-2xl font-bold text-white">
-                        يجب تسجيل الدخول أولًا
-                    </h1>
+        <a
+            href="{{ route('payments.index') }}"
+            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-green-500"
+        >
+            <div class="mb-3 text-3xl">💳</div>
 
-                    <p class="mb-6 text-slate-400">
-                        سجل الدخول للوصول إلى لوحة التحكم.
-                    </p>
+            <h2 class="font-bold text-white">
+                مراجعة الدفعات
+            </h2>
+        </a>
 
-                    <a
-                        href="{{ route('login') }}"
-                        class="inline-block px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-                    >
-                        تسجيل الدخول
-                    </a>
+        <a
+            href="{{ route('employees.index') }}"
+            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-cyan-500"
+        >
+            <div class="mb-3 text-3xl">👷</div>
 
-                </div>
+            <h2 class="font-bold text-white">
+                الموظفون
+            </h2>
+        </a>
+
+        <a
+            href="{{ route('users.index') }}"
+            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-emerald-500"
+        >
+            <div class="mb-3 text-3xl">⚙️</div>
+
+            <h2 class="font-bold text-white">
+                إدارة المستخدمين
+            </h2>
+        </a>
+
+        <a
+            href="{{ route('admin.engineer-works.index') }}"
+            class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-purple-500"
+        >
+            <div class="mb-3 text-3xl">🏗️</div>
+
+            <h2 class="font-bold text-white">
+                أعمال المهندسين
+            </h2>
+        </a>
+
+    </div>
+@else
+
+    <div class="p-6 border rounded-2xl bg-slate-900 border-slate-800">
+
+        <h2 class="text-xl font-bold text-white">
+            حساب موظف
+        </h2>
+
+        <p class="mt-2 text-slate-400">
+            يمكنك متابعة الاستشارات والطلبات حسب صلاحياتك.
+        </p>
+
+        <a
+            href="{{ route('consultations.index') }}"
+            class="inline-block px-5 py-2 mt-5 text-white bg-blue-600 rounded-lg"
+        >
+            عرض الاستشارات
+        </a>
+
+    </div>
+
+@endif
+                
 
             </div>
+
         </div>
 
     @endauth
