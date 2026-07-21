@@ -198,26 +198,125 @@
 
                     </div>
 
-                    <div class="flex flex-col gap-3 pt-6 border-t sm:flex-row border-white/10">
+                    <div class="grid gap-6 md:grid-cols-2">
 
-                        <button
-                            type="submit"
-                            class="flex items-center justify-center flex-1 gap-2 px-6 py-3 font-black text-white transition rounded-2xl bg-gradient-to-l from-cyan-500 to-blue-600 hover:scale-[1.01] hover:shadow-lg hover:shadow-cyan-500/20"
-                        >
-                            إرسال العمل للمراجعة
-                            <span>←</span>
-                        </button>
+    <div>
 
-                        <a
-                            href="{{ url()->previous() }}"
-                            class="flex items-center justify-center px-6 py-3 font-bold text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-                        >
-                            إلغاء
-                        </a>
+        <label
+            class="block mb-2 text-sm font-bold text-slate-200"
+        >
+            ملف PDF
+        </label>
 
-                    </div>
+        <label
+            class="relative flex flex-col items-center justify-center p-6 text-center transition border-2 border-dashed cursor-pointer rounded-2xl border-white/10 bg-white/[0.03] hover:border-red-400/40 hover:bg-red-500/5"
+        >
 
-                </form>
+            <input
+                type="file"
+                name="pdf_file"
+                accept=".pdf"
+                class="hidden"
+            >
+
+            <div class="text-4xl">
+                📄
+            </div>
+
+            <p class="mt-3 font-bold text-white">
+                اختر ملف PDF
+            </p>
+
+            <p class="mt-2 text-xs text-slate-400">
+                الحد الأقصى 50 MB
+            </p>
+
+        </label>
+
+    </div>
+
+    <div>
+
+        <label
+            class="block mb-2 text-sm font-bold text-slate-200"
+        >
+            ملف DWG
+        </label>
+
+        <label
+            class="relative flex flex-col items-center justify-center p-6 text-center transition border-2 border-dashed cursor-pointer rounded-2xl border-white/10 bg-white/[0.03] hover:border-cyan-400/40 hover:bg-cyan-500/5"
+        >
+
+            <input
+                type="file"
+                name="dwg_file"
+                accept=".dwg"
+                class="hidden"
+            >
+
+            <div class="text-4xl">
+                📐
+            </div>
+
+            <p class="mt-3 font-bold text-white">
+                اختر ملف DWG
+            </p>
+
+            <p class="mt-2 text-xs text-slate-400">
+                الحد الأقصى 100 MB
+            </p>
+
+        </label>
+
+    </div>
+
+</div>
+
+<div class="flex flex-col gap-3 pt-6 border-t sm:flex-row border-white/10">
+
+    <button
+        type="submit"
+        class="flex items-center justify-center flex-1 gap-2 px-6 py-3 font-black text-white transition rounded-2xl bg-gradient-to-l from-cyan-500 to-blue-600 hover:scale-[1.01] hover:shadow-lg hover:shadow-cyan-500/20"
+    >
+        إرسال العمل للمراجعة
+        <span>←</span>
+    </button>
+
+    <a
+        href="{{ url()->previous() }}"
+        class="flex items-center justify-center px-6 py-3 font-bold text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+    >
+        إلغاء
+    </a>
+
+</div>
+
+</form>
+                <div>
+    <label class="block mb-2 text-sm text-slate-300">
+        ملف PDF
+    </label>
+
+    <input
+        type="file"
+        name="pdf_file"
+        accept=".pdf"
+        class="w-full text-slate-300"
+    >
+</div>
+
+<div>
+    <label class="block mb-2 text-sm text-slate-300">
+        ملف DWG
+    </label>
+
+    <input
+        type="file"
+        name="dwg_file"
+        accept=".dwg"
+        class="w-full text-slate-300"
+    >
+</div>
 
             </div>
 

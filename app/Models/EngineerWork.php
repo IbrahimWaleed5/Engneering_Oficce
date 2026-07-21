@@ -10,12 +10,14 @@ protected $fillable = [
     'engineer_id',
     'title',
     'description',
+    'pdf_file',
+    'dwg_file',
     'location',
     'completion_year',
     'project_type',
     'status',
-    'is_featured',
     'admin_note',
+    'is_featured',
 ];
 
     protected $casts = [

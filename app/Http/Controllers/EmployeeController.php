@@ -6,13 +6,22 @@ class EmployeeController extends Controller
 {
 public function index()
 {
-    $employees = User::query()
-        ->where('role', 'admin')
-        ->orWhere('role', 'engineer')
-        ->orWhere('role', 'employee')
+    $employees = User::with([
+        'employeeProfile.specialty',
+        'engineerWorks',
+    ])
+        ->whereIn('role', [
+            'admin',
+            'engineer',
+            'employee',
+        ])
+        ->latest()
         ->get();
 
-    return view('employees.index', compact('employees'));
+    return view(
+        'employees.index',
+        compact('employees')
+    );
 }
 
     public function create()

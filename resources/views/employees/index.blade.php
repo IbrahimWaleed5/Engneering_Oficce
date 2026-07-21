@@ -99,6 +99,22 @@
                                 </th>
 
                                 <th class="px-6 py-4 text-right">
+                                    الهاتف
+                                </th>
+
+                                <th class="px-6 py-4 text-right">
+                                    الحالة
+                                </th>
+
+                                <th class="px-6 py-4 text-right">
+                                    المشاريع
+                                </th>
+
+                                <th class="px-6 py-4 text-right">
+                                    تاريخ الانضمام
+                                </th>
+
+                                <th class="px-6 py-4 text-right">
                                     الصلاحية
                                 </th>
 
@@ -121,18 +137,58 @@
                                         >
 
                                             <div
-                                                class="flex items-center justify-center w-12 h-12 font-black text-white rounded-full bg-gradient-to-br from-blue-600 to-cyan-500"
+                                                class="w-12 h-12 overflow-hidden rounded-full"
                                             >
-                                                {{ mb_substr($employee->name, 0, 1) }}
+
+                                                @if ($employee->profile_photo)
+
+                                                    <img
+                                                        src="{{ asset('storage/' . $employee->profile_photo) }}"
+                                                        alt="{{ $employee->name }}"
+                                                        class="object-cover w-full h-full rounded-full"
+                                                    >
+
+                                                @else
+
+                                                    <div
+                                                        class="flex items-center justify-center w-full h-full font-black text-white rounded-full bg-gradient-to-br from-blue-600 to-cyan-500"
+                                                    >
+                                                        {{ mb_substr($employee->name, 0, 1) }}
+                                                    </div>
+
+                                                @endif
+
                                             </div>
 
                                             <div>
 
-                                                <p
-                                                    class="font-bold text-white"
-                                                >
-                                                    {{ $employee->name }}
-                                                </p>
+@if ($employee->role === 'engineer')
+
+    <a
+        href="{{ route('engineers.show', $employee) }}"
+        class="font-bold text-white transition hover:text-cyan-300"
+    >
+        {{ $employee->name }}
+    </a>
+
+@else
+
+    <p class="font-bold text-white">
+        {{ $employee->name }}
+    </p>
+
+@endif
+
+                                                @if (
+                                                    $employee->role === 'engineer'
+                                                    && $employee->employeeProfile?->specialty
+                                                )
+
+                                                    <p class="mt-1 text-xs text-cyan-300">
+                                                        {{ $employee->employeeProfile->specialty->name }}
+                                                    </p>
+
+                                                @endif
 
                                             </div>
 
@@ -141,9 +197,47 @@
                                     </td>
 
                                     <td class="px-6 py-5 text-slate-300">
-
                                         {{ $employee->email }}
+                                    </td>
 
+                                    <td class="px-6 py-5 text-slate-300">
+                                        {{ $employee->phone ?: '—' }}
+                                    </td>
+
+                                    <td class="px-6 py-5">
+
+                                        @if ($employee->status === 'active')
+
+                                            <span class="inline-flex px-3 py-1 text-xs font-bold text-green-300 rounded-full bg-green-500/10">
+                                                نشط
+                                            </span>
+
+                                        @else
+
+                                            <span class="inline-flex px-3 py-1 text-xs font-bold text-red-300 rounded-full bg-red-500/10">
+                                                غير نشط
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                    <td class="px-6 py-5 text-slate-300">
+
+                                        @if ($employee->role === 'engineer')
+
+                                            {{ $employee->engineerWorks->count() }}
+
+                                        @else
+
+                                            —
+
+                                        @endif
+
+                                    </td>
+
+                                    <td class="px-6 py-5 text-slate-400">
+                                        {{ $employee->created_at?->format('Y-m-d') }}
                                     </td>
 
                                     <td class="px-6 py-5">
@@ -193,7 +287,7 @@
                                 <tr>
 
                                     <td
-                                        colspan="3"
+                                        colspan="7"
                                         class="px-6 py-16 text-center text-slate-400"
                                     >
 

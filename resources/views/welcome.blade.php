@@ -1511,15 +1511,26 @@
                             </p>
 
                             <p class="flex items-center gap-3">
-                                <span>✉️</span>
-                                info@example.com
-                            </p>
+    <span>✉️</span>
 
-                            <p class="flex items-center gap-3">
-                                <span>📞</span>
-                                0590000000
-                            </p>
+    <a
+        href="mailto:loea1039@gmail.com"
+        class="text-cyan-400 hover:underline"
+    >
+        loea1039@gmail.com
+    </a>
+</p>
 
+<p class="flex items-center gap-3">
+    <span>📞</span>
+
+    <a
+        href="tel:+970597349543"
+        class="text-cyan-400 hover:underline"
+    >
+        +970 597349543
+    </a>
+</p>
                         </div>
 
                     </div>

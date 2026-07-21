@@ -13,6 +13,7 @@ use App\Http\Controllers\ConsultationMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EngineerSpecialtyController;
+use App\Http\Controllers\EngineerProfileController;
 
 
 
@@ -454,6 +455,10 @@ Route::middleware(['auth', 'role:customer,admin'])->group(function () {
             [EngineerSpecialtyController::class, 'update']
         )->name('specialty.update');
     });
+    Route::get(
+    '/engineers/{user}',
+    [EngineerProfileController::class, 'show']
+)->name('engineers.show');
 require __DIR__.'/auth.php';
 
 

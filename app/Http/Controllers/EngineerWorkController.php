@@ -154,23 +154,70 @@ class EngineerWorkController extends Controller
                 'mimes:jpg,jpeg,png,webp',
                 'max:512000',
             ],
+            'pdf_file' => [
+    'nullable',
+    'file',
+    'mimes:pdf',
+    'max:51200',
+],
+
+'dwg_file' => [
+    'nullable',
+    'file',
+    'mimes:dwg',
+    'max:102400',
+],
         ]);
+        $pdfPath = null;
+$dwgPath = null;
+
+if ($request->hasFile('pdf_file')) {
+
+    $pdfPath = $request
+        ->file('pdf_file')
+        ->store(
+            'engineer-works/files',
+            'public'
+        );
+}
+
+if ($request->hasFile('dwg_file')) {
+
+    $dwgPath = $request
+        ->file('dwg_file')
+        ->store(
+            'engineer-works/files',
+            'public'
+        );
+}
 
         $work = EngineerWork::create([
-            'engineer_id' => $request->user()->id,
-            'title' => $validated['title'],
-            'description' =>
-                $validated['description'] ?? null,
-            'location' =>
-                $validated['location'] ?? null,
-            'completion_year' =>
-                $validated['completion_year'] ?? null,
-            'project_type' =>
-                $validated['project_type'] ?? null,
-            'status' => 'pending',
-            'is_featured' => false,
-            'admin_note' => null,
-        ]);
+    'engineer_id' => $request->user()->id,
+
+    'title' => $validated['title'],
+
+    'description' =>
+        $validated['description'] ?? null,
+
+    'location' =>
+        $validated['location'] ?? null,
+
+    'completion_year' =>
+        $validated['completion_year'] ?? null,
+
+    'project_type' =>
+        $validated['project_type'] ?? null,
+
+    'pdf_file' => $pdfPath,
+
+    'dwg_file' => $dwgPath,
+
+    'status' => 'pending',
+
+    'is_featured' => false,
+
+    'admin_note' => null,
+]);
 
         foreach (
             $request->file('images') as $index => $image
