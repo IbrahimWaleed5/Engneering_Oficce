@@ -1164,12 +1164,12 @@
                                 class="p-6 text-center glass-card rounded-3xl"
                             >
 
-                                <div class="relative w-24 h-24 mx-auto">
+                           <div class="relative w-24 h-24 mx-auto">
 
-    @if ($engineer->profile_photo_path)
+    @if ($engineer->profile_photo)
 
         <img
-            src="{{ asset('storage/' . $engineer->profile_photo_path) }}"
+            src="{{ asset('storage/' . $engineer->profile_photo) }}"
             alt="{{ $engineer->name }}"
             class="object-cover w-24 h-24 border rounded-full shadow-xl border-cyan-400/20"
         >
