@@ -114,7 +114,24 @@
                     </div>
 
                 @endif
+<div>
 
+    <label
+        for="bio"
+        class="block mb-3 text-sm font-bold text-slate-200"
+    >
+        نبذة عن المهندس
+    </label>
+
+    <textarea
+        id="bio"
+        name="bio"
+        rows="5"
+        class="form-control"
+        placeholder="اكتب نبذة عن خبرتك ومشاريعك..."
+    >{{ old('bio', $employeeProfile?->bio) }}</textarea>
+
+</div>
                 <button
                     type="submit"
                     class="w-full primary-button"
