@@ -67,6 +67,15 @@
                             </a>
 
                         @endif
+                        <a
+    href="{{ route('profile.edit') }}"
+    class="px-3 py-2 text-sm rounded-lg
+    {{ request()->routeIs('profile.edit')
+        ? 'bg-blue-600 text-white'
+        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+>
+    ملفي الشخصي
+</a>
 
                         @if (auth()->user()->role === 'engineer')
 
@@ -146,66 +155,88 @@
 
                         <x-slot name="trigger">
 
-                            <button
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700"
-                            >
-                                @if(auth()->user()->profile_photo)
+                     <button
+    class="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700"
+>
 
-                                <img
-                                    src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
-                                    alt="{{ auth()->user()->name }}"
-                                    class="object-cover w-10 h-10 border-2 rounded-full border-slate-600"
-                                >
+    <div class="relative">
 
-                            @else
+        @if(auth()->user()->profile_photo)
 
-                                <div
-                                    class="flex items-center justify-center w-10 h-10 font-bold text-white bg-blue-600 rounded-full"
-                                >
-                                    {{ mb_substr(auth()->user()->name, 0, 1) }}
-                                </div>
+            <img
+                src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                alt="{{ auth()->user()->name }}"
+                class="object-cover border-2 rounded-full w-11 h-11 border-cyan-500"
+            >
 
-                            @endif
+        @else
 
-                                <div class="text-right">
+            <div
+                class="flex items-center justify-center font-bold text-white rounded-full w-11 h-11 bg-gradient-to-r from-blue-600 to-cyan-500"
+            >
+                {{ mb_substr(auth()->user()->name, 0, 1) }}
+            </div>
 
-                                    <p class="text-sm font-medium text-white">
-                                        {{ auth()->user()->name }}
-                                    </p>
+        @endif
 
-                                   <p class="text-xs text-slate-400">
+        <a
+            href="{{ route('profile.edit') }}"
+            class="absolute bottom-0 left-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-blue-600 border rounded-full border-slate-900 hover:bg-blue-700"
+        >
+            📷
+        </a>
 
-    @if (
-        auth()->user()->role === 'engineer'
-        && auth()->user()->employeeProfile?->specialty
-    )
+    </div>
 
-        مهندس
-        {{ auth()->user()->employeeProfile->specialty->name }}
+    <div class="text-right">
 
-    @elseif (auth()->user()->role === 'admin')
+        <a href="{{ route('profile.edit') }}">
 
-        مدير النظام
+            <p class="text-sm font-bold text-white hover:text-cyan-300">
+                {{ auth()->user()->name }}
+            </p>
 
-    @elseif (auth()->user()->role === 'customer')
+            <p class="text-xs text-slate-400">
+                {{ auth()->user()->phone }}
+            </p>
 
-        عميل
+        </a>
 
-    @else
+        @if (auth()->user()->role === 'engineer')
 
-        {{ auth()->user()->role }}
+            <p class="mt-1 text-xs text-cyan-400">
+                🏗️
+                {{ auth()->user()->employeeProfile?->specialty?->name }}
+            </p>
 
-    @endif
+        @elseif (auth()->user()->role === 'admin')
 
-</p>
+            <div class="mt-1">
 
-                                </div>
+                <a
+                    href="{{ route('users.index') }}"
+                    class="px-2 py-1 text-[10px] text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+                >
+                    ⚙️ إدارة المستخدمين
+                </a>
 
-                                <span class="text-slate-400">
-                                    ▾
-                                </span>
+            </div>
 
-                            </button>
+        @else
+
+            <p class="mt-1 text-xs text-slate-400">
+                👤 عميل
+            </p>
+
+        @endif
+
+    </div>
+
+    <span class="text-slate-400">
+        ▾
+    </span>
+
+</button>
 
                         </x-slot>
 
@@ -297,7 +328,15 @@
             >
                 مكتبة المهندسين
             </a>
-
+<a
+    href="{{ route('profile.edit') }}"
+    class="px-3 py-2 text-sm rounded-lg
+    {{ request()->routeIs('profile.edit')
+        ? 'bg-blue-600 text-white'
+        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+>
+    ملفي الشخصي
+</a>
             @auth
 
                 @if (auth()->user()->role === 'customer')
