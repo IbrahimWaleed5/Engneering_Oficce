@@ -197,7 +197,12 @@
                         </label>
 
                     </div>
-
+@php
+    $specialty = auth()->user()
+        ->employeeProfile
+        ?->specialty
+        ?->name;
+@endphp
                     <div class="grid gap-6 md:grid-cols-2">
 
     <div>
@@ -235,12 +240,18 @@
 
     </div>
 
+   @if (in_array($specialty, [
+    'معماري',
+    'إنشائي',
+    'كهربائي',
+]))
+
     <div>
 
         <label
             class="block mb-2 text-sm font-bold text-slate-200"
         >
-            ملف DWG
+            ملف DWG (اختياري)
         </label>
 
         <label
@@ -270,6 +281,7 @@
 
     </div>
 
+@endif
 </div>
 
 <div class="flex flex-col gap-3 pt-6 border-t sm:flex-row border-white/10">
@@ -292,31 +304,7 @@
 </div>
 
 </form>
-                <div>
-    <label class="block mb-2 text-sm text-slate-300">
-        ملف PDF
-    </label>
 
-    <input
-        type="file"
-        name="pdf_file"
-        accept=".pdf"
-        class="w-full text-slate-300"
-    >
-</div>
-
-<div>
-    <label class="block mb-2 text-sm text-slate-300">
-        ملف DWG
-    </label>
-
-    <input
-        type="file"
-        name="dwg_file"
-        accept=".dwg"
-        class="w-full text-slate-300"
-    >
-</div>
 
             </div>
 
