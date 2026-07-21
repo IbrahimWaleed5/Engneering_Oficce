@@ -233,7 +233,16 @@
                             </div>
 
                         </div>
+@if ($engineerWork->engineer)
 
+    <a
+        href="{{ route('engineers.show', $engineerWork->engineer) }}"
+        class="flex items-center justify-center w-full gap-2 mt-5 secondary-button"
+    >
+        👤 عرض الملف الشخصي
+    </a>
+
+@endif
                         @auth
 
                             @if (
