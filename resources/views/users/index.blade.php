@@ -272,10 +272,10 @@
 
     <div class="overflow-hidden rounded-full w-11 h-11">
 
-        @if ($user->profile_photo_path)
+    @if ($user->profile_photo)
 
-            <img
-                src="{{ asset('storage/' . $user->profile_photo_path) }}"
+    <img
+        src="{{ asset('storage/' . $user->profile_photo) }}"
                 alt="{{ $user->name }}"
                 class="object-cover w-full h-full"
             >
