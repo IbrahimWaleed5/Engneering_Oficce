@@ -324,14 +324,22 @@
                     >
                         أعمالي
                     </a>
+                    @if (auth()->user()->role === 'engineer')
 
+    <a
+        href="{{ route('engineers.show', auth()->user()) }}"
+        class="nav-link"
+    >
+        ملفك الشخصي
+    </a>
+
+@endif
                     <a
                         href="{{ route('engineer.specialty.edit') }}"
                         class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
                     >
                         اختيار التخصص الهندسي
                     </a>
-
                 @endif
 
                 @if (auth()->user()->role === 'admin')
