@@ -481,7 +481,28 @@ Route::middleware([
         'store',
     ])->name('consultations.store');
 });
+Route::middleware([
+    'auth',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->group(function () {
 
+        Route::get(
+            '/engineer-applications',
+            [EngineerApplicationController::class, 'index']
+        )->name('engineer-applications.index');
+
+        Route::patch(
+            '/engineer-applications/{engineerApplication}/approve',
+            [EngineerApplicationController::class, 'approve']
+        )->name('engineer-applications.approve');
+
+        Route::patch(
+            '/engineer-applications/{engineerApplication}/reject',
+            [EngineerApplicationController::class, 'reject']
+        )->name('engineer-applications.reject');
+    });
 require __DIR__.'/auth.php';
 
 
