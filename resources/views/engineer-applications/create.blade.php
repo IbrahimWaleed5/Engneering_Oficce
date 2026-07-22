@@ -379,6 +379,25 @@
 
                         @endif
 
+                        {{-- معلومات الدفع --}}
+                        <div class="space-y-4">
+
+                            <div>
+
+                                <h3 class="text-xl font-black text-white">
+                                    معلومات الدفع
+                                </h3>
+
+                                <p class="mt-2 text-sm leading-7 text-slate-400">
+                                    انسخ بيانات الحساب، أتم التحويل، ثم ارفع إيصال الدفع من الأسفل.
+                                </p>
+
+                            </div>
+
+                            <x-payment-information />
+
+                        </div>
+
                         {{-- إيصال الدفع --}}
                         <div>
 

@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Payment extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'consultation_id',
         'customer_id',
@@ -17,8 +16,8 @@ class Payment extends Model
         'transaction_reference',
         'receipt_image',
         'status',
-        'paid_at',
         'rejection_reason',
+        'paid_at',
     ];
 
     protected $casts = [
@@ -26,18 +25,25 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
-    public function consultation()
+    public function consultation(): BelongsTo
     {
         return $this->belongsTo(
             Consultation::class
         );
     }
 
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(
             User::class,
             'customer_id'
+        );
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(
+            Invoice::class
         );
     }
 }

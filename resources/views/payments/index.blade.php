@@ -705,6 +705,35 @@
 
                                                 @endif
 
+                                                @if ($payment->invoice)
+
+                                                    <div class="grid gap-2 mt-4">
+
+                                                        <a
+                                                            href="{{ route(
+                                                                'invoices.show',
+                                                                $payment->invoice
+                                                            ) }}"
+                                                            target="_blank"
+                                                            class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-blue-200 transition border rounded-xl border-blue-400/20 bg-blue-500/10 hover:bg-blue-500/20"
+                                                        >
+                                                            👁️ عرض الفاتورة
+                                                        </a>
+
+                                                        <a
+                                                            href="{{ route(
+                                                                'invoices.download',
+                                                                $payment->invoice
+                                                            ) }}"
+                                                            class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-green-200 transition border rounded-xl border-green-400/20 bg-green-500/10 hover:bg-green-500/20"
+                                                        >
+                                                            📄 تحميل PDF
+                                                        </a>
+
+                                                    </div>
+
+                                                @endif
+
                                             </div>
 
                                         @elseif ($payment->status === 'rejected')

@@ -345,6 +345,7 @@ class ConsultationController extends Controller
             'consultationType',
             'engineer',
             'review',
+            'invoice',
         ])
             ->where(
                 'customer_id',
@@ -424,6 +425,17 @@ class ConsultationController extends Controller
                 'required',
                 'in:pending,in_progress,completed,cancelled',
             ],
+
+            'started_at' => [
+                'required',
+                'date',
+            ],
+
+            'expected_delivery_at' => [
+                'required',
+                'date',
+                'after:started_at',
+            ],
         ]);
 
         $engineer = null;
@@ -453,6 +465,15 @@ class ConsultationController extends Controller
 
             'status' =>
                 $validated['status'],
+
+            'started_at' =>
+                $validated['started_at'],
+
+            'expected_delivery_at' =>
+                $validated['expected_delivery_at'],
+
+            'delivered_at' =>
+                null,
         ]);
 
         if ($engineer) {
@@ -587,6 +608,9 @@ class ConsultationController extends Controller
 
             'status' =>
                 'completed',
+
+            'delivered_at' =>
+                now(),
         ]);
 
         $consultation->load('customer');

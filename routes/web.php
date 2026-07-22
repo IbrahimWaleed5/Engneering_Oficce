@@ -17,6 +17,7 @@ use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\EngineerApplicationController;
 use App\Http\Middleware\EnsureActiveEngineerMembership;
 use App\Http\Controllers\EngineerReviewController;
+use App\Http\Controllers\InvoiceController;
 
 
 /*
@@ -468,6 +469,41 @@ Route::post(
         'role:admin,engineer',
     ])
     ->name('consultations.upload-engineer-file');
+    /*
+|--------------------------------------------------------------------------
+| الفواتير
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+
+    Route::get(
+        '/invoices/{invoice}',
+        [
+            InvoiceController::class,
+            'show',
+        ]
+    )->name('invoices.show');
+
+    Route::get(
+        '/invoices/{invoice}/download',
+        [
+            InvoiceController::class,
+            'download',
+        ]
+    )->name('invoices.download');
+
+});
+/*
+|--------------------------------------------------------------------------
+| معلومات الدفع العامة
+|--------------------------------------------------------------------------
+*/
+
+Route::view(
+    '/payment-information',
+    'payment-information'
+)->name('payment-information');
 require __DIR__.'/auth.php';
 
 

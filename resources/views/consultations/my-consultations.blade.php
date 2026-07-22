@@ -211,6 +211,59 @@
 
                                     </p>
 
+                                    @if ($consultation->started_at)
+
+                                        <p class="flex items-center gap-2">
+
+                                            <span>🚀</span>
+
+                                            بدء العمل:
+                                            {{ $consultation->started_at->format('Y-m-d H:i') }}
+
+                                        </p>
+
+                                    @endif
+
+                                    @if ($consultation->expected_delivery_at)
+
+                                        <p class="flex items-center gap-2">
+
+                                            <span>📅</span>
+
+                                            التسليم المتوقع:
+                                            {{ $consultation->expected_delivery_at->format('Y-m-d H:i') }}
+
+                                        </p>
+
+                                    @endif
+
+                                    @if ($consultation->delivered_at)
+
+                                        <p class="flex items-center gap-2 text-green-300">
+
+                                            <span>✅</span>
+
+                                            تم التسليم:
+                                            {{ $consultation->delivered_at->format('Y-m-d H:i') }}
+
+                                        </p>
+
+                                    @elseif (
+                                        $consultation->expected_delivery_at
+                                        && now()->greaterThan($consultation->expected_delivery_at)
+                                        && $consultation->status !== 'completed'
+                                    )
+
+                                        <p class="flex items-center gap-2 text-red-300">
+
+                                            <span>⚠️</span>
+
+                                            متأخرة عن موعد التسليم
+
+                                        </p>
+
+                                    @endif
+
                                 </div>
 
                             </div>
@@ -281,6 +334,32 @@
                                         >
                                             الإيصال تحت المراجعة
                                         </div>
+
+                                    @endif
+
+                                    {{-- الفاتورة --}}
+                                    @if ($consultation->invoice)
+
+                                        <a
+                                            href="{{ route(
+                                                'invoices.show',
+                                                $consultation->invoice
+                                            ) }}"
+                                            target="_blank"
+                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-blue-200 transition border rounded-xl border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20"
+                                        >
+                                            👁️ عرض الفاتورة
+                                        </a>
+
+                                        <a
+                                            href="{{ route(
+                                                'invoices.download',
+                                                $consultation->invoice
+                                            ) }}"
+                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-green-200 transition border rounded-xl border-green-500/20 bg-green-500/10 hover:bg-green-500/20"
+                                        >
+                                            📄 تحميل الفاتورة PDF
+                                        </a>
 
                                     @endif
 
