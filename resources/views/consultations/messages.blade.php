@@ -73,11 +73,13 @@
             </div>
 
             <a
-                href="{{ url()->previous() }}"
-                class="secondary-button"
-            >
-                ← رجوع
-            </a>
+    href="{{ url()->previous() !== url()->current()
+        ? url()->previous()
+        : route('dashboard') }}"
+    class="secondary-button"
+>
+    ← رجوع
+</a>
 
         </div>
 
