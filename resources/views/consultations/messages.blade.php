@@ -12,6 +12,7 @@
             : $consultation->customer;
 
         $statusLabels = [
+            'waiting_payment' => 'بانتظار الدفع',
             'pending' => 'قيد الانتظار',
             'in_progress' => 'قيد التنفيذ',
             'completed' => 'مكتملة',
@@ -19,67 +20,167 @@
         ];
 
         $statusClasses = [
-            'pending' => 'border-amber-500/30 bg-amber-500/10 text-amber-300',
-            'in_progress' => 'border-blue-500/30 bg-blue-500/10 text-blue-300',
-            'completed' => 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-            'cancelled' => 'border-red-500/30 bg-red-500/10 text-red-300',
+            'waiting_payment' =>
+                'border-orange-500/30 bg-orange-500/10 text-orange-300',
+
+            'pending' =>
+                'border-amber-500/30 bg-amber-500/10 text-amber-300',
+
+            'in_progress' =>
+                'border-blue-500/30 bg-blue-500/10 text-blue-300',
+
+            'completed' =>
+                'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+
+            'cancelled' =>
+                'border-red-500/30 bg-red-500/10 text-red-300',
         ];
+
+        $canReviewEngineer =
+            (int) $currentUser->id
+                === (int) $consultation->customer_id
+            && $consultation->engineer_id
+            && $consultation->status === 'completed'
+            && $consultation->payment_status === 'paid';
     @endphp
 
     <x-slot name="header">
 
-        <div class="flex flex-wrap items-center justify-between gap-4">
+        <div
+            class="flex flex-wrap items-center justify-between gap-4"
+        >
 
-            <div class="flex items-center gap-4">
+            {{-- المستخدم الآخر في المحادثة --}}
+            @if (
+                $otherUser
+                && $otherUser->role === 'engineer'
+            )
 
-                <div class="relative">
+                <a
+                    href="{{ route(
+                        'engineers.show',
+                        $otherUser
+                    ) }}"
+                    class="flex items-center gap-4 p-2 transition rounded-2xl hover:bg-white/5"
+                    title="فتح صفحة المهندس"
+                >
 
-                    @if ($otherUser?->profile_photo)
+                    <div class="relative">
 
-                        <img
-                            src="{{ asset('storage/' . $otherUser->profile_photo) }}"
-                            alt="{{ $otherUser->name }}"
-                            class="object-cover w-12 h-12 border-2 rounded-full border-blue-500/40"
+                        @if ($otherUser->profile_photo)
+
+                            <img
+                                src="{{ asset(
+                                    'storage/' .
+                                    $otherUser->profile_photo
+                                ) }}"
+                                alt="{{ $otherUser->name }}"
+                                class="object-cover w-12 h-12 border-2 rounded-full border-blue-500/40"
+                            >
+
+                        @else
+
+                            <div
+                                class="flex items-center justify-center w-12 h-12 font-black text-white rounded-full bg-gradient-to-br from-blue-600 to-violet-600"
+                            >
+                                {{ mb_substr(
+                                    $otherUser->name,
+                                    0,
+                                    1
+                                ) }}
+                            </div>
+
+                        @endif
+
+                        <span
+                            class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-950"
+                        ></span>
+
+                    </div>
+
+                    <div>
+
+                        <h2 class="text-xl font-black text-white">
+                            المحادثة
+                        </h2>
+
+                        <p
+                            class="mt-1 text-sm font-bold text-cyan-300"
                         >
+                            {{ $otherUser->name }}
+                        </p>
 
-                    @else
+                        <p class="mt-1 text-xs text-slate-500">
+                            اضغط لعرض صفحة المهندس
+                        </p>
 
-                        <div
-                            class="flex items-center justify-center w-12 h-12 font-black text-white rounded-full bg-gradient-to-br from-blue-600 to-violet-600"
-                        >
-                            {{ mb_substr($otherUser?->name ?? 'م', 0, 1) }}
-                        </div>
+                    </div>
 
-                    @endif
+                </a>
 
-                    <span
-                        class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-950"
-                    ></span>
+            @else
+
+                <div class="flex items-center gap-4">
+
+                    <div class="relative">
+
+                        @if ($otherUser?->profile_photo)
+
+                            <img
+                                src="{{ asset(
+                                    'storage/' .
+                                    $otherUser->profile_photo
+                                ) }}"
+                                alt="{{ $otherUser->name }}"
+                                class="object-cover w-12 h-12 border-2 rounded-full border-blue-500/40"
+                            >
+
+                        @else
+
+                            <div
+                                class="flex items-center justify-center w-12 h-12 font-black text-white rounded-full bg-gradient-to-br from-blue-600 to-violet-600"
+                            >
+                                {{ mb_substr(
+                                    $otherUser?->name
+                                        ?? 'م',
+                                    0,
+                                    1
+                                ) }}
+                            </div>
+
+                        @endif
+
+                        <span
+                            class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-950"
+                        ></span>
+
+                    </div>
+
+                    <div>
+
+                        <h2 class="text-xl font-black text-white">
+                            المحادثة
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-400">
+                            {{ $otherUser?->name
+                                ?? 'المستخدم' }}
+                        </p>
+
+                    </div>
 
                 </div>
 
-                <div>
-
-                    <h2 class="text-xl font-black text-white">
-                        المحادثة
-                    </h2>
-
-                    <p class="mt-1 text-sm text-slate-400">
-                        {{ $otherUser?->name ?? 'المستخدم' }}
-                    </p>
-
-                </div>
-
-            </div>
+            @endif
 
             <a
-    href="{{ url()->previous() !== url()->current()
-        ? url()->previous()
-        : route('dashboard') }}"
-    class="secondary-button"
->
-    ← رجوع
-</a>
+                href="{{ url()->previous() !== url()->current()
+                    ? url()->previous()
+                    : route('dashboard') }}"
+                class="secondary-button"
+            >
+                ← رجوع
+            </a>
 
         </div>
 
@@ -90,8 +191,11 @@
         dir="rtl"
     >
 
-        <div class="px-4 mx-auto max-w-[1500px] sm:px-6 lg:px-8">
+        <div
+            class="px-4 mx-auto max-w-[1500px] sm:px-6 lg:px-8"
+        >
 
+            {{-- رسائل النجاح --}}
             @if (session('success'))
 
                 <div
@@ -102,6 +206,7 @@
 
             @endif
 
+            {{-- الأخطاء --}}
             @if ($errors->any())
 
                 <div
@@ -160,8 +265,11 @@
                                     رقم الاستشارة
                                 </p>
 
-                                <p class="mt-1 text-sm font-bold text-white break-all">
-                                    {{ $consultation->consultation_number }}
+                                <p
+                                    class="mt-1 text-sm font-bold text-white break-all"
+                                >
+                                    {{ $consultation
+                                        ->consultation_number }}
                                 </p>
 
                             </div>
@@ -172,8 +280,27 @@
                                     عنوان الاستشارة
                                 </p>
 
-                                <p class="mt-1 text-sm font-bold text-white">
+                                <p
+                                    class="mt-1 text-sm font-bold text-white"
+                                >
                                     {{ $consultation->title }}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p class="text-xs text-slate-500">
+                                    نوع الاستشارة
+                                </p>
+
+                                <p
+                                    class="mt-1 text-sm font-bold text-white"
+                                >
+                                    {{ $consultation
+                                        ->consultationType
+                                        ?->name
+                                        ?? 'غير محدد' }}
                                 </p>
 
                             </div>
@@ -187,8 +314,50 @@
                                 <span
                                     class="inline-flex px-3 py-1.5 text-xs font-bold border rounded-full {{ $statusClasses[$consultation->status] ?? 'border-slate-600 bg-slate-700 text-slate-200' }}"
                                 >
-                                    {{ $statusLabels[$consultation->status] ?? $consultation->status }}
+                                    {{ $statusLabels[
+                                        $consultation->status
+                                    ] ?? $consultation->status }}
                                 </span>
+
+                            </div>
+
+                            <div>
+
+                                <p class="text-xs text-slate-500">
+                                    حالة الدفع
+                                </p>
+
+                                @if (
+                                    $consultation->payment_status
+                                    === 'paid'
+                                )
+
+                                    <span
+                                        class="inline-flex px-3 py-1.5 mt-2 text-xs font-bold border rounded-full border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                    >
+                                        تم الدفع
+                                    </span>
+
+                                @elseif (
+                                    $consultation->payment_status
+                                    === 'pending'
+                                )
+
+                                    <span
+                                        class="inline-flex px-3 py-1.5 mt-2 text-xs font-bold border rounded-full border-yellow-500/30 bg-yellow-500/10 text-yellow-300"
+                                    >
+                                        قيد المراجعة
+                                    </span>
+
+                                @else
+
+                                    <span
+                                        class="inline-flex px-3 py-1.5 mt-2 text-xs font-bold text-red-300 border rounded-full border-red-500/30 bg-red-500/10"
+                                    >
+                                        غير مدفوع
+                                    </span>
+
+                                @endif
 
                             </div>
 
@@ -198,8 +367,12 @@
                                     تاريخ الإنشاء
                                 </p>
 
-                                <p class="mt-1 text-sm font-bold text-white">
-                                    {{ $consultation->created_at?->format('Y-m-d H:i') }}
+                                <p
+                                    class="mt-1 text-sm font-bold text-white"
+                                >
+                                    {{ $consultation
+                                        ->created_at
+                                        ?->format('Y-m-d H:i') }}
                                 </p>
 
                             </div>
@@ -231,17 +404,31 @@
 
                         <div class="space-y-3">
 
+                            {{-- العميل --}}
                             <div
                                 class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.04]"
                             >
 
-                                <div class="flex items-center min-w-0 gap-3">
+                                <div
+                                    class="flex items-center min-w-0 gap-3"
+                                >
 
-                                    @if ($consultation->customer?->profile_photo)
+                                    @if (
+                                        $consultation
+                                            ->customer
+                                            ?->profile_photo
+                                    )
 
                                         <img
-                                            src="{{ asset('storage/' . $consultation->customer->profile_photo) }}"
-                                            alt="{{ $consultation->customer->name }}"
+                                            src="{{ asset(
+                                                'storage/' .
+                                                $consultation
+                                                    ->customer
+                                                    ->profile_photo
+                                            ) }}"
+                                            alt="{{ $consultation
+                                                ->customer
+                                                ->name }}"
                                             class="flex-none object-cover w-10 h-10 rounded-full"
                                         >
 
@@ -250,15 +437,27 @@
                                         <div
                                             class="flex items-center justify-center flex-none w-10 h-10 font-bold text-white rounded-full bg-gradient-to-br from-violet-600 to-blue-600"
                                         >
-                                            {{ mb_substr($consultation->customer?->name ?? 'ع', 0, 1) }}
+                                            {{ mb_substr(
+                                                $consultation
+                                                    ->customer
+                                                    ?->name
+                                                    ?? 'ع',
+                                                0,
+                                                1
+                                            ) }}
                                         </div>
 
                                     @endif
 
                                     <div class="min-w-0">
 
-                                        <p class="text-sm font-bold text-white truncate">
-                                            {{ $consultation->customer?->name ?? 'غير محدد' }}
+                                        <p
+                                            class="text-sm font-bold text-white truncate"
+                                        >
+                                            {{ $consultation
+                                                ->customer
+                                                ?->name
+                                                ?? 'غير محدد' }}
                                         </p>
 
                                         <p class="text-xs text-slate-500">
@@ -277,55 +476,235 @@
 
                             </div>
 
-                            <div
-                                class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.04]"
-                            >
+                            {{-- المهندس مع رابط صفحته --}}
+                            @if ($consultation->engineer)
 
-                                <div class="flex items-center min-w-0 gap-3">
+                                <a
+                                    href="{{ route(
+                                        'engineers.show',
+                                        $consultation->engineer
+                                    ) }}"
+                                    class="flex items-center justify-between gap-3 p-3 transition rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] hover:ring-1 hover:ring-cyan-500/30"
+                                    title="فتح صفحة المهندس"
+                                >
 
-                                    @if ($consultation->engineer?->profile_photo)
+                                    <div
+                                        class="flex items-center min-w-0 gap-3"
+                                    >
 
-                                        <img
-                                            src="{{ asset('storage/' . $consultation->engineer->profile_photo) }}"
-                                            alt="{{ $consultation->engineer->name }}"
-                                            class="flex-none object-cover w-10 h-10 rounded-full"
-                                        >
+                                        @if (
+                                            $consultation
+                                                ->engineer
+                                                ->profile_photo
+                                        )
 
-                                    @else
+                                            <img
+                                                src="{{ asset(
+                                                    'storage/' .
+                                                    $consultation
+                                                        ->engineer
+                                                        ->profile_photo
+                                                ) }}"
+                                                alt="{{ $consultation
+                                                    ->engineer
+                                                    ->name }}"
+                                                class="flex-none object-cover w-10 h-10 rounded-full ring-2 ring-cyan-500/30"
+                                            >
 
-                                        <div
-                                            class="flex items-center justify-center flex-none w-10 h-10 font-bold text-white rounded-full bg-gradient-to-br from-cyan-600 to-blue-600"
-                                        >
-                                            {{ mb_substr($consultation->engineer?->name ?? 'م', 0, 1) }}
+                                        @else
+
+                                            <div
+                                                class="flex items-center justify-center flex-none w-10 h-10 font-bold text-white rounded-full bg-gradient-to-br from-cyan-600 to-blue-600"
+                                            >
+                                                {{ mb_substr(
+                                                    $consultation
+                                                        ->engineer
+                                                        ->name,
+                                                    0,
+                                                    1
+                                                ) }}
+                                            </div>
+
+                                        @endif
+
+                                        <div class="min-w-0">
+
+                                            <p
+                                                class="text-sm font-bold text-white truncate"
+                                            >
+                                                {{ $consultation
+                                                    ->engineer
+                                                    ->name }}
+                                            </p>
+
+                                            <p
+                                                class="text-xs text-cyan-300"
+                                            >
+                                                اضغط لعرض الملف الشخصي
+                                            </p>
+
                                         </div>
 
-                                    @endif
+                                    </div>
 
-                                    <div class="min-w-0">
+                                    <span
+                                        class="px-2 py-1 text-[10px] font-bold text-blue-300 rounded-lg bg-blue-500/15"
+                                    >
+                                        مهندس
+                                    </span>
 
-                                        <p class="text-sm font-bold text-white truncate">
-                                            {{ $consultation->engineer?->name ?? 'لم يتم التعيين' }}
-                                        </p>
+                                </a>
 
-                                        <p class="text-xs text-slate-500">
-                                            المهندس
-                                        </p>
+                            @else
+
+                                <div
+                                    class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.04]"
+                                >
+
+                                    <div
+                                        class="flex items-center gap-3"
+                                    >
+
+                                        <div
+                                            class="flex items-center justify-center w-10 h-10 font-bold rounded-full bg-slate-700 text-slate-400"
+                                        >
+                                            م
+                                        </div>
+
+                                        <div>
+
+                                            <p
+                                                class="text-sm font-bold text-slate-400"
+                                            >
+                                                لم يتم تعيين مهندس
+                                            </p>
+
+                                        </div>
 
                                     </div>
 
                                 </div>
 
-                                <span
-                                    class="px-2 py-1 text-[10px] font-bold text-blue-300 rounded-lg bg-blue-500/15"
-                                >
-                                    مهندس
-                                </span>
-
-                            </div>
+                            @endif
 
                         </div>
 
                     </section>
+
+                    {{-- صفحة المهندس والتقييم --}}
+                    @if ($consultation->engineer)
+
+                        <section
+                            class="p-5 border shadow-2xl rounded-3xl border-white/10 bg-slate-900/75 backdrop-blur-xl"
+                        >
+
+                            <div
+                                class="flex items-center gap-3 pb-4 mb-4 border-b border-white/10"
+                            >
+
+                                <div
+                                    class="flex items-center justify-center text-xl w-11 h-11 rounded-xl bg-yellow-500/15"
+                                >
+                                    ⭐
+                                </div>
+
+                                <h3 class="text-lg font-black text-white">
+                                    صفحة المهندس والتقييم
+                                </h3>
+
+                            </div>
+
+                            <div class="grid gap-3">
+
+                                <a
+                                    href="{{ route(
+                                        'engineers.show',
+                                        $consultation->engineer
+                                    ) }}"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-3 font-bold transition border text-cyan-200 rounded-xl border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-500/20"
+                                >
+                                    👤 فتح صفحة المهندس
+                                </a>
+
+                                @if ($canReviewEngineer)
+
+                                    @if ($consultation->review)
+
+                                        <div
+                                            class="p-4 text-center border rounded-xl border-yellow-500/20 bg-yellow-500/10"
+                                        >
+
+                                            <p
+                                                class="font-black text-yellow-300"
+                                            >
+                                                ⭐ تم تقييم المهندس
+                                            </p>
+
+                                            <div
+                                                class="flex items-center justify-center gap-1 mt-3"
+                                            >
+
+                                                @for (
+                                                    $star = 1;
+                                                    $star <= 5;
+                                                    $star++
+                                                )
+
+                                                    <span
+                                                        class="text-xl {{ $star <= $consultation->review->rating
+                                                            ? 'text-yellow-400'
+                                                            : 'text-slate-700' }}"
+                                                    >
+                                                        ★
+                                                    </span>
+
+                                                @endfor
+
+                                            </div>
+
+                                            <p
+                                                class="mt-2 text-sm font-bold text-yellow-200"
+                                            >
+                                                {{ $consultation
+                                                    ->review
+                                                    ->rating }}/5
+                                            </p>
+
+                                        </div>
+
+                                    @else
+
+                                        <a
+                                            href="{{ route(
+                                                'engineer-reviews.create',
+                                                $consultation
+                                            ) }}"
+                                            class="inline-flex items-center justify-center gap-2 px-4 py-3 font-black text-white transition bg-yellow-600 rounded-xl hover:bg-yellow-500"
+                                        >
+                                            ⭐ تقييم المهندس وكتابة تعليق
+                                        </a>
+
+                                    @endif
+
+                                @elseif (
+                                    (int) $currentUser->id
+                                    === (int) $consultation->customer_id
+                                )
+
+                                    <div
+                                        class="p-3 text-sm text-center border rounded-xl border-white/10 bg-white/[0.04] text-slate-400"
+                                    >
+                                        يظهر التقييم بعد اكتمال
+                                        الاستشارة وتأكيد الدفع.
+                                    </div>
+
+                                @endif
+
+                            </div>
+
+                        </section>
+
+                    @endif
 
                     {{-- الملفات المشتركة --}}
                     <section
@@ -350,7 +729,12 @@
 
                         <div class="space-y-3">
 
-                            @forelse ($messages->whereNotNull('attachment')->take(5) as $fileMessage)
+                            @forelse (
+                                $messages
+                                    ->whereNotNull('attachment')
+                                    ->take(5)
+                                as $fileMessage
+                            )
 
                                 @php
                                     $fileExtension = strtolower(
@@ -362,25 +746,41 @@
                                 @endphp
 
                                 <a
-                                    href="{{ asset('storage/' . $fileMessage->attachment) }}"
+                                    href="{{ asset(
+                                        'storage/' .
+                                        $fileMessage->attachment
+                                    ) }}"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     class="flex items-center gap-3 p-3 transition rounded-2xl bg-white/[0.04] hover:bg-white/[0.08]"
                                 >
 
                                     <div
                                         class="flex items-center justify-center flex-none w-10 h-10 text-xs font-black text-blue-300 rounded-xl bg-blue-500/15"
                                     >
-                                        {{ strtoupper($fileExtension ?: 'FILE') }}
+                                        {{ strtoupper(
+                                            $fileExtension
+                                                ?: 'FILE'
+                                        ) }}
                                     </div>
 
                                     <div class="min-w-0">
 
-                                        <p class="text-sm font-bold text-white truncate">
-                                            {{ basename($fileMessage->attachment) }}
+                                        <p
+                                            class="text-sm font-bold text-white truncate"
+                                        >
+                                            {{ basename(
+                                                $fileMessage
+                                                    ->attachment
+                                            ) }}
                                         </p>
 
-                                        <p class="mt-1 text-xs text-slate-500">
-                                            {{ $fileMessage->created_at?->format('Y-m-d') }}
+                                        <p
+                                            class="mt-1 text-xs text-slate-500"
+                                        >
+                                            {{ $fileMessage
+                                                ->created_at
+                                                ?->format('Y-m-d') }}
                                         </p>
 
                                     </div>
@@ -389,7 +789,9 @@
 
                             @empty
 
-                                <p class="py-6 text-sm text-center text-slate-500">
+                                <p
+                                    class="py-6 text-sm text-center text-slate-500"
+                                >
                                     لا توجد ملفات مشتركة
                                 </p>
 
@@ -411,14 +813,19 @@
                         class="h-[700px] p-4 overflow-y-auto sm:p-7"
                     >
 
-                        <div class="flex items-center gap-4 mb-8">
+                        {{-- التاريخ --}}
+                        <div
+                            class="flex items-center gap-4 mb-8"
+                        >
 
                             <div class="flex-1 h-px bg-white/10"></div>
 
                             <span
                                 class="px-4 py-2 text-xs font-bold border rounded-full text-slate-400 border-white/10 bg-slate-950/60"
                             >
-                                {{ $consultation->created_at?->format('Y-m-d') }}
+                                {{ $consultation
+                                    ->created_at
+                                    ?->format('Y-m-d') }}
                             </span>
 
                             <div class="flex-1 h-px bg-white/10"></div>
@@ -430,7 +837,10 @@
                             @forelse ($messages as $message)
 
                                 @php
-                                    $isMine = $message->sender_id === auth()->id();
+                                    $isMine =
+                                        (int) $message->sender_id
+                                        === (int) auth()->id();
+
                                     $sender = $message->sender;
 
                                     $extension = $message->attachment
@@ -450,62 +860,158 @@
                                             'png',
                                             'gif',
                                             'webp',
-                                        ]
+                                        ],
+                                        true
                                     );
+
+                                    $senderIsEngineer =
+                                        $sender
+                                        && $sender->role
+                                            === 'engineer';
                                 @endphp
 
                                 <div
-                                    class="flex items-end gap-3 {{ $isMine ? 'flex-row-reverse justify-start' : 'justify-start' }}"
+                                    class="flex items-end gap-3 {{ $isMine
+                                        ? 'flex-row-reverse justify-start'
+                                        : 'justify-start' }}"
                                 >
 
-                                    <div class="flex-none">
+                                    {{-- صورة المرسل --}}
+                                    @if ($senderIsEngineer)
 
-                                        @if ($sender?->profile_photo)
+                                        <a
+                                            href="{{ route(
+                                                'engineers.show',
+                                                $sender
+                                            ) }}"
+                                            class="flex-none transition hover:scale-105"
+                                            title="فتح صفحة المهندس"
+                                        >
 
-                                            <img
-                                                src="{{ asset('storage/' . $sender->profile_photo) }}"
-                                                alt="{{ $sender->name }}"
-                                                class="object-cover border rounded-full w-11 h-11 border-white/10"
-                                            >
+                                            @if ($sender->profile_photo)
 
-                                        @else
+                                                <img
+                                                    src="{{ asset(
+                                                        'storage/' .
+                                                        $sender
+                                                            ->profile_photo
+                                                    ) }}"
+                                                    alt="{{ $sender->name }}"
+                                                    class="object-cover border rounded-full w-11 h-11 border-cyan-500/30 ring-2 ring-cyan-500/20"
+                                                >
 
-                                            <div
-                                                class="flex items-center justify-center w-11 h-11 font-black text-white border rounded-full border-white/10 {{ $isMine ? 'bg-gradient-to-br from-blue-600 to-violet-600' : 'bg-gradient-to-br from-cyan-600 to-emerald-600' }}"
-                                            >
-                                                {{ mb_substr($sender?->name ?? 'م', 0, 1) }}
-                                            </div>
+                                            @else
 
-                                        @endif
+                                                <div
+                                                    class="flex items-center justify-center font-black text-white border rounded-full w-11 h-11 border-cyan-500/30 bg-gradient-to-br from-cyan-600 to-emerald-600"
+                                                >
+                                                    {{ mb_substr(
+                                                        $sender->name,
+                                                        0,
+                                                        1
+                                                    ) }}
+                                                </div>
 
-                                    </div>
+                                            @endif
 
-                                    <div class="w-full max-w-[80%] sm:max-w-[65%]">
+                                        </a>
+
+                                    @else
+
+                                        <div class="flex-none">
+
+                                            @if ($sender?->profile_photo)
+
+                                                <img
+                                                    src="{{ asset(
+                                                        'storage/' .
+                                                        $sender
+                                                            ->profile_photo
+                                                    ) }}"
+                                                    alt="{{ $sender->name }}"
+                                                    class="object-cover border rounded-full w-11 h-11 border-white/10"
+                                                >
+
+                                            @else
+
+                                                <div
+                                                    class="flex items-center justify-center w-11 h-11 font-black text-white border rounded-full border-white/10 {{ $isMine
+                                                        ? 'bg-gradient-to-br from-blue-600 to-violet-600'
+                                                        : 'bg-gradient-to-br from-cyan-600 to-emerald-600' }}"
+                                                >
+                                                    {{ mb_substr(
+                                                        $sender?->name
+                                                            ?? 'م',
+                                                        0,
+                                                        1
+                                                    ) }}
+                                                </div>
+
+                                            @endif
+
+                                        </div>
+
+                                    @endif
+
+                                    <div
+                                        class="w-full max-w-[80%] sm:max-w-[65%]"
+                                    >
 
                                         <div
                                             class="p-4 shadow-xl sm:p-5 rounded-3xl
                                             {{ $isMine
                                                 ? 'rounded-br-md bg-gradient-to-br from-blue-600 to-indigo-700 text-white'
-                                                : 'rounded-bl-md border border-white/5 bg-slate-800/95 text-slate-100'
-                                            }}"
+                                                : 'rounded-bl-md border border-white/5 bg-slate-800/95 text-slate-100' }}"
                                         >
 
                                             <div
                                                 class="flex items-center justify-between gap-4 mb-3"
                                             >
 
-                                                <p class="text-sm font-black">
-                                                    {{ $isMine ? 'أنت' : ($sender?->name ?? 'المستخدم') }}
-                                                </p>
+                                                @if (
+                                                    ! $isMine
+                                                    && $senderIsEngineer
+                                                )
+
+                                                    <a
+                                                        href="{{ route(
+                                                            'engineers.show',
+                                                            $sender
+                                                        ) }}"
+                                                        class="text-sm font-black transition hover:text-cyan-300"
+                                                        title="فتح صفحة المهندس"
+                                                    >
+                                                        {{ $sender->name }}
+                                                    </a>
+
+                                                @else
+
+                                                    <p
+                                                        class="text-sm font-black"
+                                                    >
+                                                        {{ $isMine
+                                                            ? 'أنت'
+                                                            : (
+                                                                $sender?->name
+                                                                ?? 'المستخدم'
+                                                            ) }}
+                                                    </p>
+
+                                                @endif
 
                                                 <span
-                                                    class="text-[11px] {{ $isMine ? 'text-blue-100/70' : 'text-slate-500' }}"
+                                                    class="text-[11px] {{ $isMine
+                                                        ? 'text-blue-100/70'
+                                                        : 'text-slate-500' }}"
                                                 >
-                                                    {{ $message->created_at?->format('H:i') }}
+                                                    {{ $message
+                                                        ->created_at
+                                                        ?->format('H:i') }}
                                                 </span>
 
                                             </div>
 
+                                            {{-- نص الرسالة --}}
                                             @if ($message->message)
 
                                                 <p
@@ -516,18 +1022,28 @@
 
                                             @endif
 
+                                            {{-- المرفق --}}
                                             @if ($message->attachment)
 
                                                 @if ($isImage)
 
                                                     <a
-                                                        href="{{ asset('storage/' . $message->attachment) }}"
+                                                        href="{{ asset(
+                                                            'storage/' .
+                                                            $message
+                                                                ->attachment
+                                                        ) }}"
                                                         target="_blank"
+                                                        rel="noopener noreferrer"
                                                         class="block mt-4 overflow-hidden border rounded-2xl border-white/10"
                                                     >
 
                                                         <img
-                                                            src="{{ asset('storage/' . $message->attachment) }}"
+                                                            src="{{ asset(
+                                                                'storage/' .
+                                                                $message
+                                                                    ->attachment
+                                                            ) }}"
                                                             alt="مرفق"
                                                             class="object-cover w-full max-h-80"
                                                         >
@@ -537,26 +1053,45 @@
                                                 @else
 
                                                     <a
-                                                        href="{{ asset('storage/' . $message->attachment) }}"
+                                                        href="{{ asset(
+                                                            'storage/' .
+                                                            $message
+                                                                ->attachment
+                                                        ) }}"
                                                         target="_blank"
+                                                        rel="noopener noreferrer"
                                                         class="flex items-center justify-between gap-4 p-3 mt-4 transition border rounded-2xl border-white/10 bg-black/15 hover:bg-black/25"
                                                     >
 
-                                                        <div class="flex items-center min-w-0 gap-3">
+                                                        <div
+                                                            class="flex items-center min-w-0 gap-3"
+                                                        >
 
                                                             <div
                                                                 class="flex items-center justify-center flex-none text-xs font-black w-11 h-11 rounded-xl bg-cyan-500/20 text-cyan-200"
                                                             >
-                                                                {{ strtoupper($extension ?: 'FILE') }}
+                                                                {{ strtoupper(
+                                                                    $extension
+                                                                        ?: 'FILE'
+                                                                ) }}
                                                             </div>
 
-                                                            <div class="min-w-0">
+                                                            <div
+                                                                class="min-w-0"
+                                                            >
 
-                                                                <p class="text-sm font-bold truncate">
-                                                                    {{ basename($message->attachment) }}
+                                                                <p
+                                                                    class="text-sm font-bold truncate"
+                                                                >
+                                                                    {{ basename(
+                                                                        $message
+                                                                            ->attachment
+                                                                    ) }}
                                                                 </p>
 
-                                                                <p class="mt-1 text-xs opacity-60">
+                                                                <p
+                                                                    class="mt-1 text-xs opacity-60"
+                                                                >
                                                                     اضغط لفتح الملف
                                                                 </p>
 
@@ -578,7 +1113,9 @@
 
                                             @if ($isMine)
 
-                                                <div class="mt-2 text-xs text-left text-cyan-200">
+                                                <div
+                                                    class="mt-2 text-xs text-left text-cyan-200"
+                                                >
                                                     ✓✓
                                                 </div>
 
@@ -602,11 +1139,15 @@
                                         💬
                                     </div>
 
-                                    <h3 class="text-xl font-black text-white">
+                                    <h3
+                                        class="text-xl font-black text-white"
+                                    >
                                         لا توجد رسائل حتى الآن
                                     </h3>
 
-                                    <p class="mt-2 text-sm text-slate-500">
+                                    <p
+                                        class="mt-2 text-sm text-slate-500"
+                                    >
                                         ابدأ المحادثة بإرسال أول رسالة
                                     </p>
 
@@ -618,6 +1159,7 @@
 
                     </div>
 
+                    {{-- إرسال رسالة --}}
                     <div
                         class="p-4 border-t sm:p-6 border-white/10 bg-slate-950/40"
                     >
@@ -632,10 +1174,14 @@
                             class="space-y-4"
                             x-data="{
                                 fileName: '',
+
                                 selectFile(event) {
-                                    this.fileName = event.target.files[0]
-                                        ? event.target.files[0].name
-                                        : '';
+                                    this.fileName =
+                                        event.target.files[0]
+                                            ? event.target
+                                                .files[0]
+                                                .name
+                                            : '';
                                 }
                             }"
                         >
@@ -723,15 +1269,20 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const messagesContainer =
-                document.getElementById('messagesContainer');
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
+                const messagesContainer =
+                    document.getElementById(
+                        'messagesContainer'
+                    );
 
-            if (messagesContainer) {
-                messagesContainer.scrollTop =
-                    messagesContainer.scrollHeight;
+                if (messagesContainer) {
+                    messagesContainer.scrollTop =
+                        messagesContainer.scrollHeight;
+                }
             }
-        });
+        );
     </script>
 
 </x-app-layout>

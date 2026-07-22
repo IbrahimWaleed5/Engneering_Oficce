@@ -2,30 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Consultation;
 use App\Models\User;
 
 class EngineerProfileController extends Controller
 {
     public function show(User $user)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | السماح بعرض المهندس النشط فقط
-        |--------------------------------------------------------------------------
-        */
-
         abort_unless(
             $user->role === 'engineer'
             && $user->status === 'active'
             && $user->hasActiveEngineerMembership(),
             404
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | تحميل بيانات المهندس والأعمال والتقييمات
-        |--------------------------------------------------------------------------
-        */
 
         $user->load([
             'employeeProfile.specialty',
@@ -47,12 +36,6 @@ class EngineerProfileController extends Controller
             },
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | حساب متوسط التقييم وعدد التقييمات
-        |--------------------------------------------------------------------------
-        */
-
         $user->loadAvg(
             'receivedEngineerReviews',
             'rating'
@@ -62,9 +45,40 @@ class EngineerProfileController extends Controller
             'receivedEngineerReviews'
         );
 
+        $reviewableConsultation = null;
+
+        if (
+            auth()->check()
+            && auth()->id() !== $user->id
+        ) {
+            $reviewableConsultation = Consultation::query()
+                ->where(
+                    'customer_id',
+                    auth()->id()
+                )
+                ->where(
+                    'engineer_id',
+                    $user->id
+                )
+                ->where(
+                    'status',
+                    'completed'
+                )
+                ->where(
+                    'payment_status',
+                    'paid'
+                )
+                ->whereDoesntHave('review')
+                ->latest()
+                ->first();
+        }
+
         return view(
             'engineers.show',
-            compact('user')
+            compact(
+                'user',
+                'reviewableConsultation'
+            )
         );
     }
 }

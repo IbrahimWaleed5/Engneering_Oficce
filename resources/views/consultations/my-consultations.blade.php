@@ -30,17 +30,21 @@
             <div class="grid gap-6">
 
                 @forelse ($consultations as $consultation)
-                
 
                     <article
                         class="p-6 glass-card rounded-[2rem] fade-up"
                     >
 
-                        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div
+                            class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"
+                        >
 
+                            {{-- معلومات الاستشارة --}}
                             <div class="flex-1">
 
-                                <div class="flex flex-wrap items-center gap-3">
+                                <div
+                                    class="flex flex-wrap items-center gap-3"
+                                >
 
                                     <span
                                         class="px-3 py-2 text-xs font-bold border rounded-full border-white/10 bg-white/5 text-slate-300"
@@ -92,30 +96,108 @@
 
                                 </div>
 
-                                <h2 class="mt-5 text-2xl font-black text-white">
+                                <h2
+                                    class="mt-5 text-2xl font-black text-white"
+                                >
                                     {{ $consultation->title }}
                                 </h2>
 
-                                <div class="flex flex-wrap mt-5 text-sm gap-x-7 gap-y-3 text-slate-400">
+                                <div
+                                    class="flex flex-wrap mt-5 text-sm gap-x-7 gap-y-4 text-slate-400"
+                                >
 
+                                    {{-- نوع الاستشارة --}}
                                     <p class="flex items-center gap-2">
 
                                         <span>📐</span>
 
-                                        {{ $consultation->consultationType?->name
+                                        {{ $consultation
+                                            ->consultationType
+                                            ?->name
                                             ?? 'غير محدد' }}
 
                                     </p>
 
-                                    <p class="flex items-center gap-2">
+                                    {{-- المهندس --}}
+                                    @if ($consultation->engineer)
 
-                                        <span>👷</span>
+                                        <a
+                                            href="{{ route(
+                                                'engineers.show',
+                                                $consultation->engineer
+                                            ) }}"
+                                            class="flex items-center gap-3 transition hover:text-cyan-300"
+                                            title="فتح صفحة المهندس"
+                                        >
 
-                                        {{ $consultation->engineer?->name
-                                            ?? 'لم يتم تعيين مهندس' }}
+                                            @if (
+                                                $consultation
+                                                    ->engineer
+                                                    ->profile_photo
+                                            )
 
-                                    </p>
+                                                <img
+                                                    src="{{ asset(
+                                                        'storage/' .
+                                                        $consultation
+                                                            ->engineer
+                                                            ->profile_photo
+                                                    ) }}"
+                                                    alt="{{ $consultation
+                                                        ->engineer
+                                                        ->name }}"
+                                                    class="object-cover rounded-full w-9 h-9 ring-2 ring-cyan-500/30"
+                                                >
 
+                                            @else
+
+                                                <div
+                                                    class="flex items-center justify-center text-sm font-black text-white rounded-full w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500"
+                                                >
+                                                    {{ mb_substr(
+                                                        $consultation
+                                                            ->engineer
+                                                            ->name,
+                                                        0,
+                                                        1
+                                                    ) }}
+                                                </div>
+
+                                            @endif
+
+                                            <span>
+
+                                                <span
+                                                    class="block font-bold text-white"
+                                                >
+                                                    {{ $consultation
+                                                        ->engineer
+                                                        ->name }}
+                                                </span>
+
+                                                <span
+                                                    class="block mt-1 text-xs text-cyan-300"
+                                                >
+                                                    اضغط لعرض صفحة المهندس
+                                                </span>
+
+                                            </span>
+
+                                        </a>
+
+                                    @else
+
+                                        <p class="flex items-center gap-2">
+
+                                            <span>👷</span>
+
+                                            لم يتم تعيين مهندس
+
+                                        </p>
+
+                                    @endif
+
+                                    {{-- السعر --}}
                                     <p class="flex items-center gap-2">
 
                                         <span>💰</span>
@@ -124,6 +206,7 @@
                                             $consultation->final_price,
                                             2
                                         ) }}
+
                                         شيكل
 
                                     </p>
@@ -132,10 +215,12 @@
 
                             </div>
 
-                            <div class="flex flex-col gap-4 lg:min-w-[260px]">
+                            {{-- الإجراءات --}}
+                            <div
+                                class="flex flex-col gap-4 lg:min-w-[280px]"
+                            >
 
                                 {{-- حالة الدفع --}}
-
                                 <div
                                     class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.04]"
                                 >
@@ -172,8 +257,11 @@
 
                                 </div>
 
-                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                                <div
+                                    class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1"
+                                >
 
+                                    {{-- الدفع --}}
                                     @if ($consultation->payment_status === 'unpaid')
 
                                         <a
@@ -183,7 +271,7 @@
                                             ) }}"
                                             class="primary-button"
                                         >
-                                            أكمل الدفع
+                                            💳 أكمل الدفع
                                         </a>
 
                                     @elseif ($consultation->payment_status === 'pending')
@@ -196,37 +284,123 @@
 
                                     @endif
 
+                                    {{-- الملف النهائي --}}
                                     @if ($consultation->engineer_file)
 
-    <a
-        href="{{ asset(
-            'storage/' .
-            $consultation->engineer_file
-        ) }}"
-        target="_blank"
-        class="secondary-button"
-    >
-        تحميل الملف النهائي
-    </a>
+                                        <a
+                                            href="{{ asset(
+                                                'storage/' .
+                                                $consultation
+                                                    ->engineer_file
+                                            ) }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="secondary-button"
+                                        >
+                                            📥 تحميل الملف النهائي
+                                        </a>
 
-@endif
+                                    @endif
 
-@if (
-    $consultation->payment_status === 'paid'
-    && $consultation->engineer_id
-)
+                                    {{-- المحادثة --}}
+                                    @if (
+                                        $consultation->payment_status === 'paid'
+                                        && $consultation->engineer_id
+                                    )
 
-    <a
-        href="{{ route(
-            'consultations.messages.index',
-            $consultation
-        ) }}"
-        class="secondary-button"
-    >
-        المحادثة مع المهندس
-    </a>
+                                        <a
+                                            href="{{ route(
+                                                'consultations.messages.index',
+                                                $consultation
+                                            ) }}"
+                                            class="secondary-button"
+                                        >
+                                            💬 المحادثة مع المهندس
+                                        </a>
 
-@endif
+                                    @endif
+
+                                    {{-- صفحة المهندس --}}
+                                    @if ($consultation->engineer)
+
+                                        <a
+                                            href="{{ route(
+                                                'engineers.show',
+                                                $consultation->engineer
+                                            ) }}"
+                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold transition border text-cyan-200 rounded-xl border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-500/20"
+                                        >
+                                            👤 صفحة المهندس
+                                        </a>
+
+                                    @endif
+
+                                    {{-- التقييم --}}
+                                    @if (
+                                        $consultation->status === 'completed'
+                                        && $consultation->payment_status === 'paid'
+                                        && $consultation->engineer_id
+                                    )
+
+                                        @if ($consultation->review)
+
+                                            <div
+                                                class="px-5 py-3 text-center border rounded-xl border-yellow-500/20 bg-yellow-500/10"
+                                            >
+
+                                                <p
+                                                    class="font-black text-yellow-300"
+                                                >
+                                                    ⭐ تم تقييم المهندس
+                                                </p>
+
+                                                <div
+                                                    class="flex items-center justify-center gap-1 mt-2"
+                                                >
+
+                                                    @for (
+                                                        $star = 1;
+                                                        $star <= 5;
+                                                        $star++
+                                                    )
+
+                                                        <span
+                                                            class="{{ $star <= $consultation->review->rating
+                                                                ? 'text-yellow-400'
+                                                                : 'text-slate-700' }}"
+                                                        >
+                                                            ★
+                                                        </span>
+
+                                                    @endfor
+
+                                                </div>
+
+                                                <p
+                                                    class="mt-1 text-xs text-slate-400"
+                                                >
+                                                    {{ $consultation
+                                                        ->review
+                                                        ->rating }}/5
+                                                </p>
+
+                                            </div>
+
+                                        @else
+
+                                            <a
+                                                href="{{ route(
+                                                    'engineer-reviews.create',
+                                                    $consultation
+                                                ) }}"
+                                                class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition bg-yellow-600 rounded-xl hover:bg-yellow-500"
+                                            >
+                                                ⭐ تقييم المهندس
+                                            </a>
+
+                                        @endif
+
+                                    @endif
 
                                 </div>
 
@@ -246,7 +420,9 @@
                             📭
                         </div>
 
-                        <h2 class="text-2xl font-black text-white">
+                        <h2
+                            class="text-2xl font-black text-white"
+                        >
                             لا توجد استشارات حتى الآن
                         </h2>
 
@@ -270,6 +446,5 @@
         </div>
 
     </div>
-
 
 </x-app-layout>
