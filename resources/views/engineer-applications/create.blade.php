@@ -516,10 +516,10 @@
                         </h2>
 
                         <p class="mt-4 text-4xl font-black text-green-300">
-                            50
+                            150
 
                             <span class="text-lg">
-                                ₪
+                                ريال سعودي
                             </span>
 
                         </p>

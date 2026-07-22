@@ -17,6 +17,11 @@
 
             <div class="grid gap-8 lg:grid-cols-[1fr_360px]">
 
+                {{-- معلومات الدفع --}}
+                <div class="lg:col-span-2">
+                    <x-payment-information />
+                </div>
+
                 {{-- نموذج الدفع --}}
 
                 <section
@@ -386,3 +391,4 @@
     </div>
 
 </x-app-layout>
+
