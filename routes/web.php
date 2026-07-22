@@ -456,6 +456,18 @@ Route::middleware([
         [EngineerReviewController::class, 'store']
     )->name('engineer-reviews.store');
 });
+Route::post(
+    '/consultations/{consultation}/upload-engineer-file',
+    [
+        ConsultationController::class,
+        'uploadEngineerFile',
+    ]
+)
+    ->middleware([
+        'auth',
+        'role:admin,engineer',
+    ])
+    ->name('consultations.upload-engineer-file');
 require __DIR__.'/auth.php';
 
 
