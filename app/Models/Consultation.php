@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Models\EngineerReview;
 use Illuminate\Database\Eloquent\Model;
 
 class Consultation extends Model
@@ -50,6 +50,11 @@ public function files()
         ConsultationFile::class
     );
 }
-
+public function review()
+{
+    return $this->hasOne(
+        EngineerReview::class
+    );
+}
 }
 

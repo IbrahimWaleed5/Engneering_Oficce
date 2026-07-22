@@ -16,7 +16,7 @@ use App\Http\Controllers\EngineerSpecialtyController;
 use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\EngineerApplicationController;
 use App\Http\Middleware\EnsureActiveEngineerMembership;
-
+use App\Http\Controllers\EngineerReviewController;
 
 
 /*
@@ -441,6 +441,21 @@ Route::middleware([
             [EngineerApplicationController::class, 'reject']
         )->name('engineer-applications.reject');
     });
+    Route::middleware([
+    'auth',
+    'role:customer,engineer',
+])->group(function () {
+
+    Route::get(
+        '/consultations/{consultation}/review',
+        [EngineerReviewController::class, 'create']
+    )->name('engineer-reviews.create');
+
+    Route::post(
+        '/consultations/{consultation}/review',
+        [EngineerReviewController::class, 'store']
+    )->name('engineer-reviews.store');
+});
 require __DIR__.'/auth.php';
 
 

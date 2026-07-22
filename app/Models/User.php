@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\EngineerReview;
 
 
 class User extends Authenticatable
@@ -83,5 +84,37 @@ public function isInactiveEngineer(): bool
 {
     return $this->role === 'engineer'
         && ! $this->hasActiveEngineerMembership();
+}
+public function receivedEngineerReviews()
+{
+    return $this->hasMany(
+        EngineerReview::class,
+        'engineer_id'
+    );
+}
+
+public function writtenEngineerReviews()
+{
+    return $this->hasMany(
+        EngineerReview::class,
+        'customer_id'
+    );
+}
+
+public function getEngineerRatingAverageAttribute(): float
+{
+    return round(
+        (float) $this
+            ->receivedEngineerReviews()
+            ->avg('rating'),
+        1
+    );
+}
+
+public function getEngineerReviewsCountAttribute(): int
+{
+    return $this
+        ->receivedEngineerReviews()
+        ->count();
 }
 }

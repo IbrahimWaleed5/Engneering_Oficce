@@ -112,13 +112,6 @@ class ConsultationController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        /*
-         * لا يظهر في قائمة المهندسين إلا المهندس:
-         * 1. دوره مهندس.
-         * 2. حسابه فعال.
-         * 3. اشتراكه فعال.
-         * 4. تاريخ اشتراكه لم ينتهِ.
-         */
         $engineers = $this
             ->activeEngineersQuery()
             ->orderBy('name')
@@ -172,9 +165,6 @@ class ConsultationController extends Controller
             'هذا المهندس غير نشط حاليًا.'
         );
 
-        /*
-         * المهندس لا يستطيع طلب استشارة من نفسه.
-         */
         if (
             (int) $engineer->id
             === (int) $request->user()->id
@@ -261,7 +251,7 @@ class ConsultationController extends Controller
         $engineer = null;
 
         /*
-         * التحقق من أن المهندس المختار ما زال نشطًا
+         * التأكد من أن المهندس المختار نشط
          * واشتراكه لم ينتهِ.
          */
         if (! empty($validated['engineer_id'])) {
@@ -354,6 +344,7 @@ class ConsultationController extends Controller
         $consultations = Consultation::with([
             'consultationType',
             'engineer',
+            'review',
         ])
             ->where(
                 'customer_id',
@@ -389,9 +380,6 @@ class ConsultationController extends Controller
                 );
         }
 
-        /*
-         * المدير يرى فقط المهندسين النشطين.
-         */
         $engineers = $this
             ->activeEngineersQuery()
             ->orderBy('name')
@@ -441,9 +429,6 @@ class ConsultationController extends Controller
         $engineer = null;
 
         if (! empty($validated['engineer_id'])) {
-            /*
-             * لا يتم تعيين المهندس إذا انتهى اشتراكه.
-             */
             $engineer = $this
                 ->activeEngineersQuery()
                 ->where(
@@ -499,10 +484,6 @@ class ConsultationController extends Controller
     public function engineerConsultations(
         Request $request
     ) {
-        /*
-         * حتى لو دخل المهندس الرابط مباشرة،
-         * لا يستطيع فتح الصفحة بعد انتهاء اشتراكه.
-         */
         abort_unless(
             $request
                 ->user()
@@ -555,8 +536,8 @@ class ConsultationController extends Controller
         );
 
         /*
-         * المدير يستطيع رفع الملف دائمًا.
-         * المهندس لا يستطيع الرفع بعد انتهاء اشتراكه.
+         * المدير يستطيع رفع الملف.
+         * المهندس يجب أن يكون اشتراكه نشطًا.
          */
         if (
             ! $isAdmin
@@ -596,6 +577,10 @@ class ConsultationController extends Controller
                 'public'
             );
 
+        /*
+         * عند رفع الملف تصبح الاستشارة مكتملة،
+         * وبذلك يستطيع العميل تقييم المهندس.
+         */
         $consultation->update([
             'engineer_file' =>
                 $filePath,
@@ -612,7 +597,7 @@ class ConsultationController extends Controller
                     'الملف النهائي جاهز',
                     'تم رفع الملف النهائي للاستشارة رقم '
                         . $consultation->consultation_number
-                        . '.',
+                        . '. يمكنك الآن تقييم المهندس.',
                     '/my-consultations'
                 )
             );
@@ -620,7 +605,7 @@ class ConsultationController extends Controller
 
         return back()->with(
             'success',
-            'تم رفع الملف النهائي.'
+            'تم رفع الملف النهائي وأصبحت الاستشارة مكتملة.'
         );
     }
 
@@ -645,11 +630,6 @@ class ConsultationController extends Controller
                 === 'admin',
             403
         );
-
-        /*
-         * بعد انتهاء الاشتراك يبقى المهندس قادرًا
-         * على رؤية المحادثات القديمة فقط حسب السياسة الحالية.
-         */
 
         $consultation->load([
             'customer',
