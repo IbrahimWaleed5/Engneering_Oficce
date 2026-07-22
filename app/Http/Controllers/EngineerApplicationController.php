@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EmployeeProfile;
 use App\Models\EngineerApplication;
 use App\Models\EngineeringSpecialty;
+use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,68 +14,109 @@ class EngineerApplicationController extends Controller
 {
     public function create(Request $request)
     {
+        $user = $request->user();
+
         abort_unless(
-            $request->user()->role === 'customer',
+            in_array(
+                $user->role,
+                ['customer', 'engineer'],
+                true
+            ),
             403
         );
 
-        $hasPendingApplication = EngineerApplication::query()
-            ->where('user_id', $request->user()->id)
-            ->whereIn('status', [
-                'pending',
-                'approved',
-            ])
-            ->exists();
+        $hasPendingApplication =
+            EngineerApplication::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->exists();
 
         if ($hasPendingApplication) {
             return redirect()
                 ->route('dashboard')
                 ->with(
                     'error',
-                    'لديك طلب انضمام سابق قيد المعالجة.'
+                    'لديك طلب دفع قيد المراجعة حاليًا.'
                 );
         }
 
-        $specialties = EngineeringSpecialty::query()
-            ->orderBy('name')
-            ->get();
+        $user->loadMissing('employeeProfile');
+
+        $lastApproved =
+            EngineerApplication::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->latest('approved_at')
+                ->first();
+
+        $isRenewal =
+            $lastApproved !== null
+            && $user->employeeProfile !== null;
+
+        $specialties =
+            EngineeringSpecialty::query()
+                ->orderBy('name')
+                ->get();
 
         return view(
             'engineer-applications.create',
-            compact('specialties')
+            compact(
+                'specialties',
+                'isRenewal',
+                'lastApproved'
+            )
         );
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
+
         abort_unless(
-            $request->user()->role === 'customer',
+            in_array(
+                $user->role,
+                ['customer', 'engineer'],
+                true
+            ),
             403
         );
 
-        $hasPendingApplication = EngineerApplication::query()
-            ->where('user_id', $request->user()->id)
-            ->whereIn('status', [
-                'pending',
-                'approved',
-            ])
-            ->exists();
+        $hasPendingApplication =
+            EngineerApplication::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->exists();
 
         if ($hasPendingApplication) {
-            return back()->withErrors([
-                'application' =>
-                    'لديك طلب انضمام سابق قيد المعالجة.',
-            ]);
+            return back()
+                ->withErrors([
+                    'application' =>
+                        'لديك طلب دفع قيد المراجعة.',
+                ])
+                ->withInput();
         }
+
+        $user->loadMissing('employeeProfile');
+
+        $lastApproved =
+            EngineerApplication::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->latest('approved_at')
+                ->first();
+
+        $isRenewal =
+            $lastApproved !== null
+            && $user->employeeProfile !== null;
 
         $validated = $request->validate([
             'specialty_id' => [
-                'required',
+                $isRenewal ? 'nullable' : 'required',
                 'exists:engineering_specialties,id',
             ],
 
             'certificate_file' => [
-                'required',
+                $isRenewal ? 'nullable' : 'required',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
                 'max:10240',
@@ -95,21 +137,42 @@ class EngineerApplicationController extends Controller
             ],
         ]);
 
-        $certificatePath = $request
-            ->file('certificate_file')
-            ->store(
-                'engineer-applications/certificates',
-                'public'
-            );
+        $specialtyId =
+            $validated['specialty_id']
+            ?? $user->employeeProfile?->specialty_id
+            ?? $lastApproved?->specialty_id;
 
-        $receiptPath = $request
-            ->file('payment_receipt')
-            ->store(
-                'engineer-applications/receipts',
-                'public'
-            );
+        if (! $specialtyId) {
+            return back()
+                ->withErrors([
+                    'specialty_id' =>
+                        'يجب تحديد التخصص الهندسي.',
+                ])
+                ->withInput();
+        }
 
-        $cvPath = null;
+        $certificatePath =
+            $lastApproved?->certificate_file;
+
+        if ($request->hasFile('certificate_file')) {
+            $certificatePath = $request
+                ->file('certificate_file')
+                ->store(
+                    'engineer-applications/certificates',
+                    'public'
+                );
+        }
+
+        if (! $certificatePath) {
+            return back()
+                ->withErrors([
+                    'certificate_file' =>
+                        'يجب رفع الشهادة الهندسية.',
+                ])
+                ->withInput();
+        }
+
+        $cvPath = $lastApproved?->cv_file;
 
         if ($request->hasFile('cv_file')) {
             $cvPath = $request
@@ -120,13 +183,24 @@ class EngineerApplicationController extends Controller
                 );
         }
 
+        $receiptPath = $request
+            ->file('payment_receipt')
+            ->store(
+                'engineer-applications/receipts',
+                'public'
+            );
+
         EngineerApplication::create([
-            'user_id' => $request->user()->id,
-            'specialty_id' => $validated['specialty_id'],
+            'user_id' => $user->id,
+            'specialty_id' => $specialtyId,
             'certificate_file' => $certificatePath,
             'cv_file' => $cvPath,
             'payment_receipt' => $receiptPath,
             'amount' => 50,
+
+            'application_type' =>
+                $isRenewal ? 'renewal' : 'new',
+
             'payment_status' => 'pending',
             'status' => 'pending',
         ]);
@@ -135,18 +209,22 @@ class EngineerApplicationController extends Controller
             ->route('dashboard')
             ->with(
                 'success',
-                'تم إرسال طلب الانضمام وإيصال الدفع للإدارة.'
+                $isRenewal
+                    ? 'تم إرسال دفعة تجديد اشتراك المهندس.'
+                    : 'تم إرسال طلب الانضمام وإيصال الدفع.'
             );
     }
 
     public function index()
     {
-        $applications = EngineerApplication::with([
-            'user',
-            'specialty',
-        ])
-            ->latest()
-            ->paginate(15);
+        $applications =
+            EngineerApplication::query()
+                ->with([
+                    'user.employeeProfile',
+                    'specialty',
+                ])
+                ->latest()
+                ->paginate(15);
 
         return view(
             'engineer-applications.index',
@@ -158,14 +236,6 @@ class EngineerApplicationController extends Controller
         Request $request,
         EngineerApplication $engineerApplication
     ) {
-        $request->validate([
-            'admin_note' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-        ]);
-
         if ($engineerApplication->status === 'approved') {
             return back()->with(
                 'success',
@@ -173,48 +243,154 @@ class EngineerApplicationController extends Controller
             );
         }
 
-        DB::transaction(function () use (
-            $request,
-            $engineerApplication
-        ) {
-            $application = EngineerApplication::query()
-                ->with('user')
-                ->lockForUpdate()
-                ->findOrFail($engineerApplication->id);
-
-            $application->update([
-                'payment_status' => 'paid',
-                'status' => 'approved',
-                'admin_note' => $request->admin_note,
-            ]);
-
-            $application->user->update([
-                'role' => 'engineer',
-                'status' => 'active',
-            ]);
-
-            EmployeeProfile::updateOrCreate(
-                [
-                    'user_id' => $application->user_id,
-                ],
-                [
-                    'specialty_id' =>
-                        $application->specialty_id,
-                ]
+        if ($engineerApplication->status !== 'pending') {
+            return back()->with(
+                'error',
+                'تمت معالجة هذا الطلب سابقًا.'
             );
+        }
 
-            $application->user->notify(
-                new SystemNotification(
-                    'تم قبول طلب الانضمام',
-                    'تم تأكيد الدفع وتحويل حسابك إلى حساب مهندس.',
-                    '/dashboard'
-                )
-            );
-        });
+        $validated = $request->validate([
+            'membership_days' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:3650',
+            ],
+
+            'admin_note' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+        ], [
+            'membership_days.required' =>
+                'حدد عدد أيام اشتراك المهندس.',
+
+            'membership_days.integer' =>
+                'عدد أيام الاشتراك يجب أن يكون رقمًا صحيحًا.',
+
+            'membership_days.min' =>
+                'مدة الاشتراك يجب أن تكون يومًا واحدًا على الأقل.',
+
+            'membership_days.max' =>
+                'الحد الأقصى لمدة الاشتراك هو 3650 يومًا.',
+        ]);
+
+        $expiresAt = DB::transaction(
+            function () use (
+                $validated,
+                $engineerApplication
+            ) {
+                $application =
+                    EngineerApplication::query()
+                        ->lockForUpdate()
+                        ->findOrFail(
+                            $engineerApplication->id
+                        );
+
+                $user = User::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $application->user_id
+                    );
+
+                if (
+                    $user->engineer_active_until
+                    && $user->engineer_active_until->isFuture()
+                ) {
+                    $startsAt =
+                        $user->engineer_active_until->copy();
+                } else {
+                    $startsAt = now();
+                }
+
+                $expiresAt = $startsAt
+                    ->copy()
+                    ->addDays(
+                        (int) $validated['membership_days']
+                    );
+
+                $application->update([
+                    'payment_status' => 'paid',
+                    'status' => 'approved',
+
+                    'membership_days' =>
+                        (int) $validated['membership_days'],
+
+                    'membership_started_at' =>
+                        $startsAt,
+
+                    'membership_expires_at' =>
+                        $expiresAt,
+
+                    'approved_at' => now(),
+
+                    'admin_note' =>
+                        $validated['admin_note'] ?? null,
+                ]);
+
+                $user->update([
+                    'role' => 'engineer',
+                    'status' => 'active',
+
+                    'engineer_membership_status' =>
+                        'active',
+
+                    'engineer_active_until' =>
+                        $expiresAt,
+                ]);
+
+                $profile = EmployeeProfile::firstOrNew([
+                    'user_id' => $user->id,
+                ]);
+
+                $profile->specialty_id =
+                    $application->specialty_id;
+
+                $profile->employee_number =
+                    $profile->employee_number
+                    ?: sprintf(
+                        'EMP-%06d',
+                        $user->id
+                    );
+
+                $profile->job_title =
+                    $profile->job_title
+                    ?: 'مهندس';
+
+                $profile->salary =
+                    $profile->salary ?? 0;
+
+                $profile->hire_date =
+                    $profile->hire_date
+                    ?: now()->toDateString();
+
+                $profile->save();
+
+                return $expiresAt;
+            }
+        );
+
+        $user = $engineerApplication
+            ->user()
+            ->first();
+
+        $user?->notify(
+            new SystemNotification(
+                'تم تفعيل اشتراك المهندس',
+                'تم تأكيد الدفع وتفعيل حساب المهندس حتى تاريخ '
+                    . $expiresAt->format('Y-m-d H:i')
+                    . '.',
+                '/dashboard'
+            )
+        );
 
         return back()->with(
             'success',
-            'تم قبول الدفع وتحويل المستخدم إلى مهندس.'
+            'تم قبول الدفع وتفعيل المهندس لمدة '
+                . $validated['membership_days']
+                . ' يوم.'
         );
     }
 
@@ -222,12 +398,22 @@ class EngineerApplicationController extends Controller
         Request $request,
         EngineerApplication $engineerApplication
     ) {
+        if ($engineerApplication->status !== 'pending') {
+            return back()->with(
+                'error',
+                'تمت معالجة هذا الطلب سابقًا.'
+            );
+        }
+
         $validated = $request->validate([
             'admin_note' => [
                 'required',
                 'string',
                 'max:2000',
             ],
+        ], [
+            'admin_note.required' =>
+                'يجب كتابة سبب رفض الطلب.',
         ]);
 
         $engineerApplication->update([
@@ -236,13 +422,15 @@ class EngineerApplicationController extends Controller
             'admin_note' => $validated['admin_note'],
         ]);
 
-        $engineerApplication->user?->notify(
-            new SystemNotification(
-                'تم رفض طلب الانضمام',
-                $validated['admin_note'],
-                '/dashboard'
-            )
-        );
+        $engineerApplication
+            ->user
+            ?->notify(
+                new SystemNotification(
+                    'تم رفض دفعة اشتراك المهندس',
+                    $validated['admin_note'],
+                    '/dashboard'
+                )
+            );
 
         return back()->with(
             'success',

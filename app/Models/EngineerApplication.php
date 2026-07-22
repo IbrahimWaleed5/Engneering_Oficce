@@ -17,8 +17,19 @@ class EngineerApplication extends Model
         'payment_status',
         'status',
         'admin_note',
+        'application_type',
+        'membership_days',
+        'membership_started_at',
+        'membership_expires_at',
+        'approved_at',
     ];
-
+protected $casts = [
+    'amount' => 'decimal:2',
+    'membership_days' => 'integer',
+    'membership_started_at' => 'datetime',
+    'membership_expires_at' => 'datetime',
+    'approved_at' => 'datetime',
+];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

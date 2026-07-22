@@ -19,12 +19,12 @@
                     </p>
 
                     <h1 class="text-3xl font-black text-white">
-                        طلبات توظيف المهندسين
+                        طلبات واشتراكات المهندسين
                     </h1>
 
                     <p class="mt-3 leading-7 text-slate-400">
-                        مراجعة بيانات المتقدمين والشهادات وإيصالات الدفع،
-                        ثم قبول أو رفض الطلب.
+                        مراجعة طلبات الانضمام ودفعات التجديد،
+                        وتحديد عدد أيام تفعيل حساب المهندس.
                     </p>
 
                 </div>
@@ -84,8 +84,8 @@
 
             @endif
 
-            {{-- ملخص --}}
-            <div class="grid gap-5 mb-8 sm:grid-cols-2">
+            {{-- الملخص --}}
+            <div class="grid gap-5 mb-8 sm:grid-cols-2 lg:grid-cols-4">
 
                 <div
                     class="p-6 border shadow rounded-3xl bg-slate-900/90 border-slate-800"
@@ -106,11 +106,45 @@
                 >
 
                     <p class="text-sm text-slate-400">
-                        الطلبات المعروضة في الصفحة
+                        طلبات الصفحة
                     </p>
 
                     <p class="mt-3 text-3xl font-black text-cyan-300">
                         {{ $applications->count() }}
+                    </p>
+
+                </div>
+
+                <div
+                    class="p-6 border shadow rounded-3xl bg-slate-900/90 border-slate-800"
+                >
+
+                    <p class="text-sm text-slate-400">
+                        قيد المراجعة
+                    </p>
+
+                    <p class="mt-3 text-3xl font-black text-yellow-300">
+                        {{ $applications
+                            ->getCollection()
+                            ->where('status', 'pending')
+                            ->count() }}
+                    </p>
+
+                </div>
+
+                <div
+                    class="p-6 border shadow rounded-3xl bg-slate-900/90 border-slate-800"
+                >
+
+                    <p class="text-sm text-slate-400">
+                        دفعات تجديد
+                    </p>
+
+                    <p class="mt-3 text-3xl font-black text-purple-300">
+                        {{ $applications
+                            ->getCollection()
+                            ->where('application_type', 'renewal')
+                            ->count() }}
                     </p>
 
                 </div>
@@ -164,6 +198,15 @@
                             'rejected' => 'الدفع مرفوض',
                             default => 'الدفع قيد الفحص',
                         };
+
+                        $isRenewal =
+                            $application->application_type
+                            === 'renewal';
+
+                        $userHasActiveMembership =
+                            $application->user
+                            && $application->user
+                                ->hasActiveEngineerMembership();
                     @endphp
 
                     <article
@@ -190,13 +233,49 @@
                                 <div>
 
                                     <h2 class="text-xl font-black text-white">
-                                        {{ $application->user?->name ?? 'مستخدم غير معروف' }}
+                                        {{ $application->user?->name
+                                            ?? 'مستخدم غير معروف' }}
                                     </h2>
 
-                                    <p class="mt-1 text-sm text-slate-400">
-                                        طلب رقم:
-                                        #{{ $application->id }}
-                                    </p>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2 mt-2"
+                                    >
+
+                                        <span class="text-sm text-slate-400">
+                                            طلب رقم:
+                                            #{{ $application->id }}
+                                        </span>
+
+                                        <span
+                                            class="px-3 py-1 text-xs font-bold rounded-full
+                                            {{ $isRenewal
+                                                ? 'text-purple-200 bg-purple-500/10'
+                                                : 'text-blue-200 bg-blue-500/10' }}"
+                                        >
+                                            {{ $isRenewal
+                                                ? 'تجديد اشتراك'
+                                                : 'انضمام جديد' }}
+                                        </span>
+
+                                        @if (
+                                            $application->user?->role
+                                            === 'engineer'
+                                        )
+
+                                            <span
+                                                class="px-3 py-1 text-xs font-bold rounded-full
+                                                {{ $userHasActiveMembership
+                                                    ? 'text-green-200 bg-green-500/10'
+                                                    : 'text-orange-200 bg-orange-500/10' }}"
+                                            >
+                                                {{ $userHasActiveMembership
+                                                    ? 'مهندس نشط'
+                                                    : 'مهندس غير نشط' }}
+                                            </span>
+
+                                        @endif
+
+                                    </div>
 
                                 </div>
 
@@ -230,7 +309,8 @@
                                         </p>
 
                                         <p class="mt-2 font-bold text-white">
-                                            {{ $application->user?->name ?? 'غير معروف' }}
+                                            {{ $application->user?->name
+                                                ?? 'غير معروف' }}
                                         </p>
 
                                     </div>
@@ -246,7 +326,8 @@
                                         <p
                                             class="mt-2 font-bold text-white break-all"
                                         >
-                                            {{ $application->user?->email ?? 'غير متوفر' }}
+                                            {{ $application->user?->email
+                                                ?? 'غير متوفر' }}
                                         </p>
 
                                     </div>
@@ -260,7 +341,8 @@
                                         </p>
 
                                         <p class="mt-2 font-bold text-white">
-                                            {{ $application->user?->phone ?? 'غير متوفر' }}
+                                            {{ $application->user?->phone
+                                                ?? 'غير متوفر' }}
                                         </p>
 
                                     </div>
@@ -274,10 +356,61 @@
                                         </p>
 
                                         <p class="mt-2 font-bold text-cyan-300">
-                                            {{ $application->specialty?->name ?? 'غير محدد' }}
+                                            {{ $application->specialty?->name
+                                                ?? 'غير محدد' }}
                                         </p>
 
                                     </div>
+
+                                    <div
+                                        class="p-4 rounded-2xl bg-slate-950/70"
+                                    >
+
+                                        <p class="text-xs text-slate-500">
+                                            نوع الطلب
+                                        </p>
+
+                                        <p
+                                            class="mt-2 font-bold
+                                            {{ $isRenewal
+                                                ? 'text-purple-300'
+                                                : 'text-blue-300' }}"
+                                        >
+                                            {{ $isRenewal
+                                                ? 'تجديد اشتراك المهندس'
+                                                : 'طلب انضمام جديد' }}
+                                        </p>
+
+                                    </div>
+
+                                    @if (
+                                        $application->user
+                                            ?->engineer_active_until
+                                    )
+
+                                        <div
+                                            class="p-4 rounded-2xl bg-slate-950/70"
+                                        >
+
+                                            <p class="text-xs text-slate-500">
+                                                انتهاء الاشتراك الحالي
+                                            </p>
+
+                                            <p
+                                                class="mt-2 font-bold
+                                                {{ $userHasActiveMembership
+                                                    ? 'text-green-300'
+                                                    : 'text-orange-300' }}"
+                                            >
+                                                {{ $application
+                                                    ->user
+                                                    ->engineer_active_until
+                                                    ->format('Y-m-d H:i') }}
+                                            </p>
+
+                                        </div>
+
+                                    @endif
 
                                 </div>
 
@@ -308,7 +441,7 @@
                                                 class="mt-2 text-2xl font-black text-green-300"
                                             >
                                                 {{ number_format(
-                                                    $application->amount,
+                                                    (float) $application->amount,
                                                     2
                                                 ) }}
                                                 ₪
@@ -328,22 +461,26 @@
 
                                 <div class="grid gap-3">
 
-                                    <a
-                                        href="{{ asset(
-                                            'storage/' .
-                                            $application->certificate_file
-                                        ) }}"
-                                        target="_blank"
-                                        class="flex items-center justify-between gap-3 p-4 font-bold text-white transition border rounded-2xl border-slate-700 bg-slate-950/70 hover:border-purple-500"
-                                    >
-                                        <span>
-                                            🎓 الشهادة الهندسية
-                                        </span>
+                                    @if ($application->certificate_file)
 
-                                        <span class="text-purple-300">
-                                            عرض
-                                        </span>
-                                    </a>
+                                        <a
+                                            href="{{ asset(
+                                                'storage/' .
+                                                $application->certificate_file
+                                            ) }}"
+                                            target="_blank"
+                                            class="flex items-center justify-between gap-3 p-4 font-bold text-white transition border rounded-2xl border-slate-700 bg-slate-950/70 hover:border-purple-500"
+                                        >
+                                            <span>
+                                                🎓 الشهادة الهندسية
+                                            </span>
+
+                                            <span class="text-purple-300">
+                                                عرض
+                                            </span>
+                                        </a>
+
+                                    @endif
 
                                     @if ($application->cv_file)
 
@@ -374,27 +511,32 @@
 
                                     @endif
 
-                                    <a
-                                        href="{{ asset(
-                                            'storage/' .
-                                            $application->payment_receipt
-                                        ) }}"
-                                        target="_blank"
-                                        class="flex items-center justify-between gap-3 p-4 font-bold text-white transition border rounded-2xl border-slate-700 bg-slate-950/70 hover:border-green-500"
-                                    >
-                                        <span>
-                                            🧾 إيصال الدفع
-                                        </span>
+                                    @if ($application->payment_receipt)
 
-                                        <span class="text-green-300">
-                                            عرض
-                                        </span>
-                                    </a>
+                                        <a
+                                            href="{{ asset(
+                                                'storage/' .
+                                                $application->payment_receipt
+                                            ) }}"
+                                            target="_blank"
+                                            class="flex items-center justify-between gap-3 p-4 font-bold text-white transition border rounded-2xl border-slate-700 bg-slate-950/70 hover:border-green-500"
+                                        >
+                                            <span>
+                                                🧾 إيصال الدفع
+                                            </span>
+
+                                            <span class="text-green-300">
+                                                عرض
+                                            </span>
+                                        </a>
+
+                                    @endif
 
                                 </div>
 
                                 <p class="mt-4 text-xs text-slate-500">
                                     تاريخ تقديم الطلب:
+
                                     {{ $application->created_at?->format(
                                         'Y-m-d h:i A'
                                     ) }}
@@ -424,14 +566,54 @@
                                         @csrf
                                         @method('PATCH')
 
+                                        <div class="mb-4">
+
+                                            <label
+                                                for="membership-days-{{ $application->id }}"
+                                                class="block mb-2 text-sm font-bold text-green-200"
+                                            >
+                                                عدد أيام تفعيل المهندس
+
+                                                <span class="text-red-400">
+                                                    *
+                                                </span>
+
+                                            </label>
+
+                                            <input
+                                                id="membership-days-{{ $application->id }}"
+                                                name="membership_days"
+                                                type="number"
+                                                min="1"
+                                                max="3650"
+                                                value="{{ old(
+                                                    'membership_days',
+                                                    30
+                                                ) }}"
+                                                required
+                                                class="w-full px-4 py-3 text-white border outline-none rounded-2xl border-slate-700 bg-slate-950 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                                            >
+
+                                            <p
+                                                class="mt-2 text-xs leading-6 text-slate-500"
+                                            >
+                                                مثال: 30 أو 90 أو 365 يومًا.
+                                                عند التجديد قبل انتهاء الاشتراك
+                                                تضاف الأيام إلى المدة الحالية.
+                                            </p>
+
+                                        </div>
+
                                         <label
                                             for="approve-note-{{ $application->id }}"
                                             class="block mb-2 text-sm font-bold text-green-200"
                                         >
                                             ملاحظة الموافقة
+
                                             <span class="font-normal text-slate-500">
                                                 — اختياري
                                             </span>
+
                                         </label>
 
                                         <textarea
@@ -440,19 +622,23 @@
                                             rows="3"
                                             placeholder="اكتب ملاحظة للمهندس..."
                                             class="w-full px-4 py-3 text-sm text-white border outline-none resize-none rounded-2xl border-slate-700 bg-slate-950 focus:border-green-500"
-                                        ></textarea>
+                                        >{{ old('admin_note') }}</textarea>
 
                                         <button
                                             type="submit"
                                             onclick="
                                                 return confirm(
-                                                    'هل أنت متأكد من قبول الطلب وتحويل الحساب إلى مهندس؟'
+                                                    'هل أنت متأكد من تأكيد الدفع وتفعيل المهندس للمدة المحددة؟'
                                                 );
                                             "
                                             class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-4 font-black text-white transition bg-green-600 rounded-2xl hover:bg-green-500"
                                         >
                                             <span>✅</span>
-                                            تأكيد الدفع وقبول الطلب
+
+                                            {{ $isRenewal
+                                                ? 'قبول التجديد وتفعيل المهندس'
+                                                : 'تأكيد الدفع وقبول الطلب' }}
+
                                         </button>
 
                                     </form>
@@ -475,7 +661,11 @@
                                             class="block mb-2 text-sm font-bold text-red-200"
                                         >
                                             سبب الرفض
-                                            <span class="text-red-400">*</span>
+
+                                            <span class="text-red-400">
+                                                *
+                                            </span>
+
                                         </label>
 
                                         <textarea
@@ -514,16 +704,85 @@
 
                                         <p class="mt-2 text-sm text-slate-400">
                                             الحالة الحالية:
+
                                             <span class="font-bold">
                                                 {{ $statusText }}
                                             </span>
+
                                         </p>
+
+                                        @if ($application->membership_days)
+
+                                            <p class="mt-3 text-sm text-slate-400">
+                                                مدة التفعيل:
+
+                                                <span class="font-bold text-white">
+                                                    {{ $application
+                                                        ->membership_days }}
+                                                    يومًا
+                                                </span>
+
+                                            </p>
+
+                                        @endif
+
+                                        @if (
+                                            $application
+                                                ->membership_started_at
+                                        )
+
+                                            <p class="mt-3 text-sm text-slate-400">
+                                                بداية المدة:
+
+                                                <span class="font-bold text-cyan-300">
+                                                    {{ $application
+                                                        ->membership_started_at
+                                                        ->format('Y-m-d H:i') }}
+                                                </span>
+
+                                            </p>
+
+                                        @endif
+
+                                        @if (
+                                            $application
+                                                ->membership_expires_at
+                                        )
+
+                                            <p class="mt-3 text-sm text-slate-400">
+                                                انتهاء المدة:
+
+                                                <span class="font-bold text-orange-300">
+                                                    {{ $application
+                                                        ->membership_expires_at
+                                                        ->format('Y-m-d H:i') }}
+                                                </span>
+
+                                            </p>
+
+                                        @endif
+
+                                        @if ($application->approved_at)
+
+                                            <p class="mt-3 text-sm text-slate-400">
+                                                تاريخ الموافقة:
+
+                                                <span class="font-bold text-green-300">
+                                                    {{ $application
+                                                        ->approved_at
+                                                        ->format('Y-m-d H:i') }}
+                                                </span>
+
+                                            </p>
+
+                                        @endif
 
                                         @if ($application->admin_note)
 
                                             <div
                                                 class="p-4 mt-4 text-sm leading-7 rounded-xl bg-slate-900 text-slate-300"
                                             >
+
                                                 <p
                                                     class="mb-1 text-xs font-bold text-slate-500"
                                                 >
@@ -531,6 +790,7 @@
                                                 </p>
 
                                                 {{ $application->admin_note }}
+
                                             </div>
 
                                         @endif
@@ -556,11 +816,11 @@
                         </div>
 
                         <h2 class="text-2xl font-black text-white">
-                            لا توجد طلبات توظيف
+                            لا توجد طلبات أو دفعات تجديد
                         </h2>
 
                         <p class="mt-3 text-slate-400">
-                            ستظهر طلبات الانضمام كمهندس هنا بعد تقديمها.
+                            ستظهر طلبات الانضمام ودفعات التجديد هنا.
                         </p>
 
                     </div>

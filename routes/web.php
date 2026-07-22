@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EngineerSpecialtyController;
 use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\EngineerApplicationController;
+use App\Http\Middleware\EnsureActiveEngineerMembership;
 
 
 
@@ -78,7 +79,7 @@ Route::get('/my-consultations', [
 ])
     ->middleware([
         'auth',
-        'role:customer',
+        'role:customer,engineer,admin',
     ])
     ->name('consultations.mine');
 
@@ -88,15 +89,7 @@ Route::get('/my-consultations', [
 |--------------------------------------------------------------------------
 */
 
-Route::get('/my-consultations', [
-    ConsultationController::class,
-    'myConsultations',
-])
-    ->middleware([
-        'auth',
-        'role:customer,engineer,admin',
-    ])
-    ->name('consultations.mine');;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -160,9 +153,9 @@ Route::get('/engineer/consultations', [
     ->middleware([
         'auth',
         'role:engineer',
+        EnsureActiveEngineerMembership::class,
     ])
     ->name('engineer.consultations');
-
 Route::post(
     '/consultations/{consultation}/upload-engineer-file',
     [
@@ -271,6 +264,7 @@ Route::get('/engineer-library/{engineerWork}', [
 Route::middleware([
     'auth',
     'role:engineer',
+    EnsureActiveEngineerMembership::class,
 ])->group(function () {
 
     Route::get('/engineer/my-works', [
@@ -314,10 +308,7 @@ Route::middleware([
         'reject',
     ])->name('admin.engineer-works.reject');
 });
-Route::get('/engineer-works/{engineerWork}', [
-    EngineerWorkController::class,
-    'show',
-])->name('engineer.works.show');
+
 /*
 |--------------------------------------------------------------------------
 | محادثات الاستشارات
@@ -348,85 +339,17 @@ Route::middleware(['auth'])->group(function () {
         ->except(['show']);
 
 });
-Route::middleware('auth')->group(function () {
 
-    Route::get(
-        '/users',
-        [UserController::class, 'index']
-    )->name('users.index');
-
-    Route::get(
-        '/users/{user}/edit',
-        [UserController::class, 'edit']
-    )->name('users.edit');
-
-    Route::patch(
-        '/users/{user}',
-        [UserController::class, 'update']
-    )->name('users.update');
-
-    Route::delete(
-        '/users/{user}',
-        [UserController::class, 'destroy']
-    )->name('users.destroy');
-
-});
-Route::middleware('auth')->group(function () {
-
-    Route::get(
-        '/users',
-        [UserController::class, 'index']
-    )->name('users.index');
-
-    Route::get(
-        '/users/create',
-        [UserController::class, 'create']
-    )->name('users.create');
-
-    Route::post(
-        '/users',
-        [UserController::class, 'store']
-    )->name('users.store');
-
-    Route::get(
-        '/users/{user}/edit',
-        [UserController::class, 'edit']
-    )->name('users.edit');
-
-    Route::patch(
-        '/users/{user}',
-        [UserController::class, 'update']
-    )->name('users.update');
-
-    Route::delete(
-        '/users/{user}',
-        [UserController::class, 'destroy']
-    )->name('users.destroy');
-
-});
 Route::patch(
     '/payments/{payment}/reject',
     [PaymentController::class, 'reject']
 )->name('payments.reject');
-Route::post(
-    '/consultations/{consultation}/upload-engineer-file',
-    [ConsultationController::class, 'uploadEngineerFile']
-)->name('consultations.upload-engineer-file');
-Route::middleware(['auth', 'role:customer,admin'])->group(function () {
 
-    Route::get(
-        '/consultations/create/{engineer}',
-        [ConsultationController::class, 'create']
-    )->name('consultations.create-for-engineer');
-
-    Route::get('/consultations/create', [ConsultationController::class, 'create'])
-        ->name('consultations.create');
-
-    Route::post('/consultations', [ConsultationController::class, 'store'])
-        ->name('consultations.store');
-});
-
-    Route::middleware(['auth', 'role:engineer,admin'])
+    Route::middleware([
+    'auth',
+    'role:engineer,admin',
+    EnsureActiveEngineerMembership::class,
+])
     ->prefix('engineer')
     ->name('engineer.')
     ->group(function () {
@@ -447,7 +370,7 @@ Route::middleware(['auth', 'role:customer,admin'])->group(function () {
 )->name('engineers.show');
 Route::middleware([
     'auth',
-    'role:customer',
+    'role:customer,engineer',
 ])->group(function () {
 
     Route::get(

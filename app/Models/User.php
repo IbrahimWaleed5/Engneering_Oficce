@@ -19,6 +19,8 @@ protected $fillable = [
     'profile_photo',
     'role',
     'status',
+    'engineer_membership_status',
+    'engineer_active_until',
 ];
 
     protected $hidden = [
@@ -31,6 +33,7 @@ protected $fillable = [
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'engineer_active_until' => 'datetime',
         ];
     }
 
@@ -67,5 +70,18 @@ public function engineerApplications()
     return $this->hasMany(
         EngineerApplication::class
     );
+}
+public function hasActiveEngineerMembership(): bool
+{
+    return $this->role === 'engineer'
+        && $this->engineer_membership_status === 'active'
+        && $this->engineer_active_until !== null
+        && $this->engineer_active_until->isFuture();
+}
+
+public function isInactiveEngineer(): bool
+{
+    return $this->role === 'engineer'
+        && ! $this->hasActiveEngineerMembership();
 }
 }

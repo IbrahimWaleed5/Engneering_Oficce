@@ -2,6 +2,22 @@
 
     @auth
 
+        @php
+            $currentUser = auth()->user();
+
+            $isActiveEngineer =
+                $currentUser->role === 'engineer'
+                && $currentUser->hasActiveEngineerMembership();
+
+            $isInactiveEngineer =
+                $currentUser->role === 'engineer'
+                && ! $currentUser->hasActiveEngineerMembership();
+
+            $actsAsCustomer =
+                $currentUser->role === 'customer'
+                || $isInactiveEngineer;
+        @endphp
+
         <div
             class="py-10"
             dir="rtl"
@@ -25,7 +41,7 @@
                         </p>
 
                         <h1 class="mb-3 text-3xl font-bold text-white">
-                            {{ auth()->user()->name }}
+                            {{ $currentUser->name }}
                         </h1>
 
                         <p class="text-blue-100">
@@ -35,6 +51,87 @@
                     </div>
 
                 </div>
+
+                {{-- حالة اشتراك المهندس --}}
+                @if ($currentUser->role === 'engineer')
+
+                    <div
+                        class="p-5 mb-6 border rounded-2xl
+                        {{ $isActiveEngineer
+                            ? 'border-green-500/30 bg-green-500/10'
+                            : 'border-orange-500/30 bg-orange-500/10' }}"
+                    >
+
+                        <div
+                            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                        >
+
+                            <div class="flex items-start gap-4">
+
+                                <div
+                                    class="flex items-center justify-center flex-none w-12 h-12 text-2xl rounded-xl
+                                    {{ $isActiveEngineer
+                                        ? 'bg-green-500/20'
+                                        : 'bg-orange-500/20' }}"
+                                >
+                                    {{ $isActiveEngineer ? '✅' : '⚠️' }}
+                                </div>
+
+                                <div>
+
+                                    <h2
+                                        class="text-xl font-black
+                                        {{ $isActiveEngineer
+                                            ? 'text-green-200'
+                                            : 'text-orange-200' }}"
+                                    >
+                                        {{ $isActiveEngineer
+                                            ? 'مهندس نشط'
+                                            : 'مهندس غير نشط' }}
+                                    </h2>
+
+                                    <p class="mt-2 text-sm leading-7 text-slate-300">
+
+                                        @if ($isActiveEngineer)
+
+                                            اشتراك المهندس فعال حتى:
+
+                                            <span class="font-black text-white">
+                                                {{ $currentUser
+                                                    ->engineer_active_until
+                                                    ?->format('Y-m-d H:i') }}
+                                            </span>
+
+                                        @else
+
+                                            انتهت مدة اشتراك المهندس.
+                                            يمكنك استخدام الموقع كعميل ورفع
+                                            إيصال دفع جديد لإعادة جميع صلاحياتك.
+
+                                        @endif
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            <a
+                                href="{{ route('engineer-applications.create') }}"
+                                class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition bg-purple-600 rounded-xl hover:bg-purple-500"
+                            >
+                                <span>💳</span>
+
+                                {{ $isActiveEngineer
+                                    ? 'تجديد الاشتراك'
+                                    : 'إعادة تفعيل الحساب' }}
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                @endif
 
                 {{-- رسالة النجاح --}}
                 @if (session('success'))
@@ -81,11 +178,10 @@
 
                 @endif
 
-
                 {{-- =========================
-                    لوحة العميل
+                    لوحة العميل أو المهندس غير النشط
                 ========================== --}}
-                @if (auth()->user()->role === 'customer')
+                @if ($actsAsCustomer)
 
                     <div
                         class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
@@ -152,12 +248,13 @@
                             </h2>
 
                             <p class="text-sm leading-7 text-slate-400">
-                                تصفح أعمال المهندسين وأرسل طلبك لمهندس محدد.
+                                تصفح أعمال المهندسين النشطين وأرسل طلبك
+                                لمهندس محدد.
                             </p>
 
                         </a>
 
-                        {{-- طلب الانضمام كمهندس --}}
+                        {{-- طلب الانضمام أو التجديد --}}
                         <a
                             href="{{ route('engineer-applications.create') }}"
                             class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-purple-500"
@@ -166,29 +263,36 @@
                             <div
                                 class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-purple-600/20"
                             >
-                                👷
+                                {{ $isInactiveEngineer ? '💳' : '👷' }}
                             </div>
 
                             <h2 class="mb-2 text-xl font-bold text-white">
-                                طلب التوظيف كمهندس
+
+                                {{ $isInactiveEngineer
+                                    ? 'تجديد اشتراك المهندس'
+                                    : 'طلب التوظيف كمهندس' }}
+
                             </h2>
 
                             <p class="text-sm leading-7 text-slate-400">
-                                ارفع الشهادة والسيرة الذاتية وإيصال الدفع لتقديم طلب الانضمام.
+
+                                {{ $isInactiveEngineer
+                                    ? 'ارفع إيصال دفع جديد لإعادة تفعيل جميع صلاحيات المهندس مع الاحتفاظ ببياناتك وأعمالك.'
+                                    : 'ارفع الشهادة والسيرة الذاتية وإيصال الدفع لتقديم طلب الانضمام.' }}
+
                             </p>
 
                         </a>
 
                     </div>
 
-
                 {{-- =========================
-                    لوحة المهندس
+                    لوحة المهندس النشط
                 ========================== --}}
-                @elseif (auth()->user()->role === 'engineer')
+                @elseif ($isActiveEngineer)
 
                     <div
-                        class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                        class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
                     >
 
                         {{-- الاستشارات المسندة --}}
@@ -230,7 +334,7 @@
                             </h2>
 
                             <p class="mt-2 text-sm leading-7 text-slate-400">
-                                أضف مشاريعك وصور الإنجازات السابقة.
+                                تابع مشاريعك وصور الإنجازات السابقة.
                             </p>
 
                         </a>
@@ -257,13 +361,56 @@
 
                         </a>
 
-                    </div>
+                        {{-- طلب استشارة كعميل --}}
+                        <a
+                            href="{{ route('consultations.create') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-orange-500"
+                        >
 
+                            <div
+                                class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-orange-600/20"
+                            >
+                                📝
+                            </div>
+
+                            <h2 class="text-xl font-bold text-white">
+                                طلب استشارة
+                            </h2>
+
+                            <p class="mt-2 text-sm leading-7 text-slate-400">
+                                اطلب استشارة من مهندس آخر.
+                            </p>
+
+                        </a>
+
+                        {{-- استشاراته كعميل --}}
+                        <a
+                            href="{{ route('consultations.mine') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-purple-500"
+                        >
+
+                            <div
+                                class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-purple-600/20"
+                            >
+                                📋
+                            </div>
+
+                            <h2 class="text-xl font-bold text-white">
+                                استشاراتي كعميل
+                            </h2>
+
+                            <p class="mt-2 text-sm leading-7 text-slate-400">
+                                تابع الاستشارات التي طلبتها من مهندسين آخرين.
+                            </p>
+
+                        </a>
+
+                    </div>
 
                 {{-- =========================
                     لوحة المدير
                 ========================== --}}
-                @elseif (auth()->user()->role === 'admin')
+                @elseif ($currentUser->role === 'admin')
 
                     <div
                         class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
@@ -369,7 +516,7 @@
 
                         </a>
 
-                        {{-- طلبات توظيف المهندسين --}}
+                        {{-- طلبات المهندسين --}}
                         <a
                             href="{{ route('engineer-applications.index') }}"
                             class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-orange-500"
@@ -380,17 +527,16 @@
                             </div>
 
                             <h2 class="font-bold text-white">
-                                طلبات توظيف المهندسين
+                                طلبات واشتراكات المهندسين
                             </h2>
 
                             <p class="mt-2 text-sm leading-6 text-slate-400">
-                                مراجعة الطلب والدفع وتحويل الحساب إلى مهندس.
+                                مراجعة طلبات الانضمام والتجديد وتحديد مدة التفعيل.
                             </p>
 
                         </a>
 
                     </div>
-
 
                 {{-- =========================
                     لوحة الموظف
