@@ -403,4 +403,27 @@ public function store(Request $request)
             'تم رفع الملف النهائي'
         );
     }
+    public function chat(
+    Request $request,
+    Consultation $consultation
+) {
+    abort_unless(
+        $request->user()->id === $consultation->customer_id
+        || $request->user()->id === $consultation->engineer_id
+        || $request->user()->role === 'admin',
+        403
+    );
+
+    $consultation->load([
+        'customer',
+        'engineer',
+        'consultationType',
+        'messages.sender',
+    ]);
+
+    return view(
+        'consultations.chat',
+        compact('consultation')
+    );
+}
 }

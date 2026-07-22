@@ -30,20 +30,7 @@
             <div class="grid gap-6">
 
                 @forelse ($consultations as $consultation)
-                 @if(
-    $consultation->payment_status === 'paid'
-    && $consultation->engineer_id
-)
-    <a
-        href="{{ route(
-            'consultations.messages.index',
-            $consultation
-        ) }}"
-        class="secondary-button"
-    >
-        المحادثة
-    </a>
-@endif
+                
 
                     <article
                         class="p-6 glass-card rounded-[2rem] fade-up"

@@ -459,6 +459,8 @@ Route::middleware(['auth', 'role:customer,admin'])->group(function () {
     '/engineers/{user}',
     [EngineerProfileController::class, 'show']
 )->name('engineers.show');
+
+
 require __DIR__.'/auth.php';
 
 
