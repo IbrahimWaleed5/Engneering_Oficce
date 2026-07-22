@@ -156,7 +156,7 @@
                         <x-slot name="trigger">
 
                      <button
-    class="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700"
+    class="flex items-center gap-2 px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700"
 >
 
     <div class="relative">
@@ -166,7 +166,7 @@
             <img
                 src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                 alt="{{ auth()->user()->name }}"
-                class="object-cover border-2 rounded-full w-11 h-11 border-cyan-500"
+            class="object-cover border-2 rounded-full w-9 h-9 border-cyan-500"
             >
 
         @else
