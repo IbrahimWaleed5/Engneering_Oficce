@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EngineerSpecialtyController;
 use App\Http\Controllers\EngineerProfileController;
+use App\Http\Controllers\EngineerApplicationController;
 
 
 
@@ -70,21 +71,6 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([
-    'auth',
-    'role:customer,admin',
-])->group(function () {
-
-    Route::get('/consultations/create', [
-        ConsultationController::class,
-        'create',
-    ])->name('consultations.create');
-
-    Route::post('/consultations', [
-        ConsultationController::class,
-        'store',
-    ])->name('consultations.store');
-});
 
 Route::get('/my-consultations', [
     ConsultationController::class,
@@ -102,15 +88,15 @@ Route::get('/my-consultations', [
 |--------------------------------------------------------------------------
 */
 
-Route::get('/consultations', [
+Route::get('/my-consultations', [
     ConsultationController::class,
-    'index',
+    'myConsultations',
 ])
     ->middleware([
         'auth',
-        'role:admin,engineer,employee',
+        'role:customer,engineer,admin',
     ])
-    ->name('consultations.index');
+    ->name('consultations.mine');;
 
 /*
 |--------------------------------------------------------------------------
@@ -459,7 +445,42 @@ Route::middleware(['auth', 'role:customer,admin'])->group(function () {
     '/engineers/{user}',
     [EngineerProfileController::class, 'show']
 )->name('engineers.show');
+Route::middleware([
+    'auth',
+    'role:customer',
+])->group(function () {
 
+    Route::get(
+        '/become-engineer',
+        [EngineerApplicationController::class, 'create']
+    )->name('engineer-applications.create');
+
+    Route::post(
+        '/become-engineer',
+        [EngineerApplicationController::class, 'store']
+    )->name('engineer-applications.store');
+});
+
+Route::middleware([
+    'auth',
+    'role:customer,engineer,admin',
+])->group(function () {
+
+    Route::get('/consultations/create', [
+        ConsultationController::class,
+        'create',
+    ])->name('consultations.create');
+
+    Route::get(
+        '/consultations/create/{engineer}',
+        [ConsultationController::class, 'createForEngineer']
+    )->name('consultations.create-for-engineer');
+
+    Route::post('/consultations', [
+        ConsultationController::class,
+        'store',
+    ])->name('consultations.store');
+});
 
 require __DIR__.'/auth.php';
 

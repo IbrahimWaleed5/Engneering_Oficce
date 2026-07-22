@@ -62,5 +62,10 @@ public function engineerWorks()
         'engineer_id'
     );
 }
-
+public function engineerApplications()
+{
+    return $this->hasMany(
+        EngineerApplication::class
+    );
+}
 }

@@ -412,14 +412,25 @@
 @endif
                         @forelse ($consultations as $consultation)
 
-                            @php
-                                $searchText = strtolower(
-                                    ($consultation->consultation_number ?? '') . ' ' .
-                                    ($consultation->title ?? '') . ' ' .
-                                    ($consultation->customer?->name ?? '') . ' ' .
-                                    ($consultation->engineer?->name ?? '')
-                                );
-                            @endphp
+                           @php
+    $searchText = strtolower(
+        ($consultation->consultation_number ?? '') . ' ' .
+        ($consultation->title ?? '') . ' ' .
+        ($consultation->customer?->name ?? '') . ' ' .
+        ($consultation->engineer?->name ?? '')
+    );
+
+    $canOpenChat =
+        (int) auth()->id()
+            === (int) $consultation->customer_id
+        || (int) auth()->id()
+            === (int) $consultation->engineer_id
+        || in_array(
+            auth()->user()->role,
+            ['admin', 'employee'],
+            true
+        );
+@endphp
 
                             <tr
                                 x-show="
@@ -643,7 +654,23 @@
                                             </a>
 
                                         @endif
+@if (
+    $canOpenChat
+    && $consultation->payment_status === 'paid'
+    && $consultation->engineer_id
+)
 
+    <a
+        href="{{ route(
+            'consultations.messages.index',
+            $consultation
+        ) }}"
+        class="px-3 py-2 text-xs font-bold text-white transition rounded-xl bg-cyan-600 hover:bg-cyan-500"
+    >
+        💬 المحادثة
+    </a>
+
+@endif
                                     </div>
 
                                 </td>
@@ -677,13 +704,24 @@
 
                 @foreach ($consultations as $consultation)
 
-                    @php
-                        $mobileSearchText = strtolower(
-                            ($consultation->consultation_number ?? '') . ' ' .
-                            ($consultation->title ?? '') . ' ' .
-                            ($consultation->customer?->name ?? '')
-                        );
-                    @endphp
+                   @php
+    $mobileSearchText = strtolower(
+        ($consultation->consultation_number ?? '') . ' ' .
+        ($consultation->title ?? '') . ' ' .
+        ($consultation->customer?->name ?? '')
+    );
+
+    $canOpenChat =
+        (int) auth()->id()
+            === (int) $consultation->customer_id
+        || (int) auth()->id()
+            === (int) $consultation->engineer_id
+        || in_array(
+            auth()->user()->role,
+            ['admin', 'employee'],
+            true
+        );
+@endphp
 
                     <article
                         x-show="
@@ -793,7 +831,23 @@
                                 </a>
 
                             @endif
+@if (
+    $canOpenChat
+    && $consultation->payment_status === 'paid'
+    && $consultation->engineer_id
+)
 
+    <a
+        href="{{ route(
+            'consultations.messages.index',
+            $consultation
+        ) }}"
+        class="flex items-center justify-center gap-2 primary-button"
+    >
+        💬 المحادثة
+    </a>
+
+@endif
                         </div>
 
                     </article>

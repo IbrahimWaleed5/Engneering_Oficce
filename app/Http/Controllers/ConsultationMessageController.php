@@ -64,7 +64,7 @@ class ConsultationMessageController extends Controller
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,webp,dwg,doc,docx,xls,xlsx,zip',
-                'max:512000',
+                'max:102400',
                 'required_without:message',
             ],
         ], [
@@ -75,7 +75,10 @@ class ConsultationMessageController extends Controller
                 'اكتب رسالة أو أرفق ملفًا.',
 
             'attachment.max' =>
-                'حجم الملف يجب ألا يتجاوز 10 ميجابايت.',
+                'حجم الملف يجب ألا يتجاوز 100 ميجابايت.',
+
+            'attachment.mimes' =>
+                'نوع الملف المرفق غير مسموح.',
         ]);
 
         $attachmentPath = null;
@@ -135,12 +138,30 @@ class ConsultationMessageController extends Controller
     ): void {
         $user = $request->user();
 
-        $isAllowed =
-            $user->role === 'admin'
-            || $consultation->customer_id === $user->id
-            || $consultation->engineer_id === $user->id;
+        $isCustomer =
+            (int) $consultation->customer_id
+            === (int) $user->id;
 
-        abort_unless($isAllowed, 403);
+        $isAssignedEngineer =
+            (int) $consultation->engineer_id
+            === (int) $user->id;
+
+        $isManagement = in_array(
+            $user->role,
+            [
+                'admin',
+                'employee',
+            ],
+            true
+        );
+
+        abort_unless(
+            $isCustomer
+            || $isAssignedEngineer
+            || $isManagement,
+            403,
+            'ليس لديك صلاحية لدخول هذه المحادثة.'
+        );
     }
 
     private function getRecipient(
@@ -149,11 +170,17 @@ class ConsultationMessageController extends Controller
     ) {
         $user = $request->user();
 
-        if ($user->id === $consultation->customer_id) {
+        if (
+            (int) $user->id
+            === (int) $consultation->customer_id
+        ) {
             return $consultation->engineer;
         }
 
-        if ($user->id === $consultation->engineer_id) {
+        if (
+            (int) $user->id
+            === (int) $consultation->engineer_id
+        ) {
             return $consultation->customer;
         }
 
