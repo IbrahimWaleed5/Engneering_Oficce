@@ -21,7 +21,7 @@
 
         body {
             direction: rtl;
-            font-family: DejaVu Sans, sans-serif;
+            font-family: dejavusans, sans-serif;
             color: #172033;
             font-size: 13px;
             line-height: 1.8;
@@ -485,9 +485,44 @@
         </table>
 
         <div class="notes">
-            هذه الفاتورة صادرة إلكترونيًا بعد تأكيد
-            عملية الدفع، ولا تحتاج إلى توقيع يدوي.
+            هذه الفاتورة صادرة إلكترونيًا بعد تأكيد عملية الدفع.
         </div>
+
+
+        <table style="width:100%; margin-top:30px;">
+            <tr>
+                <td style="width:50%; text-align:center; vertical-align:bottom;">
+                    <div style="
+                        display:inline-block;
+                        width:105px;
+                        height:105px;
+                        border:3px double #0f4c81;
+                        border-radius:50%;
+                        text-align:center;
+                        color:#0f4c81;
+                        font-weight:bold;
+                        padding-top:24px;
+                        line-height:1.5;
+                    ">
+                        مكتب الوليد<br>
+                        الهندسي<br>
+                        ختم معتمد
+                    </div>
+                </td>
+                <td style="width:50%; text-align:center; vertical-align:bottom;">
+                    <div style="
+                        width:180px;
+                        margin:45px auto 0;
+                        border-top:1px solid #64748b;
+                        padding-top:7px;
+                        color:#475569;
+                        font-size:10px;
+                    ">
+                        توقيع الإدارة
+                    </div>
+                </td>
+            </tr>
+        </table>
 
         <div class="footer">
 
