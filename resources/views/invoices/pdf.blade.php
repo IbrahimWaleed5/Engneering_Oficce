@@ -524,63 +524,114 @@
         </div>
 
 
-        <table style="width:100%; margin-top:30px;">
-            <tr>
-                <td style="width:50%; text-align:center; vertical-align:bottom;">
-                    <div style="
-                        display:inline-block;
-                        width:105px;
-                        height:105px;
-                        border:3px double #0f4c81;
-                        border-radius:50%;
-                        text-align:center;
-                        color:#0f4c81;
-                        font-weight:bold;
-                        padding-top:24px;
-                        line-height:1.5;
-                    ">
-                        مكتب الوليد<br>
-                        الهندسي<br>
-                        ختم معتمد
-                    </div>
-                </td>
-               <td style="width:50%; text-align:center; vertical-align:bottom;">
+        <table
+    style="
+        width:100%;
+        margin-top:35px;
+        border-collapse:collapse;
+    "
+>
+    <tr>
 
-    @php
-        $signaturePath = public_path(
-            'images/sign.png'
-        );
-    @endphp
-
-    @if (file_exists($signaturePath))
-
-        <img
-            src="{{ $signaturePath }}"
-            alt="توقيع الإدارة"
+        {{-- ختم المكتب --}}
+        <td
             style="
-                width:190px;
-                max-height:90px;
-                object-fit:contain;
-                margin-bottom:4px;
+                width:50%;
+                text-align:center;
+                vertical-align:bottom;
+            "
+        >
+            <div
+                style="
+                    display:inline-block;
+                    width:110px;
+                    height:110px;
+                    border:3px double #0f4c81;
+                    border-radius:50%;
+                    text-align:center;
+                    color:#0f4c81;
+                    font-weight:bold;
+                    padding-top:25px;
+                    line-height:1.5;
+                    transform:rotate(-6deg);
+                "
+            >
+                مكتب الوليد<br>
+                الهندسي<br>
+                ختم معتمد
+            </div>
+
+            <div
+                style="
+                    margin-top:10px;
+                    color:#64748b;
+                    font-size:10px;
+                "
+            >
+                ختم المكتب
+            </div>
+        </td>
+
+        {{-- توقيع الإدارة --}}
+        <td
+            style="
+                width:50%;
+                text-align:center;
+                vertical-align:bottom;
             "
         >
 
-    @endif
+            @php
+                $signaturePath = public_path(
+                    'images/sign.png'
+                );
+            @endphp
 
-    <div style="
-        width:190px;
-        margin:0 auto;
-        border-top:1px solid #64748b;
-        padding-top:7px;
-        color:#475569;
-        font-size:10px;
-    ">
-        توقيع الإدارة
-    </div>
+            @if (file_exists($signaturePath))
 
-</td>
-            </tr>
-        </table>
+                <img
+                    src="{{ $signaturePath }}"
+                    alt="توقيع الإدارة"
+                    style="
+                        width:230px;
+                        max-height:115px;
+                        margin:0 auto 3px;
+                    "
+                >
+
+            @else
+
+                <div
+                    style="
+                        height:100px;
+                        color:#dc2626;
+                        font-size:10px;
+                        padding-top:40px;
+                    "
+                >
+                    صورة التوقيع غير موجودة
+                </div>
+
+            @endif
+
+            <div
+                style="
+                    width:220px;
+                    margin:0 auto;
+                    border-top:1px solid #64748b;
+                    padding-top:7px;
+                    color:#475569;
+                    font-size:10px;
+                    font-weight:bold;
+                "
+            >
+                توقيع الإدارة
+            </div>
+
+        </td>
+
+    </tr>
+</table>
 
         <div class="footer">
 
