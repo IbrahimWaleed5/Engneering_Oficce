@@ -17,6 +17,7 @@ class Invoice extends Model
         'service_name',
         'engineer_name',
         'amount',
+        'total',
         'payment_method',
         'currency',
         'office_name',
@@ -26,6 +27,7 @@ class Invoice extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'total' => 'decimal:2',
         'issued_at' => 'datetime',
     ];
 

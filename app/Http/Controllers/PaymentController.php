@@ -407,71 +407,73 @@ class PaymentController extends Controller
      * إنشاء فاتورة واحدة لكل دفعة.
      */
     private function createInvoice(
-        Payment $payment
-    ): Invoice {
-        $consultation =
-            $payment->consultation;
+    Payment $payment
+): Invoice {
+    $payment->loadMissing([
+        'consultation.consultationType',
+        'consultation.customer',
+        'consultation.engineer',
+        'customer',
+    ]);
 
-        return Invoice::firstOrCreate(
-            [
-                'payment_id' =>
-                    $payment->id,
-            ],
-            [
-                'invoice_number' =>
-                    'INV-'
-                    . now()->format('Ymd')
-                    . '-'
-                    . str_pad(
-                        (string) $payment->id,
-                        6,
-                        '0',
-                        STR_PAD_LEFT
-                    ),
+    $consultation = $payment->consultation;
 
-                'consultation_id' =>
-                    $consultation->id,
+    return Invoice::firstOrCreate(
+        [
+            'payment_id' => $payment->id,
+        ],
+        [
+            'invoice_number' =>
+                'INV-'
+                . now()->format('Ymd')
+                . '-'
+                . str_pad(
+                    (string) $payment->id,
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                ),
 
-                'customer_id' =>
-                    $payment->customer_id,
+            'consultation_id' =>
+                $consultation->id,
 
-                'consultation_number' =>
-                    $consultation
-                        ->consultation_number,
+            'customer_id' =>
+                $payment->customer_id,
 
-                'customer_name' =>
-                    $consultation
-                        ->customer
-                        ?->name
-                    ?? $payment
-                        ->customer
-                        ?->name
-                    ?? 'عميل',
+            'consultation_number' =>
+                $consultation->consultation_number,
 
-                'service_name' =>
-                    $consultation
-                        ->consultationType
-                        ?->name
-                    ?? 'استشارة هندسية',
+            'customer_name' =>
+                $consultation->customer?->name
+                ?? $payment->customer?->name
+                ?? 'عميل',
 
-                'engineer_name' =>
-                    $consultation
-                        ->engineer
-                        ?->name,
+            'service_name' =>
+                $consultation->consultationType?->name
+                ?? 'استشارة هندسية',
 
-                'amount' =>
-                    $payment->amount,
+            'engineer_name' =>
+                $consultation->engineer?->name,
 
-                'payment_method' =>
-                    $payment->payment_method,
+            'amount' =>
+                $payment->amount,
 
-                'office_name' =>
-                    'مكتب الوليد الهندسي',
+            'total' =>
+                $payment->amount,
 
-                'issued_at' =>
-                    $payment->paid_at
-                    ?? now(),
-            ]
-        );
-    }
+            'payment_method' =>
+                $payment->payment_method,
+
+            'currency' =>
+                'ILS',
+
+            'office_name' =>
+                'مكتب الوليد الهندسي',
+
+            'issued_at' =>
+                $payment->paid_at
+                ?? now(),
+        ]
+    );
+}
 }
