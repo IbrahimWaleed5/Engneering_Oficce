@@ -91,9 +91,6 @@ class Consultation extends Model
             Invoice::class
         );
     }
-    public function review(): HasOne
-{
-    return $this->hasOne(Review::class);
-}
+    
 
 }
