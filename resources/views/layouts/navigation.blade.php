@@ -13,11 +13,15 @@
                     href="{{ route('dashboard') }}"
                     class="flex items-center gap-3"
                 >
-                    <div
-                        class="flex items-center justify-center w-10 h-10 text-xl font-bold text-white rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500"
-                    >
-                        م
-                    </div>
+                   <div
+    class="flex items-center justify-center w-12 h-12 overflow-hidden border rounded-xl border-cyan-500/30 bg-slate-800"
+>
+    <img
+        src="{{ asset('images/Mainlogo.png') }}"
+        alt="شعار مكتب الوليد الهندسي"
+        class="object-contain w-full h-full p-1"
+    >
+</div>
 
                     <div class="hidden sm:block">
                         <p class="font-bold text-white">
@@ -171,11 +175,15 @@
 
         @else
 
-            <div
-                class="flex items-center justify-center font-bold text-white rounded-full w-11 h-11 bg-gradient-to-r from-blue-600 to-cyan-500"
-            >
-                {{ mb_substr(auth()->user()->name, 0, 1) }}
-            </div>
+
+
+    <img
+        src="{{ asset('images/Mainlogo.png') }}"
+        alt="{{ auth()->user()->name }}"
+        class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-800"
+    >
+
+
 
         @endif
 
@@ -271,154 +279,140 @@
 
             </div>
 
-            <div class="flex items-center md:hidden">
+            <details class="relative md:hidden">
 
-                <button
-                    @click="open = ! open"
-                    class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
-                >
-                    <svg
-                        class="w-6 h-6"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            :class="{'hidden': open, 'inline-flex': ! open }"
-                            class="inline-flex"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"
-                        />
-
-                        <path
-                            :class="{'hidden': ! open, 'inline-flex': open }"
-                            class="hidden"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
+    <summary
+        class="inline-flex items-center justify-center p-3 list-none transition cursor-pointer rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white"
+        aria-label="فتح القائمة"
+    >
+        <svg
+            class="w-7 h-7"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 24 24"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+            />
+        </svg>
+    </summary>
 
     <div
-        :class="{'block': open, 'hidden': ! open}"
-        class="hidden border-t border-slate-700 md:hidden"
+        class="fixed right-0 z-50 w-full mt-4 overflow-y-auto border-t shadow-2xl top-16 max-h-[calc(100vh-4rem)] border-slate-700 bg-slate-900"
+        dir="rtl"
     >
-        <div class="px-4 pt-2 pb-3 space-y-1">
+
+        <div class="px-4 py-5 space-y-2">
 
             <a
                 href="{{ route('dashboard') }}"
-                class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
             >
-                لوحة التحكم
+                🏠 لوحة التحكم
             </a>
 
             <a
                 href="{{ route('engineer.works.public') }}"
-                class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
             >
-                مكتبة المهندسين
+                👷 مكتبة المهندسين
             </a>
-<a
-    href="{{ route('profile.edit') }}"
-    class="px-3 py-2 text-sm rounded-lg
-    {{ request()->routeIs('profile.edit')
-        ? 'bg-blue-600 text-white'
-        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
->
-    ملفي الشخصي
-</a>
+
             @auth
 
+                <a
+                    href="{{ route('profile.edit') }}"
+                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                >
+                    👤 ملفي الشخصي
+                </a>
+
                 @if (auth()->user()->role === 'customer')
+
                     <a
                         href="{{ route('consultations.mine') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        استشاراتي
+                        📋 استشاراتي
                     </a>
+
                 @endif
 
                 @if (auth()->user()->role === 'engineer')
 
                     <a
                         href="{{ route('engineer.consultations') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        استشارات المهندس
+                        📐 استشارات المهندس
                     </a>
 
                     <a
                         href="{{ route('engineer.works.mine') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        أعمالي
+                        🏗️ أعمالي
                     </a>
-                    @if (auth()->user()->role === 'engineer')
 
-    <a
-        href="{{ route('engineers.show', auth()->user()) }}"
-        class="nav-link"
-    >
-        ملفك الشخصي
-    </a>
+                    <a
+                        href="{{ route('engineers.show', auth()->user()) }}"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                    >
+                        ⭐ صفحتي العامة
+                    </a>
 
-@endif
                     <a
                         href="{{ route('engineer.specialty.edit') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        اختيار التخصص الهندسي
+                        🎓 تخصصي الهندسي
                     </a>
+
                 @endif
 
                 @if (auth()->user()->role === 'admin')
 
                     <a
                         href="{{ route('consultations.index') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        جميع الاستشارات
+                        📋 جميع الاستشارات
                     </a>
 
                     <a
                         href="{{ route('payments.index') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        الدفعات
+                        💳 الدفعات
                     </a>
 
                     <a
                         href="{{ route('employees.index') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        الموظفون
+                        👥 الموظفون
                     </a>
 
                     <a
-                       href="{{ route('engineer.works.public') }}"
-                        class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                        href="{{ route('users.index') }}"
+                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                     >
-                        مراجعة أعمال المهندسين
+                        ⚙️ إدارة المستخدمين
                     </a>
 
                 @endif
 
                 <a
                     href="{{ route('notifications.index') }}"
-                    class="block px-3 py-2 text-white rounded-lg hover:bg-slate-800"
+                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
                 >
-                    الإشعارات
+                    🔔 الإشعارات
                 </a>
+
+                <div class="h-px my-3 bg-slate-700"></div>
 
                 <form
                     method="POST"
@@ -428,15 +422,39 @@
 
                     <button
                         type="submit"
-                        class="block w-full px-3 py-2 text-right text-red-400 rounded-lg hover:bg-slate-800"
+                        class="block w-full px-4 py-3 font-bold text-right text-red-300 transition rounded-xl hover:bg-red-500/10"
                     >
-                        تسجيل الخروج
+                        🚪 تسجيل الخروج
                     </button>
+
                 </form>
+
+            @else
+
+                <a
+                    href="{{ route('login') }}"
+                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                >
+                    تسجيل الدخول
+                </a>
+
+                <a
+                    href="{{ route('register') }}"
+                    class="block px-4 py-3 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
+                >
+                    إنشاء حساب
+                </a>
 
             @endauth
 
         </div>
+
+    </div>
+
+</details>
+
+        </div>
+
     </div>
 @auth
 
