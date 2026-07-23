@@ -462,71 +462,111 @@
                                     @endif
 
                                     {{-- التقييم --}}
-                                    @if (
-                                        $consultation->status === 'completed'
-                                        && $consultation->payment_status === 'paid'
-                                        && $consultation->engineer_id
-                                    )
+                                    {{-- رأي وتقييم العميل --}}
+@if (
+    $consultation->status === 'completed'
+    && $consultation->payment_status === 'paid'
+)
 
-                                        @if ($consultation->review)
+    @if ($consultation->review)
 
-                                            <div
-                                                class="px-5 py-3 text-center border rounded-xl border-yellow-500/20 bg-yellow-500/10"
-                                            >
+        <div
+            class="px-5 py-4 border rounded-2xl border-yellow-500/20 bg-yellow-500/10"
+        >
 
-                                                <p
-                                                    class="font-black text-yellow-300"
-                                                >
-                                                    ⭐ تم تقييم المهندس
-                                                </p>
+            <div
+                class="flex flex-wrap items-center justify-between gap-3"
+            >
 
-                                                <div
-                                                    class="flex items-center justify-center gap-1 mt-2"
-                                                >
+                <p class="font-black text-yellow-300">
+                    ⭐ تقييمك للخدمة
+                </p>
 
-                                                    @for (
-                                                        $star = 1;
-                                                        $star <= 5;
-                                                        $star++
-                                                    )
+                @if ($consultation->review->status === 'pending')
 
-                                                        <span
-                                                            class="{{ $star <= $consultation->review->rating
-                                                                ? 'text-yellow-400'
-                                                                : 'text-slate-700' }}"
-                                                        >
-                                                            ★
-                                                        </span>
+                    <span
+                        class="px-3 py-1 text-xs font-bold text-yellow-200 rounded-full bg-yellow-500/10"
+                    >
+                        قيد مراجعة الإدارة
+                    </span>
 
-                                                    @endfor
+                @elseif ($consultation->review->status === 'approved')
 
-                                                </div>
+                    <span
+                        class="px-3 py-1 text-xs font-bold text-green-200 rounded-full bg-green-500/10"
+                    >
+                        تم اعتماد الرأي
+                    </span>
 
-                                                <p
-                                                    class="mt-1 text-xs text-slate-400"
-                                                >
-                                                    {{ $consultation
-                                                        ->review
-                                                        ->rating }}/5
-                                                </p>
+                @elseif ($consultation->review->status === 'rejected')
 
-                                            </div>
+                    <span
+                        class="px-3 py-1 text-xs font-bold text-red-200 rounded-full bg-red-500/10"
+                    >
+                        لم يتم اعتماد الرأي
+                    </span>
 
-                                        @else
+                @endif
 
-                                            <a
-                                                href="{{ route(
-                                                    'engineer-reviews.create',
-                                                    $consultation
-                                                ) }}"
-                                                class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition bg-yellow-600 rounded-xl hover:bg-yellow-500"
-                                            >
-                                                ⭐ تقييم المهندس
-                                            </a>
+            </div>
 
-                                        @endif
+            {{-- النجوم --}}
+            <div
+                class="flex items-center gap-1 mt-3"
+            >
 
-                                    @endif
+                @for ($star = 1; $star <= 5; $star++)
+
+                    <span
+                        class="text-2xl {{ $star <= $consultation->review->rating
+                            ? 'text-yellow-400'
+                            : 'text-slate-700' }}"
+                    >
+                        ★
+                    </span>
+
+                @endfor
+
+                <span class="mr-2 text-sm text-slate-400">
+                    {{ $consultation->review->rating }}/5
+                </span>
+
+            </div>
+
+            {{-- ملاحظة العميل --}}
+            <div
+                class="p-3 mt-4 border rounded-xl border-white/10 bg-black/10"
+            >
+
+                <p class="mb-2 text-xs font-bold text-slate-400">
+                    رأيك وملاحظاتك
+                </p>
+
+                <p
+                    class="text-sm leading-7 whitespace-pre-line text-slate-200"
+                >
+                    {{ $consultation->review->comment }}
+                </p>
+
+            </div>
+
+        </div>
+
+    @else
+
+        <a
+            href="{{ route(
+                'reviews.create',
+                $consultation
+            ) }}"
+            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition bg-yellow-600 rounded-xl hover:bg-yellow-500"
+        >
+            ⭐ أضف تقييمك وملاحظاتك
+        </a>
+
+    @endif
+
+@endif
 
                                 </div>
 

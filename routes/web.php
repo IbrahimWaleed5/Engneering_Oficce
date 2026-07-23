@@ -18,6 +18,7 @@ use App\Http\Controllers\EngineerApplicationController;
 use App\Http\Middleware\EnsureActiveEngineerMembership;
 use App\Http\Controllers\EngineerReviewController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ReviewController;
 
 
 /*
@@ -508,6 +509,42 @@ Route::delete(
     '/admin/engineer-works/{engineerWork}',
     [EngineerWorkController::class, 'destroy']
 )->name('admin.engineer-works.destroy');
+Route::middleware('auth')->group(function () {
+    Route::get(
+        '/consultations/{consultation}/review',
+        [ReviewController::class, 'create']
+    )->name('reviews.create');
+
+    Route::post(
+        '/consultations/{consultation}/review',
+        [ReviewController::class, 'store']
+    )->name('reviews.store');
+
+    Route::get(
+        '/admin/reviews',
+        [ReviewController::class, 'index']
+    )->name('reviews.index');
+
+    Route::patch(
+        '/admin/reviews/{review}/approve',
+        [ReviewController::class, 'approve']
+    )->name('reviews.approve');
+
+    Route::patch(
+        '/admin/reviews/{review}/reject',
+        [ReviewController::class, 'reject']
+    )->name('reviews.reject');
+
+    Route::patch(
+        '/admin/reviews/{review}/featured',
+        [ReviewController::class, 'toggleFeatured']
+    )->name('reviews.featured');
+
+    Route::delete(
+        '/admin/reviews/{review}',
+        [ReviewController::class, 'destroy']
+    )->name('reviews.destroy');
+});
 require __DIR__.'/auth.php';
 
 
