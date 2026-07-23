@@ -155,125 +155,163 @@
                         @endif
                     </a>
 
-                    <x-dropdown align="left" width="48">
+                    <div class="flex items-center gap-3">
 
-                        <x-slot name="trigger">
-
-                     <button
-    class="flex items-center gap-2 px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700"
->
-
-    <div class="relative">
-
-        @if(auth()->user()->profile_photo)
-
-            <img
-                src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
-                alt="{{ auth()->user()->name }}"
-            class="object-cover border-2 rounded-full w-9 h-9 border-cyan-500"
-            >
-
-        @else
-
-
-
-    <img
-        src="{{ asset('images/Mainlogo.png') }}"
-        alt="{{ auth()->user()->name }}"
-        class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-800"
-    >
-
-
-
-        @endif
-
-        <a
-            href="{{ route('profile.edit') }}"
-            class="absolute bottom-0 left-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-blue-600 border rounded-full border-slate-900 hover:bg-blue-700"
-        >
-            📷
-        </a>
-
-    </div>
-
-    <div class="text-right">
-
-        <a href="{{ route('profile.edit') }}">
-
-            <p class="text-sm font-bold text-white hover:text-cyan-300">
-                {{ auth()->user()->name }}
-            </p>
-
-            <p class="text-xs text-slate-400">
-                {{ auth()->user()->phone }}
-            </p>
-
-        </a>
-
-        @if (auth()->user()->role === 'engineer')
-
-            <p class="mt-1 text-xs text-cyan-400">
-                🏗️
-                {{ auth()->user()->employeeProfile?->specialty?->name }}
-            </p>
-
-        @elseif (auth()->user()->role === 'admin')
-
-            <div class="mt-1">
-
-                <a
-                    href="{{ route('users.index') }}"
-                    class="px-2 py-1 text-[10px] text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
-                >
-                    ⚙️ إدارة المستخدمين
-                </a>
-
-            </div>
-
-        @else
-
-            <p class="mt-1 text-xs text-slate-400">
-                👤 عميل
-            </p>
-
-        @endif
-
-    </div>
-
-    <span class="text-slate-400">
-        ▾
-    </span>
-
-</button>
-
-                        </x-slot>
-
-                        <x-slot name="content">
-
-                            <x-dropdown-link
-                                :href="route('profile.edit')"
+                        {{-- بطاقة التخصص --}}
+                        @if (
+                            auth()->user()->role === 'engineer'
+                            && auth()->user()->employeeProfile?->specialty
+                        )
+                            <a
+                                href="{{ route('engineer.specialty.edit') }}"
+                                class="items-center hidden gap-3 px-4 py-2 transition border lg:flex rounded-2xl border-cyan-400/20 bg-cyan-500/10 hover:bg-cyan-500/20"
                             >
-                                الملف الشخصي
-                            </x-dropdown-link>
+                                <span class="flex items-center justify-center w-10 h-10 text-xl rounded-xl bg-cyan-500/10">
+                                    🏗️
+                                </span>
 
-                            <form
-                                method="POST"
-                                action="{{ route('logout') }}"
-                            >
-                                @csrf
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-slate-400">
+                                        التخصص الهندسي
+                                    </p>
 
-                                <x-dropdown-link
-                                    :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                        this.closest('form').submit();"
+                                    <p class="mt-1 text-sm font-black text-cyan-300">
+                                        {{ auth()->user()->employeeProfile?->specialty?->name }}
+                                    </p>
+                                </div>
+                            </a>
+                        @endif
+
+                        {{-- بطاقة نوع الحساب --}}
+                        @php
+                            $accountType = match (auth()->user()->role) {
+                                'admin' => [
+                                    'label' => 'مدير النظام',
+                                    'icon' => '🛡️',
+                                    'class' => 'text-emerald-200 border-emerald-400/20 bg-emerald-500/10',
+                                ],
+                                'engineer' => [
+                                    'label' => 'حساب مهندس',
+                                    'icon' => '👷',
+                                    'class' => 'text-violet-200 border-violet-400/20 bg-violet-500/10',
+                                ],
+                                'employee' => [
+                                    'label' => 'حساب موظف',
+                                    'icon' => '🧑‍💼',
+                                    'class' => 'text-amber-200 border-amber-400/20 bg-amber-500/10',
+                                ],
+                                default => [
+                                    'label' => 'حساب عميل',
+                                    'icon' => '👤',
+                                    'class' => 'text-blue-200 border-blue-400/20 bg-blue-500/10',
+                                ],
+                            };
+                        @endphp
+
+                        <div
+                            class="hidden xl:flex items-center gap-3 px-4 py-2 border rounded-2xl {{ $accountType['class'] }}"
+                        >
+                            <span class="text-xl">
+                                {{ $accountType['icon'] }}
+                            </span>
+
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold opacity-70">
+                                    نوع الحساب
+                                </p>
+
+                                <p class="mt-1 text-sm font-black">
+                                    {{ $accountType['label'] }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- إعدادات الحساب --}}
+                        <x-dropdown align="left" width="56">
+
+                            <x-slot name="trigger">
+                                <button
+                                    type="button"
+                                    class="flex items-center gap-3 px-3 py-2 transition border rounded-2xl border-white/10 bg-slate-800/80 hover:bg-slate-700 hover:border-cyan-400/30"
                                 >
-                                    تسجيل الخروج
+                                    <div class="relative">
+
+                                        @if (auth()->user()->profile_photo)
+                                            <img
+                                                src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                                alt="{{ auth()->user()->name }}"
+                                                class="object-cover border-2 rounded-full w-11 h-11 border-cyan-500"
+                                            >
+                                        @else
+                                            <img
+                                                src="{{ asset('images/Mainlogo.png') }}"
+                                                alt="{{ auth()->user()->name }}"
+                                                class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-900"
+                                            >
+                                        @endif
+
+                                        <span
+                                            class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-800"
+                                        ></span>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <p class="text-sm font-black text-white">
+                                            {{ auth()->user()->name }}
+                                        </p>
+
+                                        <p class="mt-1 text-xs text-slate-400">
+                                            إعدادات الحساب
+                                        </p>
+                                    </div>
+
+                                    <span class="text-xs text-slate-400">
+                                        ▼
+                                    </span>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+
+                                <div class="px-4 py-3 border-b border-slate-700">
+                                    <p class="text-sm font-black text-white">
+                                        {{ auth()->user()->name }}
+                                    </p>
+
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        {{ auth()->user()->email }}
+                                    </p>
+                                </div>
+
+                                <x-dropdown-link :href="route('profile.edit')">
+                                    👤 تعديل الملف الشخصي
                                 </x-dropdown-link>
-                            </form>
 
-                        </x-slot>
+                                @if (auth()->user()->role === 'engineer')
+                                    <x-dropdown-link :href="route('engineer.specialty.edit')">
+                                        🎓 تعديل التخصص
+                                    </x-dropdown-link>
+                                @endif
 
-                    </x-dropdown>
+                                <form
+                                    method="POST"
+                                    action="{{ route('logout') }}"
+                                >
+                                    @csrf
+
+                                    <x-dropdown-link
+                                        :href="route('logout')"
+                                        onclick="event.preventDefault(); this.closest('form').submit();"
+                                    >
+                                        🚪 تسجيل الخروج
+                                    </x-dropdown-link>
+                                </form>
+
+                            </x-slot>
+
+                        </x-dropdown>
+
+                    </div>
 
                 @endauth
 
