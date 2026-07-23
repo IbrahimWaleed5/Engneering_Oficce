@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 
 class InvoiceController extends Controller
 {
@@ -15,6 +17,11 @@ class InvoiceController extends Controller
         Request $request,
         Invoice $invoice
     ) {
+        $this->authorizeInvoice(
+            $request,
+            $invoice
+        );
+
         $invoice->load([
             'payment',
             'consultation.consultationType',
@@ -22,24 +29,27 @@ class InvoiceController extends Controller
             'customer',
         ]);
 
-        $user = $request->user();
+        $pdfContent = $this
+            ->generatePdf($invoice)
+            ->Output(
+                $invoice->invoice_number . '.pdf',
+                Destination::STRING_RETURN
+            );
 
-        abort_unless(
-            $user->role === 'admin'
-            || (int) $invoice->customer_id
-                === (int) $user->id,
-            403
-        );
+        return response(
+            $pdfContent,
+            200,
+            [
+                'Content-Type' => 'application/pdf',
 
-        $pdf = Pdf::loadView(
-            'invoices.pdf',
-            compact('invoice')
-        );
+                'Content-Disposition' =>
+                    'attachment; filename="'
+                    . $invoice->invoice_number
+                    . '.pdf"',
 
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->download(
-            $invoice->invoice_number . '.pdf'
+                'Content-Length' =>
+                    strlen($pdfContent),
+            ]
         );
     }
 
@@ -50,6 +60,11 @@ class InvoiceController extends Controller
         Request $request,
         Invoice $invoice
     ) {
+        $this->authorizeInvoice(
+            $request,
+            $invoice
+        );
+
         $invoice->load([
             'payment',
             'consultation.consultationType',
@@ -57,24 +72,101 @@ class InvoiceController extends Controller
             'customer',
         ]);
 
+        $pdfContent = $this
+            ->generatePdf($invoice)
+            ->Output(
+                $invoice->invoice_number . '.pdf',
+                Destination::STRING_RETURN
+            );
+
+        return response(
+            $pdfContent,
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+
+                'Content-Disposition' =>
+                    'inline; filename="'
+                    . $invoice->invoice_number
+                    . '.pdf"',
+
+                'Content-Length' =>
+                    strlen($pdfContent),
+            ]
+        );
+    }
+
+    /**
+     * التحقق من صلاحية مشاهدة الفاتورة.
+     */
+    private function authorizeInvoice(
+        Request $request,
+        Invoice $invoice
+    ): void {
         $user = $request->user();
 
         abort_unless(
-            $user->role === 'admin'
-            || (int) $invoice->customer_id
-                === (int) $user->id,
+            $user
+            && (
+                $user->role === 'admin'
+                || (int) $invoice->customer_id
+                    === (int) $user->id
+            ),
             403
         );
+    }
 
-        $pdf = Pdf::loadView(
+    /**
+     * إنشاء ملف PDF باستخدام mPDF.
+     */
+    private function generatePdf(
+        Invoice $invoice
+    ): Mpdf {
+        $tempDirectory = storage_path(
+            'app/mpdf-temp'
+        );
+
+        File::ensureDirectoryExists(
+            $tempDirectory,
+            0775,
+            true
+        );
+
+        $html = view(
             'invoices.pdf',
             compact('invoice')
+        )->render();
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font' => 'dejavusans',
+            'directionality' => 'rtl',
+
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+
+            'tempDir' => $tempDirectory,
+
+            'margin_top' => 12,
+            'margin_right' => 12,
+            'margin_bottom' => 12,
+            'margin_left' => 12,
+        ]);
+
+        $mpdf->SetDirectionality('rtl');
+
+        $mpdf->SetTitle(
+            'فاتورة ' . $invoice->invoice_number
         );
 
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->stream(
-            $invoice->invoice_number . '.pdf'
+        $mpdf->SetAuthor(
+            $invoice->office_name
+                ?? 'مكتب الوليد الهندسي'
         );
+
+        $mpdf->WriteHTML($html);
+
+        return $mpdf;
     }
 }

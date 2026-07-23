@@ -188,39 +188,74 @@
 
                 <td class="logo-cell">
 
-                    @php
-                        $logoPath = public_path(
-                            'images/logo.png'
-                        );
-                    @endphp
+                   @php
+    $logoCandidates = [
+        public_path('images/logo.png'),
+        public_path(
+            'images/ChatGPT Image Jul 22, 2026, 06_15_51 PM.png'
+        ),
+    ];
 
-                    @if (file_exists($logoPath))
+    $logoPath = null;
 
-                        <img
-                            src="{{ $logoPath }}"
-                            alt="شعار المكتب"
-                            class="logo"
-                        >
+    foreach ($logoCandidates as $candidate) {
+        if (file_exists($candidate)) {
+            $logoPath = $candidate;
+            break;
+        }
+    }
 
-                    @else
+    $logoData = null;
 
-                        <div
-                            style="
-                                width: 70px;
-                                height: 70px;
-                                line-height: 70px;
-                                text-align: center;
-                                background: #0f4c81;
-                                color: white;
-                                font-size: 25px;
-                                font-weight: bold;
-                                border-radius: 50%;
-                            "
-                        >
-                            و
-                        </div>
+    if ($logoPath) {
+        $extension = strtolower(
+            pathinfo($logoPath, PATHINFO_EXTENSION)
+        );
 
-                    @endif
+        $mimeType = match ($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            default => 'image/png',
+        };
+
+        $logoData =
+            'data:'
+            . $mimeType
+            . ';base64,'
+            . base64_encode(
+                file_get_contents($logoPath)
+            );
+    }
+@endphp
+
+@if ($logoData)
+
+    <img
+        src="{{ $logoData }}"
+        alt="شعار المكتب"
+        class="logo"
+    >
+
+@else
+
+    <div
+        style="
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            text-align: center;
+            background: #0f4c81;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50%;
+        "
+    >
+        WO
+    </div>
+
+@endif
 
                 </td>
 
