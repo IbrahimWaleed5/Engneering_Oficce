@@ -337,31 +337,78 @@
 
                                     @endif
 
-                                    {{-- الفاتورة --}}
-                                    @if ($consultation->invoice)
+                                {{-- فاتورة المكتب --}}
+@if (
+    $consultation->payment_status === 'paid'
+    && $consultation->invoice
+)
 
-                                        <a
-                                            href="{{ route(
-                                                'invoices.show',
-                                                $consultation->invoice
-                                            ) }}"
-                                            target="_blank"
-                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-blue-200 transition border rounded-xl border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20"
-                                        >
-                                            👁️ عرض الفاتورة
-                                        </a>
+    <div
+        class="p-4 border rounded-2xl border-cyan-500/20 bg-cyan-500/10"
+    >
 
-                                        <a
-                                            href="{{ route(
-                                                'invoices.download',
-                                                $consultation->invoice
-                                            ) }}"
-                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-green-200 transition border rounded-xl border-green-500/20 bg-green-500/10 hover:bg-green-500/20"
-                                        >
-                                            📄 تحميل الفاتورة PDF
-                                        </a>
+        <div class="flex items-center gap-3 mb-4">
 
-                                    @endif
+            <div
+                class="flex items-center justify-center text-xl border w-11 h-11 rounded-xl border-cyan-400/20 bg-cyan-500/10"
+            >
+                🧾
+            </div>
+
+            <div>
+
+                <p class="font-black text-white">
+                    فاتورة المكتب
+                </p>
+
+                <p class="mt-1 text-xs text-cyan-200/70">
+                    فاتورة رسمية صادرة بعد اعتماد الدفع
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="grid gap-3">
+
+            <a
+                href="{{ route(
+                    'invoices.show',
+                    $consultation->invoice
+                ) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-blue-100 transition border rounded-xl border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20"
+            >
+                👁️ عرض فاتورة المكتب
+            </a>
+
+            <a
+                href="{{ route(
+                    'invoices.download',
+                    $consultation->invoice
+                ) }}"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 font-bold text-green-100 transition border rounded-xl border-green-500/20 bg-green-500/10 hover:bg-green-500/20"
+            >
+                📄 تحميل الفاتورة PDF
+            </a>
+
+        </div>
+
+    </div>
+
+@elseif (
+    $consultation->payment_status === 'paid'
+    && ! $consultation->invoice
+)
+
+    <div
+        class="px-4 py-3 text-sm font-bold text-center border text-slate-300 rounded-xl border-white/10 bg-white/5"
+    >
+        🧾 جاري تجهيز فاتورة المكتب
+    </div>
+
+@endif
 
                                     {{-- الملف النهائي --}}
                                     @if ($consultation->engineer_file)
