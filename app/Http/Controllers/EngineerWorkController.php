@@ -18,20 +18,20 @@ class EngineerWorkController extends Controller
     */
 
     public function publicIndex()
-{
-    $works = EngineerWork::with([
-        'engineer.employeeProfile.specialty',
-        'coverImage',
-    ])
-        ->where('status', 'approved')
-        ->latest()
-        ->paginate(12);
+    {
+        $works = EngineerWork::with([
+            'engineer.employeeProfile.specialty',
+            'coverImage',
+        ])
+            ->where('status', 'approved')
+            ->latest()
+            ->paginate(12);
 
-    return view(
-        'engineer-works.public-index',
-        compact('works')
-    );
-}
+        return view(
+            'engineer-works.public-index',
+            compact('works')
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -66,7 +66,6 @@ class EngineerWorkController extends Controller
             'engineer-works.show',
             compact('engineerWork')
         );
-
     }
 
     /*
@@ -76,20 +75,20 @@ class EngineerWorkController extends Controller
     */
 
     public function myWorks(Request $request)
-{
-    $works = EngineerWork::with([
-        'coverImage',
-        'engineer.employeeProfile.specialty',
-    ])
-        ->where('engineer_id', $request->user()->id)
-        ->latest()
-        ->get();
+    {
+        $works = EngineerWork::with([
+            'coverImage',
+            'engineer.employeeProfile.specialty',
+        ])
+            ->where('engineer_id', $request->user()->id)
+            ->latest()
+            ->get();
 
-    return view(
-        'engineer-works.my-works',
-        compact('works')
-    );
-}
+        return view(
+            'engineer-works.my-works',
+            compact('works')
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -154,60 +153,60 @@ class EngineerWorkController extends Controller
                 'mimes:jpg,jpeg,png,webp',
                 'max:512000',
             ],
+
             'pdf_file' => [
-    'nullable',
-    'file',
-    'mimes:pdf',
-    'max:51200',
-],
+                'nullable',
+                'file',
+                'mimes:pdf',
+                'max:51200',
+            ],
 
-'dwg_file' => [
-    'nullable',
-    'file',
-    'mimes:dwg',
-    'max:102400',
-],
+            'dwg_file' => [
+                'nullable',
+                'file',
+                'mimes:dwg',
+                'max:102400',
+            ],
         ]);
+
         $pdfPath = null;
-$dwgPath = null;
+        $dwgPath = null;
 
-if ($request->hasFile('pdf_file')) {
+        if ($request->hasFile('pdf_file')) {
+            $pdfPath = $request
+                ->file('pdf_file')
+                ->store(
+                    'engineer-works/files',
+                    'public'
+                );
+        }
 
-    $pdfPath = $request
-        ->file('pdf_file')
-        ->store(
-            'engineer-works/files',
-            'public'
-        );
-}
-
-if ($request->hasFile('dwg_file')) {
-
-    $dwgPath = $request
-        ->file('dwg_file')
-        ->store(
-            'engineer-works/files',
-            'public'
-        );
-}
+        if ($request->hasFile('dwg_file')) {
+            $dwgPath = $request
+                ->file('dwg_file')
+                ->store(
+                    'engineer-works/files',
+                    'public'
+                );
+        }
 
         $work = EngineerWork::create([
-    'engineer_id' => $request->user()->id,
-    'title' => $validated['title'],
-    'description' =>
-        $validated['description'] ?? null,
-    'location' =>
-        $validated['location'] ?? null,
-    'completion_year' =>
-        $validated['completion_year'] ?? null,
-    'project_type' =>
-    $validated['project_type'] ?? null,
-    'pdf_file' => $pdfPath,
-    'dwg_file' => $dwgPath,
-    'status' => 'pending',
-    'is_featured' => false,
-    'admin_note' => null,
-]);
+            'engineer_id' => $request->user()->id,
+            'title' => $validated['title'],
+            'description' =>
+                $validated['description'] ?? null,
+            'location' =>
+                $validated['location'] ?? null,
+            'completion_year' =>
+                $validated['completion_year'] ?? null,
+            'project_type' =>
+                $validated['project_type'] ?? null,
+            'pdf_file' => $pdfPath,
+            'dwg_file' => $dwgPath,
+            'status' => 'pending',
+            'is_featured' => false,
+            'admin_note' => null,
+        ]);
 
         foreach (
             $request->file('images') as $index => $image
@@ -223,13 +222,6 @@ if ($request->hasFile('dwg_file')) {
                 'sort_order' => $index,
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | إشعار المديرين بوجود عمل جديد
-        |--------------------------------------------------------------------------
-        */
 
         $admins = User::where('role', 'admin')
             ->where('status', 'active')
@@ -262,8 +254,6 @@ if ($request->hasFile('dwg_file')) {
     |--------------------------------------------------------------------------
     */
 
-
-
     public function destroy(
         Request $request,
         EngineerWork $engineerWork
@@ -282,26 +272,22 @@ if ($request->hasFile('dwg_file')) {
                 ->delete($image->image_path);
         }
 
+        if ($engineerWork->pdf_file) {
+            Storage::disk('public')
+                ->delete($engineerWork->pdf_file);
+        }
+
+        if ($engineerWork->dwg_file) {
+            Storage::disk('public')
+                ->delete($engineerWork->dwg_file);
+        }
+
         $engineerWork->delete();
 
         return back()->with(
             'success',
             'تم حذف العمل بنجاح.'
         );
-    $engineerWork->load('images');
-
-    foreach ($engineerWork->images as $image) {
-        \Illuminate\Support\Facades\Storage::disk('public')
-            ->delete($image->image_path);
-    }
-
-    $engineerWork->delete();
-
-    return back()->with(
-        'success',
-        'تم حذف العمل بنجاح.'
-    );
-}
     }
 
     /*
@@ -310,20 +296,20 @@ if ($request->hasFile('dwg_file')) {
     |--------------------------------------------------------------------------
     */
 
-public function index()
-{
-    $works = EngineerWork::with([
-        'engineer.employeeProfile.specialty',
-        'coverImage',
-    ])
-        ->latest()
-        ->get();
+    public function index()
+    {
+        $works = EngineerWork::with([
+            'engineer.employeeProfile.specialty',
+            'coverImage',
+        ])
+            ->latest()
+            ->get();
 
-    return view(
-        'engineer-works.admin-index',
-        compact('works')
-    );
-}
+        return view(
+            'engineer-works.admin-index',
+            compact('works')
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -410,4 +396,4 @@ public function index()
             'تم رفض العمل وإرسال الملاحظة للمهندس.'
         );
     }
-
+}
