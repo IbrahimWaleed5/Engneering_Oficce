@@ -193,29 +193,19 @@ if ($request->hasFile('dwg_file')) {
 
         $work = EngineerWork::create([
     'engineer_id' => $request->user()->id,
-
     'title' => $validated['title'],
-
     'description' =>
         $validated['description'] ?? null,
-
     'location' =>
         $validated['location'] ?? null,
-
     'completion_year' =>
         $validated['completion_year'] ?? null,
-
     'project_type' =>
-        $validated['project_type'] ?? null,
-
+    $validated['project_type'] ?? null,
     'pdf_file' => $pdfPath,
-
     'dwg_file' => $dwgPath,
-
     'status' => 'pending',
-
     'is_featured' => false,
-
     'admin_note' => null,
 ]);
 
@@ -233,6 +223,7 @@ if ($request->hasFile('dwg_file')) {
                 'sort_order' => $index,
             ]);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -271,6 +262,8 @@ if ($request->hasFile('dwg_file')) {
     |--------------------------------------------------------------------------
     */
 
+
+
     public function destroy(
         Request $request,
         EngineerWork $engineerWork
@@ -295,6 +288,20 @@ if ($request->hasFile('dwg_file')) {
             'success',
             'تم حذف العمل بنجاح.'
         );
+    $engineerWork->load('images');
+
+    foreach ($engineerWork->images as $image) {
+        \Illuminate\Support\Facades\Storage::disk('public')
+            ->delete($image->image_path);
+    }
+
+    $engineerWork->delete();
+
+    return back()->with(
+        'success',
+        'تم حذف العمل بنجاح.'
+    );
+}
     }
 
     /*

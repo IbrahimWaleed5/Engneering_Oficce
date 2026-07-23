@@ -504,6 +504,10 @@ Route::view(
     '/payment-information',
     'payment-information'
 )->name('payment-information');
+Route::delete(
+    '/admin/engineer-works/{engineerWork}',
+    [EngineerWorkController::class, 'destroy']
+)->name('admin.engineer-works.destroy');
 require __DIR__.'/auth.php';
 
 

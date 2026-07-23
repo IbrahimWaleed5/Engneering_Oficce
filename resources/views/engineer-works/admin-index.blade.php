@@ -18,6 +18,14 @@
 
                 @endif
 
+                @if (session('error'))
+
+                    <div class="p-4 mb-4 text-red-800 bg-red-100 rounded">
+                        {{ session('error') }}
+                    </div>
+
+                @endif
+
                 <div class="overflow-x-auto">
 
                     <table class="w-full min-w-[1100px] border-collapse border">
@@ -98,6 +106,12 @@
                                                 مرفوض
                                             </span>
 
+                                        @else
+
+                                            <span class="px-2 py-1 text-gray-800 bg-gray-100 rounded">
+                                                {{ $work->status }}
+                                            </span>
+
                                         @endif
 
                                     </td>
@@ -108,7 +122,7 @@
 
                                             <a
                                                 href="{{ route('engineer.works.show', $work) }}"
-                                                class="px-3 py-1 text-white bg-blue-600 rounded"
+                                                class="px-3 py-1 text-white transition bg-blue-600 rounded hover:bg-blue-700"
                                             >
                                                 عرض
                                             </a>
@@ -124,7 +138,7 @@
 
                                                     <button
                                                         type="submit"
-                                                        class="px-3 py-1 text-white bg-green-600 rounded"
+                                                        class="px-3 py-1 text-white transition bg-green-600 rounded hover:bg-green-700"
                                                     >
                                                         موافقة
                                                     </button>
@@ -144,7 +158,7 @@
 
                                                     <button
                                                         type="submit"
-                                                        class="px-3 py-1 text-white bg-red-600 rounded"
+                                                        class="px-3 py-1 text-white transition bg-red-600 rounded hover:bg-red-700"
                                                     >
                                                         رفض
                                                     </button>
@@ -152,6 +166,23 @@
                                                 </form>
 
                                             @endif
+
+                                            <form
+                                                method="POST"
+                                                action="{{ route('admin.engineer-works.destroy', $work) }}"
+                                                onsubmit="return confirm('هل أنت متأكد من حذف هذا العمل نهائيًا؟ لا يمكن التراجع عن الحذف.')"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button
+                                                    type="submit"
+                                                    class="px-3 py-1 text-white transition bg-gray-900 rounded hover:bg-black"
+                                                >
+                                                    حذف
+                                                </button>
+
+                                            </form>
 
                                         </div>
 
