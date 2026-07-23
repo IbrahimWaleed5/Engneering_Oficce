@@ -71,28 +71,35 @@
                             </a>
 
                         @endif
+
                         <a
-    href="{{ route('profile.edit') }}"
-    class="px-3 py-2 text-sm rounded-lg
-    {{ request()->routeIs('profile.edit')
-        ? 'bg-blue-600 text-white'
-        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
->
-    ملفي الشخصي
-</a>
+                            href="{{ route('profile.edit') }}"
+                            class="px-3 py-2 text-sm rounded-lg
+                            {{ request()->routeIs('profile.edit')
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                        >
+                            ملفي الشخصي
+                        </a>
 
                         @if (auth()->user()->role === 'engineer')
 
                             <a
                                 href="{{ route('engineer.consultations') }}"
-                                class="px-3 py-2 text-sm rounded-lg"
+                                class="px-3 py-2 text-sm rounded-lg
+                                {{ request()->routeIs('engineer.consultations')
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
                             >
                                 طلباتي
                             </a>
 
                             <a
                                 href="{{ route('engineer.works.mine') }}"
-                                class="px-3 py-2 text-sm rounded-lg"
+                                class="px-3 py-2 text-sm rounded-lg
+                                {{ request()->routeIs('engineer.works.mine')
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
                             >
                                 أعمالي
                             </a>
@@ -113,14 +120,20 @@
 
                             <a
                                 href="{{ route('consultations.index') }}"
-                                class="px-3 py-2 text-sm rounded-lg"
+                                class="px-3 py-2 text-sm rounded-lg
+                                {{ request()->routeIs('consultations.index')
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
                             >
                                 الاستشارات
                             </a>
 
                             <a
                                 href="{{ route('payments.index') }}"
-                                class="px-3 py-2 text-sm rounded-lg"
+                                class="px-3 py-2 text-sm rounded-lg
+                                {{ request()->routeIs('payments.index')
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
                             >
                                 الدفعات
                             </a>
@@ -155,107 +168,53 @@
                         @endif
                     </a>
 
+                    {{-- عرض تخصص المهندس خارج الـ dropdown --}}
+                    @if (auth()->user()->role === 'engineer' && auth()->user()->employeeProfile?->specialty)
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800">
+                            <span class="text-cyan-400">🏗️</span>
+                            <span class="text-sm font-medium text-cyan-300">
+                                {{ auth()->user()->employeeProfile->specialty->name }}
+                            </span>
+                        </div>
+                    @endif
+
+                    {{-- صورة المستخدم مع dropdown لتسجيل الخروج فقط --}}
                     <x-dropdown align="left" width="48">
 
                         <x-slot name="trigger">
 
-                     <button
-    class="flex items-center gap-2 px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700"
->
+                            <button
+                                class="flex items-center justify-center transition rounded-full hover:ring-2 hover:ring-cyan-500"
+                            >
+                                <div class="relative">
 
-    <div class="relative">
+                                    @if(auth()->user()->profile_photo)
 
-        @if(auth()->user()->profile_photo)
+                                        <img
+                                            src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                            alt="{{ auth()->user()->name }}"
+                                            class="object-cover border-2 rounded-full w-11 h-11 border-cyan-500"
+                                        >
 
-            <img
-                src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
-                alt="{{ auth()->user()->name }}"
-            class="object-cover border-2 rounded-full w-9 h-9 border-cyan-500"
-            >
+                                    @else
 
-        @else
+                                        <img
+                                            src="{{ asset('images/Mainlogo.png') }}"
+                                            alt="{{ auth()->user()->name }}"
+                                            class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-800"
+                                        >
 
+                                    @endif
 
+                                </div>
 
-    <img
-        src="{{ asset('images/Mainlogo.png') }}"
-        alt="{{ auth()->user()->name }}"
-        class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-800"
-    >
-
-
-
-        @endif
-
-        <a
-            href="{{ route('profile.edit') }}"
-            class="absolute bottom-0 left-0 flex items-center justify-center w-5 h-5 text-xs text-white bg-blue-600 border rounded-full border-slate-900 hover:bg-blue-700"
-        >
-            📷
-        </a>
-
-    </div>
-
-    <div class="text-right">
-
-        <a href="{{ route('profile.edit') }}">
-
-            <p class="text-sm font-bold text-white hover:text-cyan-300">
-                {{ auth()->user()->name }}
-            </p>
-
-            <p class="text-xs text-slate-400">
-                {{ auth()->user()->phone }}
-            </p>
-
-        </a>
-
-        @if (auth()->user()->role === 'engineer')
-
-            <p class="mt-1 text-xs text-cyan-400">
-                🏗️
-                {{ auth()->user()->employeeProfile?->specialty?->name }}
-            </p>
-
-        @elseif (auth()->user()->role === 'admin')
-
-            <div class="mt-1">
-
-                <a
-                    href="{{ route('users.index') }}"
-                    class="px-2 py-1 text-[10px] text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
-                >
-                    ⚙️ إدارة المستخدمين
-                </a>
-
-            </div>
-
-        @else
-
-            <p class="mt-1 text-xs text-slate-400">
-                👤 عميل
-            </p>
-
-        @endif
-
-    </div>
-
-    <span class="text-slate-400">
-        ▾
-    </span>
-
-</button>
+                            </button>
 
                         </x-slot>
 
                         <x-slot name="content">
 
-                            <x-dropdown-link
-                                :href="route('profile.edit')"
-                            >
-                                الملف الشخصي
-                            </x-dropdown-link>
-
+                            {{-- تسجيل الخروج فقط --}}
                             <form
                                 method="POST"
                                 action="{{ route('logout') }}"
@@ -266,8 +225,9 @@
                                     :href="route('logout')"
                                     onclick="event.preventDefault();
                                         this.closest('form').submit();"
+                                    class="text-red-600 hover:bg-red-50"
                                 >
-                                    تسجيل الخروج
+                                    🚪 تسجيل الخروج
                                 </x-dropdown-link>
                             </form>
 
@@ -279,195 +239,197 @@
 
             </div>
 
+            {{-- Mobile Menu --}}
             <details class="relative md:hidden">
 
-    <summary
-        class="inline-flex items-center justify-center p-3 list-none transition cursor-pointer rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white"
-        aria-label="فتح القائمة"
-    >
-        <svg
-            class="w-7 h-7"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 24 24"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-            />
-        </svg>
-    </summary>
-
-    <div
-        class="fixed right-0 z-50 w-full mt-4 overflow-y-auto border-t shadow-2xl top-16 max-h-[calc(100vh-4rem)] border-slate-700 bg-slate-900"
-        dir="rtl"
-    >
-
-        <div class="px-4 py-5 space-y-2">
-
-            <a
-                href="{{ route('dashboard') }}"
-                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-            >
-                🏠 لوحة التحكم
-            </a>
-
-            <a
-                href="{{ route('engineer.works.public') }}"
-                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-            >
-                👷 مكتبة المهندسين
-            </a>
-
-            @auth
-
-                <a
-                    href="{{ route('profile.edit') }}"
-                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                <summary
+                    class="inline-flex items-center justify-center p-3 list-none transition cursor-pointer rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white"
+                    aria-label="فتح القائمة"
                 >
-                    👤 ملفي الشخصي
-                </a>
-
-                @if (auth()->user()->role === 'customer')
-
-                    <a
-                        href="{{ route('consultations.mine') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                    <svg
+                        class="w-7 h-7"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 24 24"
                     >
-                        📋 استشاراتي
-                    </a>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"
+                        />
+                    </svg>
+                </summary>
 
-                @endif
-
-                @if (auth()->user()->role === 'engineer')
-
-                    <a
-                        href="{{ route('engineer.consultations') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        📐 استشارات المهندس
-                    </a>
-
-                    <a
-                        href="{{ route('engineer.works.mine') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        🏗️ أعمالي
-                    </a>
-
-                    <a
-                        href="{{ route('engineers.show', auth()->user()) }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        ⭐ صفحتي العامة
-                    </a>
-
-                    <a
-                        href="{{ route('engineer.specialty.edit') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        🎓 تخصصي الهندسي
-                    </a>
-
-                @endif
-
-                @if (auth()->user()->role === 'admin')
-
-                    <a
-                        href="{{ route('consultations.index') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        📋 جميع الاستشارات
-                    </a>
-
-                    <a
-                        href="{{ route('payments.index') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        💳 الدفعات
-                    </a>
-
-                    <a
-                        href="{{ route('employees.index') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        👥 الموظفون
-                    </a>
-
-                    <a
-                        href="{{ route('users.index') }}"
-                        class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                    >
-                        ⚙️ إدارة المستخدمين
-                    </a>
-
-                @endif
-
-                <a
-                    href="{{ route('notifications.index') }}"
-                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                <div
+                    class="fixed right-0 z-50 w-full mt-4 overflow-y-auto border-t shadow-2xl top-16 max-h-[calc(100vh-4rem)] border-slate-700 bg-slate-900"
+                    dir="rtl"
                 >
-                    🔔 الإشعارات
-                </a>
 
-                <div class="h-px my-3 bg-slate-700"></div>
+                    <div class="px-4 py-5 space-y-2">
 
-                <form
-                    method="POST"
-                    action="{{ route('logout') }}"
-                >
-                    @csrf
+                        <a
+                            href="{{ route('dashboard') }}"
+                            class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                        >
+                            🏠 لوحة التحكم
+                        </a>
 
-                    <button
-                        type="submit"
-                        class="block w-full px-4 py-3 font-bold text-right text-red-300 transition rounded-xl hover:bg-red-500/10"
-                    >
-                        🚪 تسجيل الخروج
-                    </button>
+                        <a
+                            href="{{ route('engineer.works.public') }}"
+                            class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                        >
+                            👷 مكتبة المهندسين
+                        </a>
 
-                </form>
+                        @auth
 
-            @else
+                            <a
+                                href="{{ route('profile.edit') }}"
+                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                            >
+                                👤 ملفي الشخصي
+                            </a>
 
-                <a
-                    href="{{ route('login') }}"
-                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                >
-                    تسجيل الدخول
-                </a>
+                            @if (auth()->user()->role === 'customer')
 
-                <a
-                    href="{{ route('register') }}"
-                    class="block px-4 py-3 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
-                >
-                    إنشاء حساب
-                </a>
+                                <a
+                                    href="{{ route('consultations.mine') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    📋 استشاراتي
+                                </a>
 
-            @endauth
+                            @endif
+
+                            @if (auth()->user()->role === 'engineer')
+
+                                <a
+                                    href="{{ route('engineer.consultations') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    📐 استشارات المهندس
+                                </a>
+
+                                <a
+                                    href="{{ route('engineer.works.mine') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    🏗️ أعمالي
+                                </a>
+
+                                <a
+                                    href="{{ route('engineers.show', auth()->user()) }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    ⭐ صفحتي العامة
+                                </a>
+
+                                <a
+                                    href="{{ route('engineer.specialty.edit') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    🎓 تخصصي الهندسي
+                                </a>
+
+                            @endif
+
+                            @if (auth()->user()->role === 'admin')
+
+                                <a
+                                    href="{{ route('consultations.index') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    📋 جميع الاستشارات
+                                </a>
+
+                                <a
+                                    href="{{ route('payments.index') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    💳 الدفعات
+                                </a>
+
+                                <a
+                                    href="{{ route('employees.index') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    👥 الموظفون
+                                </a>
+
+                                <a
+                                    href="{{ route('users.index') }}"
+                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                >
+                                    ⚙️ إدارة المستخدمين
+                                </a>
+
+                            @endif
+
+                            <a
+                                href="{{ route('notifications.index') }}"
+                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                            >
+                                🔔 الإشعارات
+                            </a>
+
+                            <div class="h-px my-3 bg-slate-700"></div>
+
+                            <form
+                                method="POST"
+                                action="{{ route('logout') }}"
+                            >
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="block w-full px-4 py-3 font-bold text-right text-red-300 transition rounded-xl hover:bg-red-500/10"
+                                >
+                                    🚪 تسجيل الخروج
+                                </button>
+
+                            </form>
+
+                        @else
+
+                            <a
+                                href="{{ route('login') }}"
+                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                            >
+                                تسجيل الدخول
+                            </a>
+
+                            <a
+                                href="{{ route('register') }}"
+                                class="block px-4 py-3 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
+                            >
+                                إنشاء حساب
+                            </a>
+
+                        @endauth
+
+                    </div>
+
+                </div>
+
+            </details>
 
         </div>
 
     </div>
 
-</details>
+    @auth
 
-        </div>
+        @if (auth()->user()->role === 'admin')
 
-    </div>
-@auth
+            <x-nav-link
+                :href="route('users.index')"
+                :active="request()->routeIs('users.*')"
+            >
+                إدارة المستخدمين
+            </x-nav-link>
 
-    @if (auth()->user()->role === 'admin')
+        @endif
 
-        <x-nav-link
-            :href="route('users.index')"
-            :active="request()->routeIs('users.*')"
-        >
-            إدارة المستخدمين
-        </x-nav-link>
-
-    @endif
-
-@endauth
+    @endauth
 </nav>
