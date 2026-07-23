@@ -544,18 +544,41 @@
                         ختم معتمد
                     </div>
                 </td>
-                <td style="width:50%; text-align:center; vertical-align:bottom;">
-                    <div style="
-                        width:180px;
-                        margin:45px auto 0;
-                        border-top:1px solid #64748b;
-                        padding-top:7px;
-                        color:#475569;
-                        font-size:10px;
-                    ">
-                        توقيع الإدارة
-                    </div>
-                </td>
+               <td style="width:50%; text-align:center; vertical-align:bottom;">
+
+    @php
+        $signaturePath = public_path(
+            'images/sign.png'
+        );
+    @endphp
+
+    @if (file_exists($signaturePath))
+
+        <img
+            src="{{ $signaturePath }}"
+            alt="توقيع الإدارة"
+            style="
+                width:190px;
+                max-height:90px;
+                object-fit:contain;
+                margin-bottom:4px;
+            "
+        >
+
+    @endif
+
+    <div style="
+        width:190px;
+        margin:0 auto;
+        border-top:1px solid #64748b;
+        padding-top:7px;
+        color:#475569;
+        font-size:10px;
+    ">
+        توقيع الإدارة
+    </div>
+
+</td>
             </tr>
         </table>
 
