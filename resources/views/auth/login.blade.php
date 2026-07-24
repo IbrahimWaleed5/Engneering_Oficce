@@ -3,7 +3,6 @@
     <div
         class="w-full px-4 py-8 sm:px-6"
         dir="rtl"
-        x-data="{ showPassword: false }"
     >
 
         <div
@@ -496,9 +495,7 @@
 
                                 <input
                                     id="password"
-                                    :type="showPassword
-                                        ? 'text'
-                                        : 'password'"
+                                    type="password"
                                     name="password"
                                     required
                                     autocomplete="current-password"
@@ -508,22 +505,13 @@
                                 >
 
                                 <button
+                                    id="toggle_login_password"
                                     type="button"
-                                    @click="showPassword = !showPassword"
+                                    aria-controls="password"
+                                    aria-pressed="false"
                                     class="absolute text-xs font-bold -translate-y-1/2 left-4 top-1/2 text-cyan-300 hover:text-cyan-200"
                                 >
-
-                                    <span x-show="!showPassword">
-                                        إظهار
-                                    </span>
-
-                                    <span
-                                        x-cloak
-                                        x-show="showPassword"
-                                    >
-                                        إخفاء
-                                    </span>
-
+                                    إظهار
                                 </button>
 
                             </div>
@@ -642,5 +630,30 @@
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById(
+                'toggle_login_password'
+            );
+
+            if (!passwordInput || !toggleButton) {
+                return;
+            }
+
+            toggleButton.addEventListener('click', function () {
+                const shouldShow = passwordInput.type === 'password';
+
+                passwordInput.type = shouldShow ? 'text' : 'password';
+                toggleButton.textContent = shouldShow ? 'إخفاء' : 'إظهار';
+                toggleButton.setAttribute(
+                    'aria-pressed',
+                    shouldShow ? 'true' : 'false'
+                );
+                passwordInput.focus({ preventScroll: true });
+            });
+        });
+    </script>
 
 </x-guest-layout>

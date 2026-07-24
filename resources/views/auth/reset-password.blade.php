@@ -3,10 +3,6 @@
     <div
         class="w-full px-4 py-8 sm:px-6"
         dir="rtl"
-        x-data="{
-            showPassword: false,
-            showPasswordConfirmation: false
-        }"
     >
 
         <div
@@ -491,9 +487,7 @@
 
                                 <input
                                     id="password"
-                                    :type="showPassword
-                                        ? 'text'
-                                        : 'password'"
+                                    type="password"
                                     name="password"
                                     required
                                     autocomplete="new-password"
@@ -504,24 +498,12 @@
 
                                 <button
                                     type="button"
-                                    @click="
-                                        showPassword =
-                                            !showPassword
-                                    "
+                                    data-password-toggle="password"
                                     class="absolute text-xs font-bold -translate-y-1/2 left-4 top-1/2 text-cyan-300 hover:text-cyan-200"
+                                    aria-label="إظهار كلمة المرور"
+                                    aria-pressed="false"
                                 >
-
-                                    <span x-show="!showPassword">
-                                        إظهار
-                                    </span>
-
-                                    <span
-                                        x-cloak
-                                        x-show="showPassword"
-                                    >
-                                        إخفاء
-                                    </span>
-
+                                    إظهار
                                 </button>
 
                             </div>
@@ -578,11 +560,7 @@
 
                                 <input
                                     id="password_confirmation"
-                                    :type="
-                                        showPasswordConfirmation
-                                            ? 'text'
-                                            : 'password'
-                                    "
+                                    type="password"
                                     name="password_confirmation"
                                     required
                                     autocomplete="new-password"
@@ -593,30 +571,12 @@
 
                                 <button
                                     type="button"
-                                    @click="
-                                        showPasswordConfirmation =
-                                            !showPasswordConfirmation
-                                    "
+                                    data-password-toggle="password_confirmation"
                                     class="absolute text-xs font-bold -translate-y-1/2 left-4 top-1/2 text-cyan-300 hover:text-cyan-200"
+                                    aria-label="إظهار تأكيد كلمة المرور"
+                                    aria-pressed="false"
                                 >
-
-                                    <span
-                                        x-show="
-                                            !showPasswordConfirmation
-                                        "
-                                    >
-                                        إظهار
-                                    </span>
-
-                                    <span
-                                        x-cloak
-                                        x-show="
-                                            showPasswordConfirmation
-                                        "
-                                    >
-                                        إخفاء
-                                    </span>
-
+                                    إظهار
                                 </button>
 
                             </div>
@@ -717,5 +677,37 @@
         </div>
 
     </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleButtons = document.querySelectorAll(
+                '[data-password-toggle]'
+            );
+
+            toggleButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const inputId = button.getAttribute(
+                        'data-password-toggle'
+                    );
+
+                    const input = document.getElementById(inputId);
+
+                    if (!input) {
+                        return;
+                    }
+
+                    const isHidden = input.type === 'password';
+
+                    input.type = isHidden ? 'text' : 'password';
+                    button.textContent = isHidden ? 'إخفاء' : 'إظهار';
+                    button.setAttribute(
+                        'aria-pressed',
+                        isHidden ? 'true' : 'false'
+                    );
+                });
+            });
+        });
+    </script>
 
 </x-guest-layout>

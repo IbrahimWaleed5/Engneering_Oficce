@@ -3,28 +3,6 @@
     <div
         class="w-full px-4 py-8 sm:px-6"
         dir="rtl"
-        x-data="{
-            showPassword: false,
-            showPasswordConfirmation: false,
-            photoPreview: null,
-
-            previewPhoto(event) {
-                const file = event.target.files[0];
-
-                if (!file) {
-                    this.photoPreview = null;
-                    return;
-                }
-
-                const reader = new FileReader();
-
-                reader.onload = (event) => {
-                    this.photoPreview = event.target.result;
-                };
-
-                reader.readAsDataURL(file);
-            }
-        }"
     >
 
         <div
@@ -398,110 +376,117 @@
                         @csrf
 
                         {{-- الصورة الشخصية --}}
-                        <div>
+                       {{-- الصورة الشخصية --}}
+<div class="space-y-3">
 
-                            <label
-                                for="profile_photo"
-                                class="block mb-3 text-sm font-bold text-slate-200"
-                            >
-                                الصورة الشخصية
-                            </label>
+    <label
+        for="profile_photo"
+        class="block text-sm font-black text-white"
+    >
+        الصورة الشخصية
+    </label>
 
-                            <label
-                                for="profile_photo"
-                                class="flex flex-col items-center gap-5 p-5 transition border border-dashed cursor-pointer rounded-3xl border-white/15 bg-slate-950/50 hover:border-cyan-500/50 hover:bg-slate-950/80 sm:flex-row"
-                            >
+    <label
+        for="profile_photo"
+        class="group relative flex min-h-[160px] w-full cursor-pointer
+               flex-col items-center justify-center overflow-hidden
+               rounded-3xl border border-dashed border-cyan-400/40
+               bg-gradient-to-br from-cyan-500/[0.08]
+               via-blue-500/[0.04] to-transparent
+               px-5 py-6 text-center transition-all duration-300
+               hover:-translate-y-0.5 hover:border-cyan-300/70
+               hover:bg-cyan-500/[0.10]
+               hover:shadow-[0_18px_45px_rgba(6,182,212,0.12)]"
+    >
 
-                                <div class="relative flex-none">
+        {{-- الإضاءة الخلفية --}}
+        <span
+            class="absolute w-24 h-24 transition rounded-full bg-cyan-400/10 blur-3xl group-hover:bg-cyan-400/20"
+        ></span>
 
-                                    <template x-if="photoPreview">
+        {{-- معاينة الصورة --}}
+        <img
+            id="profile_photo_preview"
+            src=""
+            alt="معاينة الصورة"
+            class="relative z-10 hidden object-cover w-20 h-20 border-2 shadow-xl rounded-2xl border-cyan-400/30"
+        >
 
-                                        <img
-                                            :src="photoPreview"
-                                            alt="معاينة الصورة الشخصية"
-                                            class="object-cover w-24 h-24 border-2 rounded-full shadow-lg border-cyan-500/50 shadow-cyan-500/10"
-                                        >
+        {{-- الأيقونة --}}
+        <div
+            id="profile_photo_icon"
+            class="relative z-10 flex items-center justify-center w-16 h-16 transition duration-300 border shadow-lg rounded-2xl border-cyan-400/20 bg-cyan-400/10 text-cyan-300 group-hover:scale-105"
+        >
+            <svg
+                class="w-8 h-8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.8"
+                    d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"
+                />
+            </svg>
+        </div>
 
-                                    </template>
+        <div class="relative z-10 mt-4">
+            <p class="text-sm font-black text-white">
+                اضغط لاختيار صورتك
+            </p>
 
-                                    <template x-if="!photoPreview">
+            <p
+                id="profile_photo_name"
+                class="mt-2 text-xs leading-6 text-slate-400"
+            >
+                JPG أو JPEG أو PNG أو WEBP
+            </p>
 
-                                        <div
-                                            class="flex items-center justify-center w-24 h-24 border-2 rounded-full border-white/10 bg-slate-800"
-                                        >
+            <p class="mt-1 text-[11px] text-slate-500">
+                الحد الأقصى لحجم الصورة 2MB
+            </p>
+        </div>
 
-                                            <svg
-                                                class="w-10 h-10 text-slate-500"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.5"
-                                            >
-                                                <path
-                                                    d="M20 21a8 8 0 0 0-16 0"
-                                                />
+        <span
+            class="relative z-10 inline-flex items-center gap-2 px-5 py-2 mt-4 text-xs font-black transition border rounded-xl border-cyan-400/20 bg-cyan-400/10 text-cyan-200 group-hover:bg-cyan-400/20"
+        >
+            <svg
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                />
+            </svg>
 
-                                                <circle
-                                                    cx="12"
-                                                    cy="7"
-                                                    r="4"
-                                                />
-                                            </svg>
+            اختيار صورة
+        </span>
 
-                                        </div>
+        <input
+            id="profile_photo"
+            name="profile_photo"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            class="hidden"
+            data-profile-photo-input
+        >
 
-                                    </template>
+    </label>
 
-                                    <div
-                                        class="absolute bottom-0 left-0 flex items-center justify-center w-8 h-8 text-sm text-white bg-blue-600 border-2 rounded-full border-slate-900"
-                                    >
-                                        📷
-                                    </div>
+    @error('profile_photo')
+        <p class="text-sm font-bold text-red-300">
+            {{ $message }}
+        </p>
+    @enderror
 
-                                </div>
-
-                                <div class="flex-1 text-center sm:text-right">
-
-                                    <p class="font-bold text-white">
-                                        اختر صورتك الشخصية
-                                    </p>
-
-                                    <p
-                                        class="mt-2 text-xs leading-6 text-slate-500"
-                                    >
-                                        JPG أو JPEG أو PNG أو WEBP، والحد
-                                        الأقصى لحجم الصورة 2MB.
-                                    </p>
-
-                                    <span
-                                        class="inline-flex px-4 py-2 mt-3 text-xs font-bold text-blue-200 rounded-xl bg-blue-500/10"
-                                    >
-                                        اختيار صورة
-                                    </span>
-
-                                </div>
-
-                            </label>
-
-                            <input
-                                id="profile_photo"
-                                type="file"
-                                name="profile_photo"
-                                accept="image/png,image/jpeg,image/jpg,image/webp"
-                                required
-                                class="hidden"
-                                @change="previewPhoto($event)"
-                            >
-
-                            @error('profile_photo')
-
-                                <p class="mt-2 text-sm text-red-300">
-                                    {{ $message }}
-                                </p>
-
-                            @enderror
-
-                        </div>
+</div>
 
                         {{-- الاسم والهاتف --}}
                         <div class="grid gap-5 sm:grid-cols-2">
@@ -728,9 +713,7 @@
 
                                     <input
                                         id="password"
-                                        :type="showPassword
-                                            ? 'text'
-                                            : 'password'"
+                                        type="password"
                                         name="password"
                                         required
                                         autocomplete="new-password"
@@ -741,24 +724,10 @@
 
                                     <button
                                         type="button"
-                                        @click="
-                                            showPassword =
-                                                !showPassword
-                                        "
+                                        data-password-toggle="password"
                                         class="absolute text-xs font-bold -translate-y-1/2 left-4 top-1/2 text-cyan-300 hover:text-cyan-200"
                                     >
-
-                                        <span x-show="!showPassword">
-                                            إظهار
-                                        </span>
-
-                                        <span
-                                            x-cloak
-                                            x-show="showPassword"
-                                        >
-                                            إخفاء
-                                        </span>
-
+                                        <span data-toggle-text>إظهار</span>
                                     </button>
 
                                 </div>
@@ -812,11 +781,7 @@
 
                                     <input
                                         id="password_confirmation"
-                                        :type="
-                                            showPasswordConfirmation
-                                                ? 'text'
-                                                : 'password'
-                                        "
+                                        type="password"
                                         name="password_confirmation"
                                         required
                                         autocomplete="new-password"
@@ -827,30 +792,10 @@
 
                                     <button
                                         type="button"
-                                        @click="
-                                            showPasswordConfirmation =
-                                                !showPasswordConfirmation
-                                        "
+                                        data-password-toggle="password_confirmation"
                                         class="absolute text-xs font-bold -translate-y-1/2 left-4 top-1/2 text-cyan-300 hover:text-cyan-200"
                                     >
-
-                                        <span
-                                            x-show="
-                                                !showPasswordConfirmation
-                                            "
-                                        >
-                                            إظهار
-                                        </span>
-
-                                        <span
-                                            x-cloak
-                                            x-show="
-                                                showPasswordConfirmation
-                                            "
-                                        >
-                                            إخفاء
-                                        </span>
-
+                                        <span data-toggle-text>إظهار</span>
                                     </button>
 
                                 </div>
@@ -933,5 +878,49 @@
         </div>
 
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const input = document.getElementById(button.dataset.passwordToggle);
+            const label = button.querySelector('[data-toggle-text]');
+            if (!input || !label) return;
+            const hidden = input.type === 'password';
+            input.type = hidden ? 'text' : 'password';
+            label.textContent = hidden ? 'إخفاء' : 'إظهار';
+        });
+    });
+
+    const photoInput = document.querySelector('[data-profile-photo-input]');
+    const preview = document.getElementById('profile_photo_preview');
+    const icon = document.getElementById('profile_photo_icon');
+    const fileName = document.getElementById('profile_photo_name');
+
+    if (photoInput && preview && icon && fileName) {
+        photoInput.addEventListener('change', function () {
+            const file = photoInput.files && photoInput.files[0];
+
+            if (!file) {
+                preview.src = '';
+                preview.classList.add('hidden');
+                icon.classList.remove('hidden');
+                fileName.textContent = 'JPG أو JPEG أو PNG أو WEBP';
+                return;
+            }
+
+            fileName.textContent = file.name;
+            const reader = new FileReader();
+
+            reader.addEventListener('load', function (event) {
+                preview.src = event.target.result;
+                preview.classList.remove('hidden');
+                icon.classList.add('hidden');
+            });
+
+            reader.readAsDataURL(file);
+        });
+    }
+});
+</script>
 
 </x-guest-layout>
