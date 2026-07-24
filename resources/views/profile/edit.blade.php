@@ -3,19 +3,9 @@
         class="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.12),_transparent_25%),linear-gradient(to_bottom,_#020617,_#071132,_#020617)]"
         dir="rtl"
         x-data="{
-            activeTab: 'profile',
             showCurrent: false,
             showPassword: false,
-            showPasswordConfirmation: false,
-            goTab(tab) {
-                this.activeTab = tab;
-                this.$nextTick(() => {
-                    const section = document.getElementById('section-' + tab);
-                    if (section) {
-                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                });
-            }
+            showPasswordConfirmation: false
         }"
     >
         <div class="max-w-6xl px-4 py-8 mx-auto sm:px-6 lg:px-8">
@@ -56,55 +46,45 @@
 
             {{-- شريط التبويبات --}}
             <div class="sticky z-20 mb-8 top-4">
-                <div class="p-3 border shadow-2xl rounded-3xl bg-slate-950/60 border-white/10 backdrop-blur-2xl">
+                <div class="p-3 border shadow-2xl rounded-3xl bg-slate-950/80 border-white/10 backdrop-blur-2xl">
                     <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        <button
-                            type="button"
-                            @click="goTab('profile')"
-                            :class="activeTab === 'profile'
-                                ? 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20'
-                                : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'"
-                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10"
+
+                        <a
+                            href="#section-profile"
+                            onclick="event.preventDefault(); document.getElementById('section-profile').scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-white transition-all duration-200 border border-cyan-400/20 rounded-2xl bg-gradient-to-l from-cyan-500/20 to-blue-600/20 hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-cyan-500/20"
                         >
                             <span>👤</span>
                             <span>البيانات الشخصية</span>
-                        </button>
+                        </a>
 
-                        <button
-                            type="button"
-                            @click="goTab('password')"
-                            :class="activeTab === 'password'
-                                ? 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20'
-                                : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'"
-                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10"
+                        <a
+                            href="#section-password"
+                            onclick="event.preventDefault(); document.getElementById('section-password').scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10 bg-white/[0.03] text-slate-300 hover:-translate-y-0.5 hover:bg-white/[0.07] hover:text-white"
                         >
                             <span>🔐</span>
                             <span>كلمة المرور</span>
-                        </button>
+                        </a>
 
-                        <button
-                            type="button"
-                            @click="goTab('specialty')"
-                            :class="activeTab === 'specialty'
-                                ? 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20'
-                                : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'"
-                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10"
+                        <a
+                            href="#section-specialty"
+                            onclick="event.preventDefault(); document.getElementById('section-specialty').scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10 bg-white/[0.03] text-slate-300 hover:-translate-y-0.5 hover:bg-white/[0.07] hover:text-white"
                         >
                             <span>🧾</span>
                             <span>التخصص والنبذة</span>
-                        </button>
+                        </a>
 
-                        <button
-                            type="button"
-                            @click="goTab('delete')"
-                            :class="activeTab === 'delete'
-                                ? 'bg-gradient-to-l from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/20'
-                                : 'bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'"
-                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-white/10"
+                        <a
+                            href="#section-delete"
+                            onclick="event.preventDefault(); document.getElementById('section-delete').scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all duration-200 border rounded-2xl border-red-400/20 bg-red-500/5 text-red-200 hover:-translate-y-0.5 hover:bg-red-500/10 hover:text-white"
                         >
                             <span>⚠️</span>
                             <span>حذف الحساب</span>
-                        </button>
+                        </a>
+
                     </div>
                 </div>
             </div>
@@ -114,7 +94,7 @@
                 {{-- البيانات الشخصية --}}
                 <section
                     id="section-profile"
-                    class="overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
+                    class="scroll-mt-32 overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
                 >
                     <div class="p-6 border-b sm:p-8 border-white/10">
                         <h2 class="text-2xl font-black text-white">البيانات الشخصية</h2>
@@ -233,7 +213,7 @@
                 {{-- كلمة المرور --}}
                 <section
                     id="section-password"
-                    class="overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
+                    class="scroll-mt-32 overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
                 >
                     <div class="p-6 border-b sm:p-8 border-white/10">
                         <h2 class="text-2xl font-black text-white">كلمة المرور</h2>
@@ -334,7 +314,7 @@
                 {{-- التخصص والنبذة --}}
                 <section
                     id="section-specialty"
-                    class="overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
+                    class="scroll-mt-32 overflow-hidden border shadow-2xl rounded-[2rem] border-white/10 bg-slate-950/40 backdrop-blur-xl"
                 >
                     <div class="p-6 border-b sm:p-8 border-white/10">
                         <h2 class="text-2xl font-black text-white">التخصص والنبذة</h2>
@@ -350,7 +330,7 @@
                             class="p-6 space-y-6 sm:p-8"
                         >
                             @csrf
-                            @method('PATCH')
+                            @method('PUT')
 
                             <div>
                                 <label class="block mb-2 text-sm font-bold text-slate-200">
@@ -402,7 +382,7 @@
                 {{-- حذف الحساب --}}
                 <section
                     id="section-delete"
-                    class="overflow-hidden border shadow-2xl rounded-[2rem] border-red-400/10 bg-slate-950/40 backdrop-blur-xl"
+                    class="scroll-mt-32 overflow-hidden border shadow-2xl rounded-[2rem] border-red-400/10 bg-slate-950/40 backdrop-blur-xl"
                 >
                     <div class="p-6 border-b sm:p-8 border-red-400/10">
                         <h2 class="text-2xl font-black text-white">حذف الحساب</h2>
