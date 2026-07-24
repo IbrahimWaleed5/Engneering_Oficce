@@ -19,12 +19,7 @@
 @endphp
 
 <nav
-    x-data="{
-        mobileOpen: false,
-        accountOpen: false
-    }"
-    x-effect="document.body.classList.toggle('overflow-hidden', mobileOpen)"
-    @keydown.escape.window="mobileOpen = false; accountOpen = false"
+    id="main-navigation"
     class="sticky top-0 z-50 border-b border-white/[0.07] bg-slate-950/75 shadow-[0_12px_50px_rgba(2,6,23,0.35)] backdrop-blur-2xl"
     dir="rtl"
 >
@@ -178,14 +173,15 @@
 
                     {{-- قائمة الحساب على سطح المكتب --}}
                     <div
+                        id="account-menu-wrapper"
                         class="relative hidden lg:block"
-                        @click.outside="accountOpen = false"
                     >
                         <button
+                            id="account-menu-button"
                             type="button"
-                            @click="accountOpen = !accountOpen"
                             class="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-1.5 pl-3 text-right transition hover:border-cyan-400/25 hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-                            :aria-expanded="accountOpen"
+                            aria-expanded="false"
+                            aria-controls="account-menu"
                         >
                             <div class="relative shrink-0">
                                 @if ($user->profile_photo)
@@ -222,8 +218,8 @@
                             </div>
 
                             <svg
+                                id="account-menu-chevron"
                                 class="w-4 h-4 transition text-slate-400"
-                                :class="accountOpen ? 'rotate-180' : ''"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -234,15 +230,8 @@
                         </button>
 
                         <div
-                            x-cloak
-                            x-show="accountOpen"
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                            x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-                            class="absolute left-0 mt-3 w-72 overflow-hidden rounded-3xl border border-white/[0.09] bg-slate-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-2xl"
+                            id="account-menu"
+                            class="absolute left-0 mt-3 hidden w-72 origin-top-left overflow-hidden rounded-3xl border border-white/[0.09] bg-slate-950/95 p-2 opacity-0 scale-95 shadow-2xl shadow-black/40 backdrop-blur-2xl transition duration-150"
                         >
                             <div class="mb-2 rounded-2xl border border-white/[0.07] bg-white/[0.04] p-4">
                                 <p class="text-sm font-black text-white truncate">
@@ -330,11 +319,12 @@
 
                 {{-- زر قائمة الجوال --}}
                 <button
+                    id="mobile-menu-open"
                     type="button"
-                    @click="mobileOpen = true"
                     class="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.05] text-white shadow-lg transition hover:border-cyan-400/30 hover:bg-cyan-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 lg:hidden"
                     aria-label="فتح القائمة"
-                    :aria-expanded="mobileOpen"
+                    aria-expanded="false"
+                    aria-controls="mobile-menu"
                 >
                     <span class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10"></span>
                     <svg class="relative w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -347,26 +337,17 @@
 
     {{-- طبقة خلفية لقائمة الجوال --}}
     <div
-        x-cloak
-        x-show="mobileOpen"
-        x-transition.opacity
-        @click="mobileOpen = false"
-        class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-sm lg:hidden"
+        id="mobile-menu-backdrop"
+        class="fixed inset-0 z-[60] hidden bg-slate-950/75 opacity-0 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
         aria-hidden="true"
     ></div>
 
     {{-- قائمة الجوال الجانبية --}}
     <aside
-        x-cloak
-        x-show="mobileOpen"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="translate-x-full opacity-0"
-        x-transition:enter-end="translate-x-0 opacity-100"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="translate-x-0 opacity-100"
-        x-transition:leave-end="translate-x-full opacity-0"
-        class="fixed right-0 top-0 z-[70] flex h-dvh w-[min(90vw,390px)] flex-col border-l border-white/[0.08] bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-2xl lg:hidden"
+        id="mobile-menu"
+        class="pointer-events-none fixed right-0 top-0 z-[70] flex h-dvh w-[min(90vw,390px)] translate-x-full flex-col border-l border-white/[0.08] bg-slate-950/95 opacity-0 shadow-2xl shadow-black/50 backdrop-blur-2xl transition duration-300 lg:hidden"
         aria-label="قائمة التنقل للجوال"
+        aria-hidden="true"
     >
         {{-- رأس القائمة --}}
         <div class="relative overflow-hidden border-b border-white/[0.07] p-4">
@@ -393,8 +374,8 @@
                 </div>
 
                 <button
+                    id="mobile-menu-close"
                     type="button"
-                    @click="mobileOpen = false"
                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.05] text-slate-300 transition hover:bg-rose-500/10 hover:text-rose-300"
                     aria-label="إغلاق القائمة"
                 >
@@ -442,7 +423,6 @@
                 <div class="space-y-2">
                     <a
                         href="{{ $homeLink }}"
-                        @click="mobileOpen = false"
                         class="{{ $mobileItemBase }} {{ request()->routeIs('dashboard', 'home') ? $mobileItemActive : $mobileItemIdle }}"
                     >
                         <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🏠</span>
@@ -451,7 +431,6 @@
 
                     <a
                         href="{{ route('engineer.works.public') }}"
-                        @click="mobileOpen = false"
                         class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.public', 'engineer.works.show') ? $mobileItemActive : $mobileItemIdle }}"
                     >
                         <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">👷</span>
@@ -469,7 +448,6 @@
                     <div class="space-y-2">
                         <a
                             href="{{ route('profile.edit') }}"
-                            @click="mobileOpen = false"
                             class="{{ $mobileItemBase }} {{ request()->routeIs('profile.*') ? $mobileItemActive : $mobileItemIdle }}"
                         >
                             <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">👤</span>
@@ -478,7 +456,6 @@
 
                         <a
                             href="{{ route('notifications.index') }}"
-                            @click="mobileOpen = false"
                             class="{{ $mobileItemBase }} {{ request()->routeIs('notifications.*') ? $mobileItemActive : $mobileItemIdle }}"
                         >
                             <span class="relative flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 text-amber-300">
@@ -503,8 +480,7 @@
                         <div class="space-y-2">
                             <a
                                 href="{{ route('consultations.mine') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.mine', 'consultations.messages.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.mine', 'consultations.messages.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">📋</span>
                                 <span>استشاراتي</span>
@@ -512,8 +488,7 @@
 
                             <a
                                 href="{{ route('consultations.create') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.create') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.create') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">➕</span>
                                 <span>طلب استشارة جديدة</span>
@@ -531,8 +506,7 @@
                         <div class="space-y-2">
                             <a
                                 href="{{ route('engineer.consultations') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.consultations') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.consultations') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">📐</span>
                                 <span>استشارات المهندس</span>
@@ -540,8 +514,7 @@
 
                             <a
                                 href="{{ route('engineer.works.mine') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">🏗️</span>
                                 <span>أعمالي</span>
@@ -549,8 +522,7 @@
 
                             <a
                                 href="{{ route('engineers.show', $user) }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineers.show') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('engineers.show') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 text-amber-300">⭐</span>
                                 <span>صفحتي العامة</span>
@@ -558,8 +530,7 @@
 
                             <a
                                 href="{{ route('engineer.specialty.edit') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.specialty.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.specialty.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">🎓</span>
                                 <span>التخصص والنبذة</span>
@@ -577,8 +548,7 @@
                         <div class="space-y-2">
                             <a
                                 href="{{ route('consultations.index') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.index', 'consultations.assign.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.index', 'consultations.assign.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">📋</span>
                                 <span>جميع الاستشارات</span>
@@ -586,8 +556,7 @@
 
                             <a
                                 href="{{ route('payments.index') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('payments.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('payments.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">💳</span>
                                 <span>إدارة الدفعات</span>
@@ -595,8 +564,7 @@
 
                             <a
                                 href="{{ route('employees.index') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('employees.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('employees.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">👥</span>
                                 <span>الموظفون</span>
@@ -604,8 +572,7 @@
 
                             <a
                                 href="{{ route('users.index') }}"
-                                @click="mobileOpen = false"
-                                class="{{ $mobileItemBase }} {{ request()->routeIs('users.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('users.*') ? $mobileItemActive : $mobileItemIdle }}"
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">⚙️</span>
                                 <span>إدارة المستخدمين</span>
@@ -622,7 +589,6 @@
                     <div class="space-y-2">
                         <a
                             href="{{ route('login') }}"
-                            @click="mobileOpen = false"
                             class="{{ $mobileItemBase }} {{ $mobileItemIdle }}"
                         >
                             <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🔑</span>
@@ -631,7 +597,6 @@
 
                         <a
                             href="{{ route('register') }}"
-                            @click="mobileOpen = false"
                             class="{{ $mobileItemBase }} border-cyan-400/25 bg-gradient-to-l from-cyan-500/25 to-blue-600/25 text-white"
                         >
                             <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10">✨</span>
@@ -658,4 +623,129 @@
             </div>
         @endauth
     </aside>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accountWrapper = document.getElementById('account-menu-wrapper');
+            const accountButton = document.getElementById('account-menu-button');
+            const accountMenu = document.getElementById('account-menu');
+            const accountChevron = document.getElementById('account-menu-chevron');
+
+            const mobileOpenButton = document.getElementById('mobile-menu-open');
+            const mobileCloseButton = document.getElementById('mobile-menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileBackdrop = document.getElementById('mobile-menu-backdrop');
+
+            function openAccountMenu() {
+                if (!accountMenu || !accountButton) return;
+
+                accountMenu.classList.remove('hidden');
+
+                requestAnimationFrame(function () {
+                    accountMenu.classList.remove('opacity-0', 'scale-95');
+                    accountMenu.classList.add('opacity-100', 'scale-100');
+                });
+
+                accountButton.setAttribute('aria-expanded', 'true');
+                accountChevron?.classList.add('rotate-180');
+            }
+
+            function closeAccountMenu() {
+                if (!accountMenu || !accountButton) return;
+
+                accountMenu.classList.remove('opacity-100', 'scale-100');
+                accountMenu.classList.add('opacity-0', 'scale-95');
+                accountButton.setAttribute('aria-expanded', 'false');
+                accountChevron?.classList.remove('rotate-180');
+
+                window.setTimeout(function () {
+                    if (accountButton.getAttribute('aria-expanded') === 'false') {
+                        accountMenu.classList.add('hidden');
+                    }
+                }, 150);
+            }
+
+            function toggleAccountMenu(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!accountMenu || !accountButton) return;
+
+                const isOpen = accountButton.getAttribute('aria-expanded') === 'true';
+                isOpen ? closeAccountMenu() : openAccountMenu();
+            }
+
+            function openMobileMenu() {
+                if (!mobileMenu || !mobileBackdrop || !mobileOpenButton) return;
+
+                mobileBackdrop.classList.remove('hidden');
+                mobileMenu.classList.remove('pointer-events-none');
+                mobileMenu.setAttribute('aria-hidden', 'false');
+                mobileOpenButton.setAttribute('aria-expanded', 'true');
+                document.body.classList.add('overflow-hidden');
+
+                requestAnimationFrame(function () {
+                    mobileBackdrop.classList.remove('opacity-0');
+                    mobileBackdrop.classList.add('opacity-100');
+                    mobileMenu.classList.remove('translate-x-full', 'opacity-0');
+                    mobileMenu.classList.add('translate-x-0', 'opacity-100');
+                });
+            }
+
+            function closeMobileMenu() {
+                if (!mobileMenu || !mobileBackdrop || !mobileOpenButton) return;
+
+                mobileBackdrop.classList.remove('opacity-100');
+                mobileBackdrop.classList.add('opacity-0');
+                mobileMenu.classList.remove('translate-x-0', 'opacity-100');
+                mobileMenu.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+                mobileMenu.setAttribute('aria-hidden', 'true');
+                mobileOpenButton.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('overflow-hidden');
+
+                window.setTimeout(function () {
+                    if (mobileMenu.getAttribute('aria-hidden') === 'true') {
+                        mobileBackdrop.classList.add('hidden');
+                    }
+                }, 300);
+            }
+
+            accountButton?.addEventListener('click', toggleAccountMenu);
+
+            document.addEventListener('click', function (event) {
+                if (
+                    accountWrapper
+                    && !accountWrapper.contains(event.target)
+                ) {
+                    closeAccountMenu();
+                }
+            });
+
+            mobileOpenButton?.addEventListener('click', function (event) {
+                event.preventDefault();
+                openMobileMenu();
+            });
+
+            mobileCloseButton?.addEventListener('click', closeMobileMenu);
+            mobileBackdrop?.addEventListener('click', closeMobileMenu);
+
+            mobileMenu?.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeAccountMenu();
+                    closeMobileMenu();
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 1024) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+
 </nav>
