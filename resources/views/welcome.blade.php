@@ -40,18 +40,33 @@
 
    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        #welcome-mobile-menu {
+            animation: welcomeMenuIn 0.24s ease-out;
+        }
+
+        @keyframes welcomeMenuIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
 </head>
 
 <body class="min-h-screen overflow-x-hidden font-sans text-white bg-slate-950">
 
-    <div
-        x-data="{
-            menuOpen: false,
-            showScrollButton: false
-        }"
-        @scroll.window="showScrollButton = window.scrollY > 500"
-        class="relative min-h-screen"
-    >
+    <div class="relative min-h-screen">
 
         {{-- الخلفيات المتحركة --}}
 
@@ -179,14 +194,17 @@
                 </div>
 
                 <button
+                    id="welcome-mobile-menu-button"
                     type="button"
-                    @click="menuOpen = ! menuOpen"
-                    class="flex items-center justify-center border w-11 h-11 lg:hidden rounded-xl border-white/10 bg-white/5"
+                    aria-controls="welcome-mobile-menu"
+                    aria-expanded="false"
+                    aria-label="فتح القائمة"
+                    class="relative flex items-center justify-center overflow-hidden transition-all duration-300 border shadow-lg w-11 h-11 lg:hidden rounded-xl border-cyan-400/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-cyan-300/40 hover:shadow-cyan-500/20 active:scale-95"
                 >
                     <svg
-                        x-show="!menuOpen"
+                        id="welcome-menu-open-icon"
                         xmlns="http://www.w3.org/2000/svg"
-                        class="w-6 h-6"
+                        class="w-6 h-6 transition text-slate-100"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -200,10 +218,9 @@
                     </svg>
 
                     <svg
-                        x-cloak
-                        x-show="menuOpen"
+                        id="welcome-menu-close-icon"
                         xmlns="http://www.w3.org/2000/svg"
-                        class="w-6 h-6"
+                        class="hidden w-6 h-6 transition text-slate-100"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -222,17 +239,15 @@
             {{-- قائمة الهاتف --}}
 
             <div
-                x-cloak
-                x-show="menuOpen"
-                x-transition
-                class="px-4 pb-5 border-t lg:hidden border-white/10 bg-slate-950/95"
+                id="welcome-mobile-menu"
+                class="hidden px-4 pb-5 border-t shadow-2xl lg:hidden border-white/10 bg-slate-950/95 backdrop-blur-2xl"
             >
 
                 <div class="pt-4 space-y-2">
 
                     <a
                         href="#home"
-                        @click="menuOpen = false"
+                        data-welcome-mobile-link
                         class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
                     >
                         الرئيسية
@@ -240,7 +255,7 @@
 
                     <a
                         href="#services"
-                        @click="menuOpen = false"
+                        data-welcome-mobile-link
                         class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
                     >
                         خدماتنا
@@ -248,7 +263,7 @@
 
                     <a
                         href="#works"
-                        @click="menuOpen = false"
+                        data-welcome-mobile-link
                         class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
                     >
                         أعمال المهندسين
@@ -256,7 +271,7 @@
 
                     <a
                         href="#engineers"
-                        @click="menuOpen = false"
+                        data-welcome-mobile-link
                         class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
                     >
                         مهندسونا
@@ -1558,17 +1573,150 @@
         {{-- زر الصعود --}}
 
         <button
-            x-cloak
-            x-show="showScrollButton"
-            x-transition
+            id="welcome-scroll-button"
             type="button"
-            @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
-            class="fixed z-50 flex items-center justify-center w-12 h-12 text-lg border rounded-full shadow-xl bottom-6 left-6 border-cyan-400/20 bg-cyan-500 text-slate-950 hover:-translate-y-1"
+            aria-label="العودة إلى أعلى الصفحة"
+            class="fixed z-50 items-center justify-center hidden w-12 h-12 text-lg font-black transition-all duration-300 border rounded-full shadow-xl bottom-6 left-6 border-cyan-400/30 bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950 hover:-translate-y-1 hover:shadow-cyan-500/30 active:scale-95"
         >
             ↑
         </button>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nav = document.querySelector('nav');
+            const menuButton = document.getElementById(
+                'welcome-mobile-menu-button'
+            );
+            const mobileMenu = document.getElementById(
+                'welcome-mobile-menu'
+            );
+            const openIcon = document.getElementById(
+                'welcome-menu-open-icon'
+            );
+            const closeIcon = document.getElementById(
+                'welcome-menu-close-icon'
+            );
+            const mobileLinks = document.querySelectorAll(
+                '[data-welcome-mobile-link]'
+            );
+            const scrollButton = document.getElementById(
+                'welcome-scroll-button'
+            );
+
+            function setMobileMenu(open) {
+                if (
+                    !menuButton
+                    || !mobileMenu
+                    || !openIcon
+                    || !closeIcon
+                ) {
+                    return;
+                }
+
+                mobileMenu.classList.toggle('hidden', !open);
+                openIcon.classList.toggle('hidden', open);
+                closeIcon.classList.toggle('hidden', !open);
+
+                menuButton.setAttribute(
+                    'aria-expanded',
+                    open ? 'true' : 'false'
+                );
+
+                menuButton.setAttribute(
+                    'aria-label',
+                    open ? 'إغلاق القائمة' : 'فتح القائمة'
+                );
+
+                if (window.innerWidth < 1024) {
+                    document.body.classList.toggle(
+                        'overflow-hidden',
+                        open
+                    );
+                }
+            }
+
+            if (menuButton && mobileMenu) {
+                menuButton.addEventListener('click', function (event) {
+                    event.stopPropagation();
+
+                    const isOpen =
+                        menuButton.getAttribute('aria-expanded')
+                        === 'true';
+
+                    setMobileMenu(!isOpen);
+                });
+
+                mobileLinks.forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        setMobileMenu(false);
+                    });
+                });
+
+                document.addEventListener('click', function (event) {
+                    const isOpen =
+                        menuButton.getAttribute('aria-expanded')
+                        === 'true';
+
+                    if (
+                        isOpen
+                        && nav
+                        && !nav.contains(event.target)
+                    ) {
+                        setMobileMenu(false);
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        setMobileMenu(false);
+                    }
+                });
+
+                window.addEventListener('resize', function () {
+                    if (window.innerWidth >= 1024) {
+                        setMobileMenu(false);
+                    }
+                });
+            }
+
+            function updateScrollButton() {
+                if (!scrollButton) {
+                    return;
+                }
+
+                const shouldShow = window.scrollY > 500;
+
+                scrollButton.classList.toggle(
+                    'hidden',
+                    !shouldShow
+                );
+
+                scrollButton.classList.toggle(
+                    'flex',
+                    shouldShow
+                );
+            }
+
+            if (scrollButton) {
+                scrollButton.addEventListener('click', function () {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth',
+                    });
+                });
+
+                window.addEventListener(
+                    'scroll',
+                    updateScrollButton,
+                    { passive: true }
+                );
+
+                updateScrollButton();
+            }
+        });
+    </script>
 
 </body>
 
