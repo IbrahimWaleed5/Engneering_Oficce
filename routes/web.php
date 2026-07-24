@@ -46,22 +46,37 @@ Route::get(
     ->name('dashboard');
 /*
 |--------------------------------------------------------------------------
-| Profile
+| إعدادات الحساب
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth')->group(function () {
 
+    // صفحة البيانات الشخصية
     Route::get('/profile', [
         ProfileController::class,
         'edit',
     ])->name('profile.edit');
 
+    // صفحة تغيير كلمة المرور
+    Route::get('/profile/password', [
+        ProfileController::class,
+        'editPassword',
+    ])->name('profile.password.edit');
+
+    // صفحة حذف الحساب
+    Route::get('/profile/delete', [
+        ProfileController::class,
+        'deleteAccount',
+    ])->name('profile.delete');
+
+    // تحديث البيانات الشخصية
     Route::patch('/profile', [
         ProfileController::class,
         'update',
     ])->name('profile.update');
 
+    // حذف الحساب نهائيًا
     Route::delete('/profile', [
         ProfileController::class,
         'destroy',
@@ -545,7 +560,5 @@ Route::middleware('auth')->group(function () {
         [ReviewController::class, 'destroy']
     )->name('reviews.destroy');
 });
+
 require __DIR__.'/auth.php';
-
-
-

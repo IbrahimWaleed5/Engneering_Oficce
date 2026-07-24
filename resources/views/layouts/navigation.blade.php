@@ -1,435 +1,661 @@
+@php
+    $user = auth()->user();
+    $role = $user?->role;
+    $unreadNotifications = $user
+        ? $user->unreadNotifications()->count()
+        : 0;
+
+    $homeLink = $user
+        ? route('dashboard')
+        : route('home');
+
+    $navItemBase = 'group relative inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200';
+    $navItemIdle = 'text-slate-300 hover:-translate-y-0.5 hover:bg-white/[0.07] hover:text-white';
+    $navItemActive = 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-300/20';
+
+    $mobileItemBase = 'flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-right text-sm font-bold transition-all duration-200';
+    $mobileItemIdle = 'border-white/[0.07] bg-white/[0.03] text-slate-200 hover:border-cyan-400/20 hover:bg-cyan-500/10 hover:text-white';
+    $mobileItemActive = 'border-cyan-400/25 bg-gradient-to-l from-cyan-500/25 to-blue-600/25 text-white shadow-lg shadow-cyan-500/10';
+@endphp
+
 <nav
-    x-data="{ open: false }"
-    class="border-b border-slate-700 bg-slate-900"
+    x-data="{
+        mobileOpen: false,
+        accountOpen: false
+    }"
+    x-effect="document.body.classList.toggle('overflow-hidden', mobileOpen)"
+    @keydown.escape.window="mobileOpen = false; accountOpen = false"
+    class="sticky top-0 z-50 border-b border-white/[0.07] bg-slate-950/75 shadow-[0_12px_50px_rgba(2,6,23,0.35)] backdrop-blur-2xl"
     dir="rtl"
 >
-    <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+    {{-- إضاءة خفيفة أعلى الناف --}}
+    <div
+        class="absolute inset-x-0 top-0 h-px pointer-events-none bg-gradient-to-l from-transparent via-cyan-400/70 to-transparent"
+    ></div>
 
-        <div class="flex justify-between h-16">
+    <div class="relative mx-auto max-w-[1500px] px-3 sm:px-5 lg:px-7">
+        <div class="flex h-[76px] items-center justify-between gap-3">
 
-            <div class="flex items-center gap-8">
-
+            {{-- الشعار والروابط الرئيسية --}}
+            <div class="flex items-center min-w-0 gap-3 xl:gap-6">
                 <a
-                    href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3"
+                    href="{{ $homeLink }}"
+                    class="flex items-center min-w-0 gap-3 outline-none group rounded-2xl focus-visible:ring-2 focus-visible:ring-cyan-400/70"
+                    aria-label="مكتب الوليد الهندسي"
                 >
-                   <div
-    class="flex items-center justify-center w-12 h-12 overflow-hidden border rounded-xl border-cyan-500/30 bg-slate-800"
->
-    <img
-        src="{{ asset('images/Mainlogo.png') }}"
-        alt="شعار مكتب الوليد الهندسي"
-        class="object-contain w-full h-full p-1"
-    >
-</div>
+                    <div class="relative shrink-0">
+                        <div
+                            class="absolute transition -inset-1 rounded-2xl bg-gradient-to-br from-cyan-400/35 to-blue-600/35 opacity-70 blur group-hover:opacity-100"
+                        ></div>
 
-                    <div class="hidden sm:block">
-                        <p class="font-bold text-white">
+                        <div
+                            class="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-cyan-300/20 bg-slate-900/90 shadow-xl shadow-cyan-950/40 sm:h-[52px] sm:w-[52px]"
+                        >
+                            <img
+                                src="{{ asset('images/Mainlogo.png') }}"
+                                alt="شعار مكتب الوليد الهندسي"
+                                class="h-full w-full object-contain p-1.5 transition duration-300 group-hover:scale-105"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="hidden min-w-0 sm:block">
+                        <p class="truncate text-[15px] font-black tracking-tight text-white xl:text-base">
                             مكتب الوليد الهندسي
                         </p>
-
-                        <p class="text-xs text-slate-400">
-                            إدارة الاستشارات
-                        </p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]"></span>
+                            <p class="truncate text-[11px] font-semibold text-slate-400">
+                                منصة الاستشارات الهندسية
+                            </p>
+                        </div>
                     </div>
                 </a>
 
-                <div class="items-center hidden gap-2 md:flex">
-
+                {{-- روابط سطح المكتب --}}
+                <div class="hidden items-center gap-1.5 lg:flex">
                     <a
-                        href="{{ route('dashboard') }}"
-                        class="px-3 py-2 text-sm rounded-lg
-                        {{ request()->routeIs('dashboard')
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                        href="{{ $homeLink }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('dashboard', 'home') ? $navItemActive : $navItemIdle }}"
                     >
-                        لوحة التحكم
+                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h14V10M9 20v-6h6v6" />
+                        </svg>
+                        <span>لوحة التحكم</span>
                     </a>
 
                     <a
                         href="{{ route('engineer.works.public') }}"
-                        class="px-3 py-2 text-sm rounded-lg
-                        {{ request()->routeIs('engineer.works.public')
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('engineer.works.public', 'engineer.works.show') ? $navItemActive : $navItemIdle }}"
                     >
-                        مكتبة المهندسين
+                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 20V8l6-4 6 4v12M9 11h1m4 0h1M9 15h1m4 0h1" />
+                        </svg>
+                        <span>مكتبة المهندسين</span>
                     </a>
 
                     @auth
-
-                        @if (auth()->user()->role === 'customer')
-
+                        @if ($role === 'customer')
                             <a
                                 href="{{ route('consultations.mine') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('consultations.mine')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('consultations.mine', 'consultations.messages.*', 'payments.create') ? $navItemActive : $navItemIdle }}"
                             >
-                                استشاراتي
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                                </svg>
+                                <span>استشاراتي</span>
                             </a>
-
                         @endif
 
-                        <a
-                            href="{{ route('profile.edit') }}"
-                            class="px-3 py-2 text-sm rounded-lg
-                            {{ request()->routeIs('profile.edit')
-                                ? 'bg-blue-600 text-white'
-                                : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
-                        >
-                            ملفي الشخصي
-                        </a>
-
-                        @if (auth()->user()->role === 'engineer')
-
+                        @if ($role === 'engineer')
                             <a
                                 href="{{ route('engineer.consultations') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('engineer.consultations')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('engineer.consultations') ? $navItemActive : $navItemIdle }}"
                             >
-                                طلباتي
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h4M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zM14 3v6h5" />
+                                </svg>
+                                <span>طلباتي</span>
                             </a>
 
                             <a
                                 href="{{ route('engineer.works.mine') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('engineer.works.mine')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $navItemActive : $navItemIdle }}"
                             >
-                                أعمالي
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M7 20v-9h10v9M9 11V7h6v4M8 7l4-4 4 4" />
+                                </svg>
+                                <span>أعمالي</span>
                             </a>
-
-                            <a
-                                href="{{ route('engineer.specialty.edit') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('engineer.specialty.*')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
-                            >
-                                تخصصي
-                            </a>
-
                         @endif
 
-                        @if (auth()->user()->role === 'admin')
-
+                        @if ($role === 'admin')
                             <a
                                 href="{{ route('consultations.index') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('consultations.index')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('consultations.index', 'consultations.assign.*') ? $navItemActive : $navItemIdle }}"
                             >
-                                الاستشارات
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5h6M9 9h6M9 13h4M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                                </svg>
+                                <span>الاستشارات</span>
                             </a>
 
                             <a
                                 href="{{ route('payments.index') }}"
-                                class="px-3 py-2 text-sm rounded-lg
-                                {{ request()->routeIs('payments.index')
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('payments.*') ? $navItemActive : $navItemIdle }}"
                             >
-                                الدفعات
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2zM7 15h4" />
+                                </svg>
+                                <span>الدفعات</span>
                             </a>
-
                         @endif
-
                     @endauth
-
                 </div>
-
             </div>
 
-            <div class="items-center hidden gap-3 md:flex">
-
+            {{-- الطرف الأيسر في سطح المكتب --}}
+            <div class="flex items-center gap-2 shrink-0">
                 @auth
-
+                    {{-- الإشعارات --}}
                     <a
                         href="{{ route('notifications.index') }}"
-                        class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+                        class="relative hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-slate-300 transition hover:-translate-y-0.5 hover:border-cyan-400/25 hover:bg-cyan-500/10 hover:text-white lg:flex"
                         title="الإشعارات"
                     >
-                        <span class="text-xl">🔔</span>
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+                        </svg>
 
-                        @if (auth()->user()->unreadNotifications()->count() > 0)
-
+                        @if ($unreadNotifications > 0)
                             <span
-                                class="absolute flex items-center justify-center w-5 h-5 text-xs text-white bg-red-600 rounded-full -top-1 -left-1"
+                                class="absolute -left-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-slate-950 bg-rose-500 px-1 text-[10px] font-black text-white shadow-lg shadow-rose-500/30"
                             >
-                                {{ auth()->user()->unreadNotifications()->count() }}
+                                {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
                             </span>
-
                         @endif
                     </a>
 
-                    {{-- عرض تخصص المهندس خارج الـ dropdown --}}
-                    @if (auth()->user()->role === 'engineer' && auth()->user()->employeeProfile?->specialty)
-                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800">
-                            <span class="text-cyan-400">🏗️</span>
-                            <span class="text-sm font-medium text-cyan-300">
-                                {{ auth()->user()->employeeProfile->specialty->name }}
-                            </span>
-                        </div>
-                    @endif
-
-                    {{-- صورة المستخدم مع dropdown لتسجيل الخروج فقط --}}
-                    <x-dropdown align="left" width="48">
-
-                        <x-slot name="trigger">
-
-                            <button
-                                class="flex items-center justify-center transition rounded-full hover:ring-2 hover:ring-cyan-500"
-                            >
-                                <div class="relative">
-
-                                    @if(auth()->user()->profile_photo)
-
-                                        <img
-                                            src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
-                                            alt="{{ auth()->user()->name }}"
-                                            class="object-cover border-2 rounded-full w-11 h-11 border-cyan-500"
-                                        >
-
-                                    @else
-
-                                        <img
-                                            src="{{ asset('images/Mainlogo.png') }}"
-                                            alt="{{ auth()->user()->name }}"
-                                            class="object-contain p-1 border-2 rounded-full w-11 h-11 border-cyan-500 bg-slate-800"
-                                        >
-
-                                    @endif
-
-                                </div>
-
-                            </button>
-
-                        </x-slot>
-
-                        <x-slot name="content">
-
-                            {{-- تسجيل الخروج فقط --}}
-                            <form
-                                method="POST"
-                                action="{{ route('logout') }}"
-                            >
-                                @csrf
-
-                                <x-dropdown-link
-                                    :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                        this.closest('form').submit();"
-                                    class="text-red-600 hover:bg-red-50"
-                                >
-                                    🚪 تسجيل الخروج
-                                </x-dropdown-link>
-                            </form>
-
-                        </x-slot>
-
-                    </x-dropdown>
-
-                @endauth
-
-            </div>
-
-            {{-- Mobile Menu --}}
-            <details class="relative md:hidden">
-
-                <summary
-                    class="inline-flex items-center justify-center p-3 list-none transition cursor-pointer rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white"
-                    aria-label="فتح القائمة"
-                >
-                    <svg
-                        class="w-7 h-7"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 24 24"
+                    {{-- قائمة الحساب على سطح المكتب --}}
+                    <div
+                        class="relative hidden lg:block"
+                        @click.outside="accountOpen = false"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"
-                        />
-                    </svg>
-                </summary>
-
-                <div
-                    class="fixed right-0 z-50 w-full mt-4 overflow-y-auto border-t shadow-2xl top-16 max-h-[calc(100vh-4rem)] border-slate-700 bg-slate-900"
-                    dir="rtl"
-                >
-
-                    <div class="px-4 py-5 space-y-2">
-
-                        <a
-                            href="{{ route('dashboard') }}"
-                            class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                        <button
+                            type="button"
+                            @click="accountOpen = !accountOpen"
+                            class="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-1.5 pl-3 text-right transition hover:border-cyan-400/25 hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+                            :aria-expanded="accountOpen"
                         >
-                            🏠 لوحة التحكم
-                        </a>
+                            <div class="relative shrink-0">
+                                @if ($user->profile_photo)
+                                    <img
+                                        src="{{ asset('storage/' . $user->profile_photo) }}"
+                                        alt="{{ $user->name }}"
+                                        class="object-cover w-10 h-10 border rounded-xl border-cyan-300/25"
+                                    >
+                                @else
+                                    <div
+                                        class="flex items-center justify-center w-10 h-10 text-base font-black text-white border rounded-xl border-cyan-300/25 bg-gradient-to-br from-cyan-500 to-blue-600"
+                                    >
+                                        {{ mb_substr($user->name, 0, 1) }}
+                                    </div>
+                                @endif
 
-                        <a
-                            href="{{ route('engineer.works.public') }}"
-                            class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                <span
+                                    class="absolute -bottom-0.5 -left-0.5 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400"
+                                ></span>
+                            </div>
+
+                            <div class="hidden max-w-32 xl:block">
+                                <p class="text-xs font-black text-white truncate">
+                                    {{ $user->name }}
+                                </p>
+                                <p class="mt-0.5 truncate text-[10px] font-semibold text-slate-400">
+                                    @switch($role)
+                                        @case('admin') مدير النظام @break
+                                        @case('engineer') مهندس @break
+                                        @case('employee') موظف @break
+                                        @default عميل
+                                    @endswitch
+                                </p>
+                            </div>
+
+                            <svg
+                                class="w-4 h-4 transition text-slate-400"
+                                :class="accountOpen ? 'rotate-180' : ''"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div
+                            x-cloak
+                            x-show="accountOpen"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                            class="absolute left-0 mt-3 w-72 overflow-hidden rounded-3xl border border-white/[0.09] bg-slate-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-2xl"
                         >
-                            👷 مكتبة المهندسين
-                        </a>
+                            <div class="mb-2 rounded-2xl border border-white/[0.07] bg-white/[0.04] p-4">
+                                <p class="text-sm font-black text-white truncate">
+                                    {{ $user->name }}
+                                </p>
+                                <p class="mt-1 text-xs truncate text-slate-400">
+                                    {{ $user->email }}
+                                </p>
 
-                        @auth
+                                @if ($role === 'engineer' && $user->employeeProfile?->specialty)
+                                    <div class="inline-flex items-center gap-2 px-3 py-2 mt-3 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-200">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
+                                        {{ $user->employeeProfile->specialty->name }}
+                                    </div>
+                                @endif
+                            </div>
 
                             <a
                                 href="{{ route('profile.edit') }}"
-                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
                             >
-                                👤 ملفي الشخصي
+                                <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-cyan-500/10 text-cyan-300">👤</span>
+                                <span>إعدادات الحساب</span>
                             </a>
 
-                            @if (auth()->user()->role === 'customer')
-
+                            @if ($role === 'engineer')
                                 <a
-                                    href="{{ route('consultations.mine') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                    href="{{ route('engineers.show', $user) }}"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
                                 >
-                                    📋 استشاراتي
-                                </a>
-
-                            @endif
-
-                            @if (auth()->user()->role === 'engineer')
-
-                                <a
-                                    href="{{ route('engineer.consultations') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    📐 استشارات المهندس
-                                </a>
-
-                                <a
-                                    href="{{ route('engineer.works.mine') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    🏗️ أعمالي
-                                </a>
-
-                                <a
-                                    href="{{ route('engineers.show', auth()->user()) }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    ⭐ صفحتي العامة
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-amber-500/10 text-amber-300">⭐</span>
+                                    <span>صفحتي العامة</span>
                                 </a>
 
                                 <a
                                     href="{{ route('engineer.specialty.edit') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
                                 >
-                                    🎓 تخصصي الهندسي
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-violet-500/10 text-violet-300">🎓</span>
+                                    <span>التخصص والنبذة</span>
                                 </a>
-
                             @endif
 
-                            @if (auth()->user()->role === 'admin')
-
-                                <a
-                                    href="{{ route('consultations.index') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    📋 جميع الاستشارات
-                                </a>
-
-                                <a
-                                    href="{{ route('payments.index') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    💳 الدفعات
-                                </a>
-
-                                <a
-                                    href="{{ route('employees.index') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                                >
-                                    👥 الموظفون
-                                </a>
-
+                            @if ($role === 'admin')
                                 <a
                                     href="{{ route('users.index') }}"
-                                    class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
                                 >
-                                    ⚙️ إدارة المستخدمين
+                                    <span class="flex items-center justify-center text-blue-300 h-9 w-9 rounded-xl bg-blue-500/10">⚙️</span>
+                                    <span>إدارة المستخدمين</span>
                                 </a>
-
                             @endif
 
-                            <a
-                                href="{{ route('notifications.index') }}"
-                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                            >
-                                🔔 الإشعارات
-                            </a>
+                            <div class="my-2 h-px bg-white/[0.07]"></div>
 
-                            <div class="h-px my-3 bg-slate-700"></div>
-
-                            <form
-                                method="POST"
-                                action="{{ route('logout') }}"
-                            >
+                            <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-
                                 <button
                                     type="submit"
-                                    class="block w-full px-4 py-3 font-bold text-right text-red-300 transition rounded-xl hover:bg-red-500/10"
+                                    class="flex items-center w-full gap-3 px-4 py-3 text-sm font-black text-right transition rounded-2xl text-rose-300 hover:bg-rose-500/10 hover:text-rose-200"
                                 >
-                                    🚪 تسجيل الخروج
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-rose-500/10">🚪</span>
+                                    <span>تسجيل الخروج</span>
                                 </button>
-
                             </form>
-
-                        @else
-
-                            <a
-                                href="{{ route('login') }}"
-                                class="block px-4 py-3 font-bold text-white transition rounded-xl hover:bg-slate-800"
-                            >
-                                تسجيل الدخول
-                            </a>
-
-                            <a
-                                href="{{ route('register') }}"
-                                class="block px-4 py-3 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
-                            >
-                                إنشاء حساب
-                            </a>
-
-                        @endauth
-
+                        </div>
                     </div>
+                @else
+                    <div class="items-center hidden gap-2 lg:flex">
+                        <a
+                            href="{{ route('login') }}"
+                            class="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                        >
+                            تسجيل الدخول
+                        </a>
 
-                </div>
+                        <a
+                            href="{{ route('register') }}"
+                            class="rounded-2xl bg-gradient-to-l from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5"
+                        >
+                            إنشاء حساب
+                        </a>
+                    </div>
+                @endauth
 
-            </details>
-
+                {{-- زر قائمة الجوال --}}
+                <button
+                    type="button"
+                    @click="mobileOpen = true"
+                    class="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.05] text-white shadow-lg transition hover:border-cyan-400/30 hover:bg-cyan-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 lg:hidden"
+                    aria-label="فتح القائمة"
+                    :aria-expanded="mobileOpen"
+                >
+                    <span class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10"></span>
+                    <svg class="relative w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                    </svg>
+                </button>
+            </div>
         </div>
-
     </div>
 
-    @auth
+    {{-- طبقة خلفية لقائمة الجوال --}}
+    <div
+        x-cloak
+        x-show="mobileOpen"
+        x-transition.opacity
+        @click="mobileOpen = false"
+        class="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-sm lg:hidden"
+        aria-hidden="true"
+    ></div>
 
-        @if (auth()->user()->role === 'admin')
+    {{-- قائمة الجوال الجانبية --}}
+    <aside
+        x-cloak
+        x-show="mobileOpen"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full opacity-0"
+        x-transition:enter-end="translate-x-0 opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0 opacity-100"
+        x-transition:leave-end="translate-x-full opacity-0"
+        class="fixed right-0 top-0 z-[70] flex h-dvh w-[min(90vw,390px)] flex-col border-l border-white/[0.08] bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-2xl lg:hidden"
+        aria-label="قائمة التنقل للجوال"
+    >
+        {{-- رأس القائمة --}}
+        <div class="relative overflow-hidden border-b border-white/[0.07] p-4">
+            <div class="absolute w-48 h-48 rounded-full pointer-events-none -right-20 -top-20 bg-cyan-500/15 blur-3xl"></div>
 
-            <x-nav-link
-                :href="route('users.index')"
-                :active="request()->routeIs('users.*')"
-            >
-                إدارة المستخدمين
-            </x-nav-link>
+            <div class="relative flex items-center justify-between gap-3">
+                <div class="flex items-center min-w-0 gap-3">
+                    <div class="flex items-center justify-center w-12 h-12 overflow-hidden border shrink-0 rounded-2xl border-cyan-300/20 bg-slate-900">
+                        <img
+                            src="{{ asset('images/Mainlogo.png') }}"
+                            alt="شعار مكتب الوليد الهندسي"
+                            class="h-full w-full object-contain p-1.5"
+                        >
+                    </div>
 
-        @endif
+                    <div class="min-w-0">
+                        <p class="text-sm font-black text-white truncate">
+                            مكتب الوليد الهندسي
+                        </p>
+                        <p class="mt-1 truncate text-[11px] font-semibold text-slate-400">
+                            منصة الاستشارات الهندسية
+                        </p>
+                    </div>
+                </div>
 
-    @endauth
+                <button
+                    type="button"
+                    @click="mobileOpen = false"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.05] text-slate-300 transition hover:bg-rose-500/10 hover:text-rose-300"
+                    aria-label="إغلاق القائمة"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+
+            @auth
+                <div class="relative mt-4 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] p-3">
+                    @if ($user->profile_photo)
+                        <img
+                            src="{{ asset('storage/' . $user->profile_photo) }}"
+                            alt="{{ $user->name }}"
+                            class="object-cover w-12 h-12 border shrink-0 rounded-2xl border-cyan-300/25"
+                        >
+                    @else
+                        <div class="flex items-center justify-center w-12 h-12 text-lg font-black text-white shrink-0 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600">
+                            {{ mb_substr($user->name, 0, 1) }}
+                        </div>
+                    @endif
+
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-black text-white truncate">
+                            {{ $user->name }}
+                        </p>
+                        <p class="mt-1 text-xs truncate text-slate-400">
+                            {{ $user->email }}
+                        </p>
+                    </div>
+
+                    <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"></span>
+                </div>
+            @endauth
+        </div>
+
+        {{-- روابط القائمة --}}
+        <div class="flex-1 px-4 py-5 space-y-5 overflow-y-auto overscroll-contain">
+            <div>
+                <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                    القائمة الرئيسية
+                </p>
+
+                <div class="space-y-2">
+                    <a
+                        href="{{ $homeLink }}"
+                        @click="mobileOpen = false"
+                        class="{{ $mobileItemBase }} {{ request()->routeIs('dashboard', 'home') ? $mobileItemActive : $mobileItemIdle }}"
+                    >
+                        <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🏠</span>
+                        <span>لوحة التحكم</span>
+                    </a>
+
+                    <a
+                        href="{{ route('engineer.works.public') }}"
+                        @click="mobileOpen = false"
+                        class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.public', 'engineer.works.show') ? $mobileItemActive : $mobileItemIdle }}"
+                    >
+                        <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">👷</span>
+                        <span>مكتبة المهندسين</span>
+                    </a>
+                </div>
+            </div>
+
+            @auth
+                <div>
+                    <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                        حسابي
+                    </p>
+
+                    <div class="space-y-2">
+                        <a
+                            href="{{ route('profile.edit') }}"
+                            @click="mobileOpen = false"
+                            class="{{ $mobileItemBase }} {{ request()->routeIs('profile.*') ? $mobileItemActive : $mobileItemIdle }}"
+                        >
+                            <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">👤</span>
+                            <span>إعدادات الحساب</span>
+                        </a>
+
+                        <a
+                            href="{{ route('notifications.index') }}"
+                            @click="mobileOpen = false"
+                            class="{{ $mobileItemBase }} {{ request()->routeIs('notifications.*') ? $mobileItemActive : $mobileItemIdle }}"
+                        >
+                            <span class="relative flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 text-amber-300">
+                                🔔
+                                @if ($unreadNotifications > 0)
+                                    <span class="absolute -left-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">
+                                        {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
+                                    </span>
+                                @endif
+                            </span>
+                            <span>الإشعارات</span>
+                        </a>
+                    </div>
+                </div>
+
+                @if ($role === 'customer')
+                    <div>
+                        <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                            خدمات العميل
+                        </p>
+
+                        <div class="space-y-2">
+                            <a
+                                href="{{ route('consultations.mine') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.mine', 'consultations.messages.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">📋</span>
+                                <span>استشاراتي</span>
+                            </a>
+
+                            <a
+                                href="{{ route('consultations.create') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.create') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">➕</span>
+                                <span>طلب استشارة جديدة</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($role === 'engineer')
+                    <div>
+                        <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                            لوحة المهندس
+                        </p>
+
+                        <div class="space-y-2">
+                            <a
+                                href="{{ route('engineer.consultations') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.consultations') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">📐</span>
+                                <span>استشارات المهندس</span>
+                            </a>
+
+                            <a
+                                href="{{ route('engineer.works.mine') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">🏗️</span>
+                                <span>أعمالي</span>
+                            </a>
+
+                            <a
+                                href="{{ route('engineers.show', $user) }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineers.show') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 text-amber-300">⭐</span>
+                                <span>صفحتي العامة</span>
+                            </a>
+
+                            <a
+                                href="{{ route('engineer.specialty.edit') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.specialty.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">🎓</span>
+                                <span>التخصص والنبذة</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($role === 'admin')
+                    <div>
+                        <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                            إدارة النظام
+                        </p>
+
+                        <div class="space-y-2">
+                            <a
+                                href="{{ route('consultations.index') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('consultations.index', 'consultations.assign.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">📋</span>
+                                <span>جميع الاستشارات</span>
+                            </a>
+
+                            <a
+                                href="{{ route('payments.index') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('payments.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">💳</span>
+                                <span>إدارة الدفعات</span>
+                            </a>
+
+                            <a
+                                href="{{ route('employees.index') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('employees.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">👥</span>
+                                <span>الموظفون</span>
+                            </a>
+
+                            <a
+                                href="{{ route('users.index') }}"
+                                @click="mobileOpen = false"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('users.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">⚙️</span>
+                                <span>إدارة المستخدمين</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+            @else
+                <div>
+                    <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                        الحساب
+                    </p>
+
+                    <div class="space-y-2">
+                        <a
+                            href="{{ route('login') }}"
+                            @click="mobileOpen = false"
+                            class="{{ $mobileItemBase }} {{ $mobileItemIdle }}"
+                        >
+                            <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🔑</span>
+                            <span>تسجيل الدخول</span>
+                        </a>
+
+                        <a
+                            href="{{ route('register') }}"
+                            @click="mobileOpen = false"
+                            class="{{ $mobileItemBase }} border-cyan-400/25 bg-gradient-to-l from-cyan-500/25 to-blue-600/25 text-white"
+                        >
+                            <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10">✨</span>
+                            <span>إنشاء حساب جديد</span>
+                        </a>
+                    </div>
+                </div>
+            @endauth
+        </div>
+
+        {{-- أسفل القائمة --}}
+        @auth
+            <div class="border-t border-white/[0.07] p-4">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button
+                        type="submit"
+                        class="flex w-full items-center justify-center gap-3 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3.5 text-sm font-black text-rose-200 transition hover:bg-rose-500/15 hover:text-white"
+                    >
+                        <span>🚪</span>
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </form>
+            </div>
+        @endauth
+    </aside>
 </nav>

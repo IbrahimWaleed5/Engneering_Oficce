@@ -13,11 +13,33 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * عرض صفحة الملف الشخصي.
+     * عرض صفحة البيانات الشخصية.
      */
     public function edit(Request $request): View
     {
         return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * عرض صفحة تغيير كلمة المرور.
+     */
+    public function editPassword(
+        Request $request
+    ): View {
+        return view('profile.password', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * عرض صفحة حذف الحساب.
+     */
+    public function deleteAccount(
+        Request $request
+    ): View {
+        return view('profile.delete', [
             'user' => $request->user(),
         ]);
     }
@@ -38,14 +60,14 @@ class ProfileController extends Controller
 
         $validated = $request->validated();
 
-        // الصورة ملف، لذلك لا نمررها إلى fill.
+        // الصورة ملف وليست قيمة نصية.
         unset($validated['profile_photo']);
 
         $user->fill($validated);
 
         /*
         |--------------------------------------------------------------------------
-        | إعادة التحقق من البريد عند تغييره
+        | إلغاء التحقق عند تغيير البريد
         |--------------------------------------------------------------------------
         */
 
@@ -75,7 +97,7 @@ class ProfileController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | حفظ المستخدم
+        | حفظ البيانات
         |--------------------------------------------------------------------------
         */
 
@@ -83,7 +105,7 @@ class ProfileController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | حذف الصورة القديمة بعد نجاح الحفظ
+        | حذف الصورة القديمة
         |--------------------------------------------------------------------------
         */
 
@@ -135,7 +157,7 @@ class ProfileController extends Controller
         $user->delete();
 
         /*
-         * نحذف الصورة بعد نجاح حذف المستخدم.
+         * حذف صورة الحساب من التخزين.
          */
         if (
             $profilePhoto
