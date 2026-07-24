@@ -13,7 +13,7 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * عرض صفحة الملف الشخصي.
      */
     public function edit(Request $request): View
     {
@@ -23,90 +23,136 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * تحديث البيانات الشخصية.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
+    public function update(
+        ProfileUpdateRequest $request
+    ): RedirectResponse {
         $user = $request->user();
 
         /*
-         * نملأ البيانات النصية فقط.
-         * لا نمرر profile_photo إلى fill لأنها ملف وليست نصًا.
-         */
-        $user->fill(
-            $request->safe()->except('profile_photo')
-        );
+        |--------------------------------------------------------------------------
+        | البيانات النصية
+        |--------------------------------------------------------------------------
+        */
+
+        $validated = $request->validated();
+
+        // الصورة ملف، لذلك لا نمررها إلى fill.
+        unset($validated['profile_photo']);
+
+        $user->fill($validated);
 
         /*
-         * إذا تغيّر البريد الإلكتروني نلغي حالة التحقق منه.
-         */
+        |--------------------------------------------------------------------------
+        | إعادة التحقق من البريد عند تغييره
+        |--------------------------------------------------------------------------
+        */
+
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
         /*
-         * حفظ الصورة الشخصية الجديدة.
-         */
+        |--------------------------------------------------------------------------
+        | رفع الصورة الجديدة
+        |--------------------------------------------------------------------------
+        */
+
+        $oldPhoto = $user->profile_photo;
+        $newPhoto = null;
+
         if ($request->hasFile('profile_photo')) {
-
-            /*
-             * حذف الصورة القديمة من storage إذا كانت موجودة.
-             */
-            if (
-                $user->profile_photo
-                && Storage::disk('public')->exists($user->profile_photo)
-            ) {
-                Storage::disk('public')->delete($user->profile_photo);
-            }
-
-            /*
-             * تخزين الصورة الجديدة داخل:
-             * storage/app/public/profile-photos
-             */
-            $profilePhotoPath = $request
+            $newPhoto = $request
                 ->file('profile_photo')
-                ->store('profile-photos', 'public');
+                ->store(
+                    'profile-photos',
+                    'public'
+                );
 
-            $user->profile_photo = $profilePhotoPath;
+            $user->profile_photo = $newPhoto;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | حفظ المستخدم
+        |--------------------------------------------------------------------------
+        */
 
         $user->save();
 
+        /*
+        |--------------------------------------------------------------------------
+        | حذف الصورة القديمة بعد نجاح الحفظ
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $newPhoto
+            && $oldPhoto
+            && $oldPhoto !== $newPhoto
+            && Storage::disk('public')->exists($oldPhoto)
+        ) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
+
         return Redirect::route('profile.edit')
-            ->with('status', 'profile-updated');
+            ->with('status', 'profile-updated')
+            ->with(
+                'success',
+                'تم حفظ البيانات الشخصية بنجاح.'
+            );
     }
 
     /**
-     * Delete the user's account.
+     * حذف الحساب.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => [
-                'required',
-                'current_password',
+    public function destroy(
+        Request $request
+    ): RedirectResponse {
+        $request->validateWithBag(
+            'userDeletion',
+            [
+                'password' => [
+                    'required',
+                    'current_password',
+                ],
             ],
-        ]);
+            [
+                'password.required' =>
+                    'يجب إدخال كلمة المرور للتأكيد.',
+
+                'password.current_password' =>
+                    'كلمة المرور التي أدخلتها غير صحيحة.',
+            ]
+        );
 
         $user = $request->user();
-
-        /*
-         * حذف الصورة الشخصية عند حذف الحساب.
-         */
-        if (
-            $user->profile_photo
-            && Storage::disk('public')->exists($user->profile_photo)
-        ) {
-            Storage::disk('public')->delete($user->profile_photo);
-        }
+        $profilePhoto = $user->profile_photo;
 
         Auth::logout();
 
         $user->delete();
 
+        /*
+         * نحذف الصورة بعد نجاح حذف المستخدم.
+         */
+        if (
+            $profilePhoto
+            && Storage::disk('public')
+                ->exists($profilePhoto)
+        ) {
+            Storage::disk('public')
+                ->delete($profilePhoto);
+        }
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return Redirect::to('/')
+            ->with(
+                'success',
+                'تم حذف الحساب بنجاح.'
+            );
     }
 }
