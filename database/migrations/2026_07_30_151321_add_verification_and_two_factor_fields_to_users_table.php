@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasColumn('users', 'country_code')) {
+        if (!Schema::hasColumn('users', 'country_code')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->string('country_code', 2)
                     ->nullable()
@@ -16,7 +16,7 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasColumn('users', 'dial_code')) {
+        if (!Schema::hasColumn('users', 'dial_code')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->string('dial_code', 8)
                     ->nullable()
@@ -24,19 +24,13 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasColumn('users', 'phone_verified_at')) {
+        if (!Schema::hasColumn('users', 'phone_verified_at')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->timestamp('phone_verified_at')
                     ->nullable()
                     ->after('phone');
             });
         }
-
-        /*
-         * لا نضيف حقول two_factor هنا؛
-         * تمت إضافتها مسبقًا بواسطة:
-         * add_two_factor_columns_to_users_table
-         */
     }
 
     public function down(): void
@@ -55,7 +49,7 @@ return new class extends Migration
             $columns[] = 'phone_verified_at';
         }
 
-        if ($columns !== []) {
+        if (!empty($columns)) {
             Schema::table('users', function (Blueprint $table) use ($columns) {
                 $table->dropColumn($columns);
             });
