@@ -489,161 +489,64 @@
 </div>
 
                         {{-- الاسم والهاتف --}}
-                        <div class="grid gap-5 sm:grid-cols-2">
+{{-- الاسم والهاتف --}}
+<div class="grid gap-6 sm:grid-cols-2">
 
-                            <div>
+    {{-- الاسم الكامل --}}
+    <div>
+        <label
+            for="name"
+            class="block mb-3 text-sm font-bold text-slate-200"
+        >
+            الاسم الكامل
+        </label>
 
-                                <label
-                                    for="name"
-                                    class="block mb-3 text-sm font-bold text-slate-200"
-                                >
-                                    الاسم الكامل
-                                </label>
-
-                                <div class="relative">
-
-                                    <span
-                                        class="absolute -translate-y-1/2 pointer-events-none right-4 top-1/2 text-slate-500"
-                                    >
-
-                                        <svg
-                                            class="w-5 h-5"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                        >
-                                            <circle
-                                                cx="12"
-                                                cy="7"
-                                                r="4"
-                                            />
-
-                                            <path
-                                                d="M4 21a8 8 0 0 1 16 0"
-                                            />
-                                        </svg>
-
-                                    </span>
-
-                                    <input
-                                        id="name"
-                                        type="text"
-                                        name="name"
-                                        value="{{ old('name') }}"
-                                        required
-                                        autofocus
-                                        autocomplete="name"
-                                        placeholder="أدخل الاسم الكامل"
-                                        class="w-full py-4 pl-4 pr-12 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                                    >
-
-                                </div>
-
-                                @error('name')
-
-                                    <p class="mt-2 text-sm text-red-300">
-                                        {{ $message }}
-                                    </p>
-
-                                @enderror
-
-                            </div>
-
-                            <div>
-
-                               <div class="sm:col-span-2">
-
-    <label
-        for="phone"
-        class="block mb-3 text-sm font-bold text-slate-200"
-    >
-        رقم الهاتف
-    </label>
-
-    <div class="grid gap-3 sm:grid-cols-[180px_1fr]">
-
-        <div>
-            <select
-                id="country_code"
-                name="country_code"
-                required
-                class="w-full px-4 py-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+        <div class="relative">
+            <span
+                class="absolute z-10 -translate-y-1/2 pointer-events-none right-4 top-1/2 text-slate-500"
             >
-                <option value="">اختر الدولة</option>
+                <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M4 21a8 8 0 0 1 16 0" />
+                </svg>
+            </span>
 
-                <option value="PS" data-dial="+970" @selected(old('country_code') === 'PS')>
-                    فلسطين +970
-                </option>
-
-                <option value="SA" data-dial="+966" @selected(old('country_code') === 'SA')>
-                    السعودية +966
-                </option>
-
-                <option value="JO" data-dial="+962" @selected(old('country_code') === 'JO')>
-                    الأردن +962
-                </option>
-
-                <option value="EG" data-dial="+20" @selected(old('country_code') === 'EG')>
-                    مصر +20
-                </option>
-
-                <option value="AE" data-dial="+971" @selected(old('country_code') === 'AE')>
-                    الإمارات +971
-                </option>
-
-                <option value="QA" data-dial="+974" @selected(old('country_code') === 'QA')>
-                    قطر +974
-                </option>
-
-                <option value="KW" data-dial="+965" @selected(old('country_code') === 'KW')>
-                    الكويت +965
-                </option>
-
-                <option value="BH" data-dial="+973" @selected(old('country_code') === 'BH')>
-                    البحرين +973
-                </option>
-
-                <option value="OM" data-dial="+968" @selected(old('country_code') === 'OM')>
-                    عُمان +968
-                </option>
-
-                <option value="IQ" data-dial="+964" @selected(old('country_code') === 'IQ')>
-                    العراق +964
-                </option>
-
-                <option value="SY" data-dial="+963" @selected(old('country_code') === 'SY')>
-                    سوريا +963
-                </option>
-
-                <option value="LB" data-dial="+961" @selected(old('country_code') === 'LB')>
-                    لبنان +961
-                </option>
-
-                <option value="TR" data-dial="+90" @selected(old('country_code') === 'TR')>
-                    تركيا +90
-                </option>
-
-                <option value="GB" data-dial="+44" @selected(old('country_code') === 'GB')>
-                    بريطانيا +44
-                </option>
-
-                <option value="US" data-dial="+1" @selected(old('country_code') === 'US')>
-                    الولايات المتحدة +1
-                </option>
-            </select>
+            <input
+                id="name"
+                type="text"
+                name="name"
+                value="{{ old('name') }}"
+                required
+                autofocus
+                autocomplete="name"
+                placeholder="أدخل الاسم الكامل"
+                class="w-full py-4 pl-4 pr-12 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
+            >
         </div>
 
-        <div class="flex overflow-hidden border rounded-2xl border-white/10 bg-slate-950/70 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
+        @error('name')
+            <p class="mt-2 text-sm font-bold text-red-300">
+                {{ $message }}
+            </p>
+        @enderror
+    </div>
 
-            <div
-                id="dial_code_display"
-                class="flex items-center justify-center px-4 font-bold border-l min-w-20 border-white/10 text-cyan-300"
-                dir="ltr"
-            >
-                +970
-            </div>
+    {{-- رقم الهاتف الدولي --}}
+    <div>
+        <label
+            for="phone"
+            class="block mb-3 text-sm font-bold text-slate-200"
+        >
+            رقم الهاتف
+        </label>
 
+        <div class="iti-premium-wrapper">
             <input
                 id="phone"
                 type="tel"
@@ -652,8 +555,14 @@
                 required
                 autocomplete="tel"
                 placeholder="599000000"
-                class="w-full px-4 py-4 bg-transparent border-0 outline-none text-slate-100 placeholder:text-slate-600 focus:ring-0"
                 dir="ltr"
+            >
+
+            <input
+                id="country_code"
+                type="hidden"
+                name="country_code"
+                value="{{ old('country_code', 'PS') }}"
             >
 
             <input
@@ -662,77 +571,33 @@
                 name="dial_code"
                 value="{{ old('dial_code', '+970') }}"
             >
-
         </div>
 
+        <p
+            id="phone-client-error"
+            class="hidden mt-2 text-sm font-bold text-red-300"
+        ></p>
+
+        @error('country_code')
+            <p class="mt-2 text-sm font-bold text-red-300">
+                {{ $message }}
+            </p>
+        @enderror
+
+        @error('dial_code')
+            <p class="mt-2 text-sm font-bold text-red-300">
+                {{ $message }}
+            </p>
+        @enderror
+
+        @error('phone')
+            <p class="mt-2 text-sm font-bold text-red-300">
+                {{ $message }}
+            </p>
+        @enderror
     </div>
 
-    @error('country_code')
-        <p class="mt-2 text-sm text-red-300">
-            {{ $message }}
-        </p>
-    @enderror
-
-    @error('phone')
-        <p class="mt-2 text-sm text-red-300">
-            {{ $message }}
-        </p>
-    @enderror
-
 </div>
-
-                                <div class="relative">
-
-                                    <span
-                                        class="absolute -translate-y-1/2 pointer-events-none right-4 top-1/2 text-slate-500"
-                                    >
-
-                                        <svg
-                                            class="w-5 h-5"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                        >
-                                            <rect
-                                                x="6"
-                                                y="2"
-                                                width="12"
-                                                height="20"
-                                                rx="2"
-                                            />
-
-                                            <path d="M10 18h4" />
-                                        </svg>
-
-                                    </span>
-
-                                    <input
-                                        id="phone"
-                                        type="text"
-                                        name="phone"
-                                        value="{{ old('phone') }}"
-                                        required
-                                        autocomplete="tel"
-                                        placeholder="0590000000"
-                                        class="w-full py-4 pl-4 pr-12 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                                        dir="ltr"
-                                    >
-
-                                </div>
-
-                                @error('phone')
-
-                                    <p class="mt-2 text-sm text-red-300">
-                                        {{ $message }}
-                                    </p>
-
-                                @enderror
-
-                            </div>
-
-                        </div>
-
                         {{-- البريد الإلكتروني --}}
                         <div>
 
@@ -1044,33 +909,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-const countrySelect = document.getElementById('country_code');
-const dialCodeInput = document.getElementById('dial_code');
-const dialCodeDisplay = document.getElementById('dial_code_display');
 
-function updateDialCode() {
-    if (!countrySelect || !dialCodeInput || !dialCodeDisplay) {
-        return;
-    }
-
-    const selectedOption =
-        countrySelect.options[countrySelect.selectedIndex];
-
-    const dialCode =
-        selectedOption?.dataset?.dial || '+970';
-
-    dialCodeInput.value = dialCode;
-    dialCodeDisplay.textContent = dialCode;
-}
-
-if (countrySelect) {
-    countrySelect.addEventListener(
-        'change',
-        updateDialCode
-    );
-
-    updateDialCode();
-}
 </script>
 
 </x-guest-layout>

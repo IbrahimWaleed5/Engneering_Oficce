@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import './phone-input';
 window.Alpine = Alpine;
 Alpine.start();
 document.addEventListener('DOMContentLoaded', () => {

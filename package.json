@@ -19,6 +19,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "apexcharts": "^6.0.0"
+        "apexcharts": "^6.0.0",
+        "intl-tel-input": "^29.1.2"
     }
 }
