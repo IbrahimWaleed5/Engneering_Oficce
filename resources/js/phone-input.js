@@ -1,5 +1,5 @@
 import intlTelInput from 'intl-tel-input';
-import 'intl-tel-input/build/css/intlTelInput.css';
+import 'intl-tel-input/dist/css/intlTelInput.css';
 
 document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('phone');
