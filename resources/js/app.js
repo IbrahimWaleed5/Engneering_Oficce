@@ -1,33 +1,45 @@
 import './bootstrap';
+import './phone-input';
+
 import Alpine from 'alpinejs';
+
 window.Alpine = Alpine;
+
 Alpine.start();
+
 document.addEventListener('DOMContentLoaded', () => {
     const animatedElements = document.querySelectorAll(
         '.fade-up, .fade-in'
     );
 
-    const revealObserver = new IntersectionObserver(
-        (entries, observer) => {
-            entries.forEach((entry) => {
-                if (!entry.isIntersecting) {
-                    return;
-                }
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver(
+            (entries, observer) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
 
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            });
-        },
-        {
-            threshold: 0.12,
-        }
-    );
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                });
+            },
+            {
+                threshold: 0.12,
+            }
+        );
 
-    animatedElements.forEach((element) => {
-        revealObserver.observe(element);
-    });
+        animatedElements.forEach((element) => {
+            revealObserver.observe(element);
+        });
+    }
 
-    const counters = document.querySelectorAll('[data-counter]');
+    const counters =
+        document.querySelectorAll('[data-counter]');
+
+    if (!('IntersectionObserver' in window)) {
+        return;
+    }
 
     const counterObserver = new IntersectionObserver(
         (entries, observer) => {
@@ -37,7 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const element = entry.target;
-                const target = Number(element.dataset.counter || 0);
+                const target =
+                    Number(element.dataset.counter || 0);
+
                 const duration = 1200;
                 const startTime = performance.now();
 

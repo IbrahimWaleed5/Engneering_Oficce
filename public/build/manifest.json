@@ -7,12 +7,6 @@
     "file": "assets/flags@2x-QBzdwbZ8.webp",
     "src": "node_modules/intl-tel-input/dist/img/flags@2x.webp"
   },
-  "node_modules/intl-tel-input/dist/js/utils.js": {
-    "file": "assets/utils-OX5WXhS4.js",
-    "name": "utils",
-    "src": "node_modules/intl-tel-input/dist/js/utils.js",
-    "isDynamicEntry": true
-  },
   "resources/css/app.css": {
     "file": "assets/app-CFE7coGo.css",
     "src": "resources/css/app.css",
@@ -23,13 +17,10 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CEIDBZ-3.js",
+    "file": "assets/app-DXhdHXnC.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
-    "dynamicImports": [
-      "node_modules/intl-tel-input/dist/js/utils.js"
-    ],
     "css": [
       "assets/app-DWAWV3dS.css"
     ],

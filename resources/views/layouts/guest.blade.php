@@ -34,10 +34,6 @@
         'resources/css/app.css',
         'resources/js/app.js'
     ])
-    <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/intl-tel-input@26.5.0/dist/css/intlTelInput.css"
->
 </head>
 
 <body class="font-sans antialiased text-white bg-slate-950">
@@ -47,135 +43,7 @@
     >
         {{ $slot }}
     </main>
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@26.5.0/dist/js/intlTelInput.min.js"></script>
 
-<script>
-    window.addEventListener('load', function () {
-        const phoneInput = document.getElementById('phone');
 
-        if (
-            !phoneInput ||
-            typeof window.intlTelInput !== 'function' ||
-            phoneInput.dataset.itiInitialized === 'true'
-        ) {
-            return;
-        }
-
-        phoneInput.dataset.itiInitialized = 'true';
-
-        const countryCodeInput =
-            document.getElementById('country_code');
-
-        const dialCodeInput =
-            document.getElementById('dial_code');
-
-        const form = phoneInput.closest('form');
-
-        const iti = window.intlTelInput(phoneInput, {
-            initialCountry: (
-                countryCodeInput?.value || 'PS'
-            ).toLowerCase(),
-
-            separateDialCode: true,
-            nationalMode: true,
-            countrySearch: true,
-            showFlags: true,
-            formatAsYouType: true,
-            strictMode: true,
-
-            countryOrder: [
-                'ps',
-                'sa',
-                'ae',
-                'jo',
-                'eg',
-                'qa',
-                'kw',
-                'bh',
-                'om',
-                'iq',
-                'lb',
-                'sy',
-                'tr',
-                'gb',
-                'us'
-            ],
-
-            loadUtils: () => import(
-                'https://cdn.jsdelivr.net/npm/intl-tel-input@26.5.0/dist/js/utils.js'
-            )
-        });
-
-        function syncPhoneData() {
-            const country = iti.getSelectedCountryData();
-
-            if (countryCodeInput) {
-                countryCodeInput.value =
-                    country.iso2?.toUpperCase() || 'PS';
-            }
-
-            if (dialCodeInput) {
-                dialCodeInput.value = country.dialCode
-                    ? `+${country.dialCode}`
-                    : '+970';
-            }
-        }
-
-        phoneInput.addEventListener(
-            'countrychange',
-            syncPhoneData
-        );
-
-        phoneInput.addEventListener('input', function () {
-            phoneInput.setCustomValidity('');
-        });
-
-        syncPhoneData();
-
-        form?.addEventListener('submit', async function (event) {
-            event.preventDefault();
-
-            try {
-                await iti.promise;
-            } catch (error) {
-                console.error(error);
-            }
-
-            syncPhoneData();
-
-            if (!phoneInput.value.trim()) {
-                phoneInput.setCustomValidity(
-                    'يرجى إدخال رقم الهاتف.'
-                );
-
-                phoneInput.reportValidity();
-                phoneInput.focus();
-
-                return;
-            }
-
-            if (!iti.isValidNumber()) {
-                phoneInput.setCustomValidity(
-                    'رقم الهاتف غير صحيح للدولة المختارة.'
-                );
-
-                phoneInput.reportValidity();
-                phoneInput.focus();
-
-                return;
-            }
-
-            phoneInput.setCustomValidity('');
-
-            const fullNumber = iti.getNumber();
-
-            if (fullNumber) {
-                phoneInput.value = fullNumber;
-            }
-
-            form.submit();
-        });
-    });
-</script>
 </body>
 </html>
