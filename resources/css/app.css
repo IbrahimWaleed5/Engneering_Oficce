@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 :root {
     --page-bg: #020617;
     --surface: rgba(15, 23, 42, 0.72);
@@ -353,196 +354,179 @@ select.form-control option {
     background: linear-gradient(180deg, #2563eb, #06b6d4);
     border-radius: 9999px;
 }
+
 /* =========================================================
    Premium International Phone Input
    ========================================================= */
 
-.iti-premium-wrapper {
+.premium-phone-field {
     position: relative;
     width: 100%;
 }
 
-.iti-premium-wrapper .iti {
-    width: 100%;
+.premium-phone-field .iti {
     display: block;
+    width: 100%;
 }
 
-.iti-premium-wrapper .iti__tel-input {
-    width: 100%;
-    min-height: 58px;
-
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    padding-left: 1rem;
-
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(15, 23, 42, 0.96),
-            rgba(2, 6, 23, 0.88)
-        );
-
-    color: rgb(241 245 249);
-    font-size: 0.95rem;
-    font-weight: 600;
-    outline: none;
-
+.premium-phone-field .iti__tel-input {
+    width: 100% !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-right: 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 1rem !important;
+    background: linear-gradient(
+        135deg,
+        rgba(2, 6, 23, 0.82),
+        rgba(15, 23, 42, 0.88)
+    ) !important;
+    color: rgb(241 245 249) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    outline: none !important;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.03),
-        0 12px 32px rgba(2, 6, 23, 0.18);
-
+        0 12px 30px rgba(2, 6, 23, 0.18) !important;
     transition:
         border-color 180ms ease,
         box-shadow 180ms ease,
-        transform 180ms ease;
+        background-color 180ms ease !important;
 }
 
-.iti-premium-wrapper .iti__tel-input::placeholder {
-    color: rgb(71 85 105);
+.premium-phone-field .iti__tel-input::placeholder {
+    color: rgb(71 85 105) !important;
 }
 
-.iti-premium-wrapper .iti__tel-input:hover {
-    border-color: rgba(34, 211, 238, 0.28);
+.premium-phone-field .iti__tel-input:hover {
+    border-color: rgba(34, 211, 238, 0.32) !important;
 }
 
-.iti-premium-wrapper .iti__tel-input:focus {
-    border-color: rgb(34 211 238);
-
+.premium-phone-field .iti__tel-input:focus {
+    border-color: rgb(34 211 238) !important;
+    background: rgba(2, 6, 23, 0.96) !important;
     box-shadow:
         0 0 0 4px rgba(6, 182, 212, 0.1),
-        0 18px 40px rgba(8, 145, 178, 0.08);
+        0 18px 40px rgba(8, 145, 178, 0.08) !important;
 }
 
-.iti-premium-wrapper.phone-has-error .iti__tel-input {
-    border-color: rgb(248 113 113);
-
-    box-shadow:
-        0 0 0 4px rgba(239, 68, 68, 0.1);
+.premium-phone-field.phone-has-error .iti__tel-input {
+    border-color: rgb(248 113 113) !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
 }
 
-/* زر الدولة */
-.iti-premium-wrapper .iti__selected-country {
-    min-width: 108px;
-    padding: 0 0.9rem;
-
-    border-radius: 1rem 0 0 1rem;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(6, 182, 212, 0.1),
-            rgba(37, 99, 235, 0.08)
-        );
-
-    transition:
-        background-color 180ms ease,
-        box-shadow 180ms ease;
-}
-
-.iti-premium-wrapper .iti__selected-country:hover {
-    background:
-        linear-gradient(
-            135deg,
-            rgba(6, 182, 212, 0.17),
-            rgba(37, 99, 235, 0.13)
-        );
-}
-
-.iti-premium-wrapper .iti__selected-dial-code {
-    margin-inline-start: 0.5rem;
-    color: rgb(103 232 249);
-    font-weight: 800;
+.premium-phone-field .iti__country-container {
     direction: ltr;
 }
 
-/* القائمة */
-.iti__dropdown-content {
-    overflow: hidden !important;
-
-    border: 1px solid rgba(34, 211, 238, 0.2) !important;
-    border-radius: 1.25rem !important;
-
-    background:
-        linear-gradient(
-            160deg,
-            rgba(15, 23, 42, 0.99),
-            rgba(2, 6, 23, 0.99)
-        ) !important;
-
-    box-shadow:
-        0 28px 70px rgba(2, 6, 23, 0.65),
-        0 0 0 1px rgba(255, 255, 255, 0.025) !important;
-
-    backdrop-filter: blur(22px);
+.premium-phone-field .iti__selected-country {
+    min-width: 112px !important;
+    height: 100% !important;
+    padding-right: 0.9rem !important;
+    padding-left: 0.9rem !important;
+    border-radius: 1rem 0 0 1rem !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: linear-gradient(
+        135deg,
+        rgba(6, 182, 212, 0.14),
+        rgba(37, 99, 235, 0.1)
+    ) !important;
 }
 
-/* البحث */
+.premium-phone-field .iti__selected-country:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(6, 182, 212, 0.22),
+        rgba(37, 99, 235, 0.17)
+    ) !important;
+}
+
+.premium-phone-field .iti__selected-dial-code {
+    margin-left: 0.5rem !important;
+    color: rgb(103 232 249) !important;
+    font-weight: 900 !important;
+    direction: ltr;
+}
+
+.premium-phone-field .iti__arrow {
+    margin-left: 0.4rem !important;
+    border-top-color: rgb(103 232 249) !important;
+}
+
+.iti__dropdown-content {
+    z-index: 99999 !important;
+    overflow: hidden !important;
+    width: min(390px, calc(100vw - 2rem)) !important;
+    border: 1px solid rgba(34, 211, 238, 0.22) !important;
+    border-radius: 1.25rem !important;
+    background: linear-gradient(
+        160deg,
+        rgba(15, 23, 42, 0.99),
+        rgba(2, 6, 23, 0.99)
+    ) !important;
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.72),
+        0 0 0 1px rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
 .iti__search-input {
-    margin: 0.75rem !important;
     width: calc(100% - 1.5rem) !important;
-
-    padding: 0.85rem 1rem !important;
-
+    margin: 0.75rem !important;
+    padding: 0.9rem 1rem !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0.9rem !important;
-
-    background: rgba(2, 6, 23, 0.78) !important;
+    background: rgba(2, 6, 23, 0.88) !important;
     color: rgb(241 245 249) !important;
     outline: none !important;
-
-    transition:
-        border-color 180ms ease,
-        box-shadow 180ms ease;
 }
 
 .iti__search-input::placeholder {
-    color: rgb(100 116 139);
+    color: rgb(100 116 139) !important;
 }
 
 .iti__search-input:focus {
     border-color: rgb(34 211 238) !important;
-    box-shadow:
-        0 0 0 4px rgba(6, 182, 212, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1) !important;
 }
 
-/* عناصر الدول */
+.iti__country-list {
+    max-height: 320px !important;
+    direction: rtl;
+}
+
 .iti__country {
-    min-height: 48px;
+    min-height: 50px !important;
     padding: 0.7rem 1rem !important;
-
     color: rgb(203 213 225) !important;
-
     transition:
         background-color 150ms ease,
-        color 150ms ease;
+        color 150ms ease !important;
 }
 
 .iti__country:hover,
 .iti__country.iti__highlight {
-    background:
-        linear-gradient(
-            90deg,
-            rgba(6, 182, 212, 0.14),
-            rgba(37, 99, 235, 0.08)
-        ) !important;
-
+    background: linear-gradient(
+        90deg,
+        rgba(6, 182, 212, 0.15),
+        rgba(37, 99, 235, 0.1)
+    ) !important;
     color: white !important;
 }
 
 .iti__country-name {
-    font-weight: 700;
+    font-weight: 700 !important;
 }
 
 .iti__dial-code {
     color: rgb(103 232 249) !important;
-    font-weight: 800;
+    font-weight: 900 !important;
     direction: ltr;
 }
 
-/* Scrollbar */
 .iti__country-list::-webkit-scrollbar {
     width: 7px;
 }
@@ -553,23 +537,21 @@ select.form-control option {
 
 .iti__country-list::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-
-    background:
-        linear-gradient(
-            rgb(37 99 235),
-            rgb(6 182 212)
-        );
+    background: linear-gradient(
+        rgb(37 99 235),
+        rgb(6 182 212)
+    );
 }
 
-/* تحسين الموبايل */
 @media (max-width: 640px) {
-    .iti-premium-wrapper .iti__tel-input {
-        min-height: 56px;
-        font-size: 1rem;
+    .premium-phone-field .iti__tel-input {
+        height: 56px !important;
+        min-height: 56px !important;
+        font-size: 1rem !important;
     }
 
-    .iti-premium-wrapper .iti__selected-country {
-        min-width: 104px;
+    .premium-phone-field .iti__selected-country {
+        min-width: 108px !important;
     }
 
     .iti--fullscreen-popup .iti__dropdown-content {

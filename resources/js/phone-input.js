@@ -1,37 +1,45 @@
 import intlTelInput from 'intl-tel-input';
-import 'intl-tel-input/styles';
-import { ar } from 'intl-tel-input/locale';
+import 'intl-tel-input/build/css/intlTelInput.css';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('phone');
 
-    if (!phoneInput || phoneInput.dataset.intlTelReady === 'true') {
+    if (!phoneInput) {
         return;
     }
 
-    phoneInput.dataset.intlTelReady = 'true';
+    const countryCodeInput =
+        document.getElementById('country_code');
+
+    const dialCodeInput =
+        document.getElementById('dial_code');
 
     const form = phoneInput.closest('form');
-    const countryCodeInput = document.getElementById('country_code');
-    const dialCodeInput = document.getElementById('dial_code');
-    const phoneError = document.getElementById('phone-client-error');
-
-    const initialCountry =
-        countryCodeInput?.value?.toLowerCase() || 'ps';
 
     const iti = intlTelInput(phoneInput, {
-        initialCountry: initialCountry,
+        initialCountry:
+            countryCodeInput?.value?.toLowerCase() || 'ps',
+
+        separateDialCode: true,
+
+        countrySearch: true,
+
+        nationalMode: true,
+
+        formatAsYouType: true,
+
+        strictMode: true,
 
         countryOrder: [
             'ps',
             'sa',
-            'jo',
             'ae',
+            'jo',
+            'eg',
             'qa',
             'kw',
             'bh',
             'om',
-            'eg',
             'iq',
             'lb',
             'sy',
@@ -40,20 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
             'us',
         ],
 
-        separateDialCode: true,
-        countrySearch: true,
-        countryNameLocale: 'ar',
-        uiTranslations: ar,
-        showFlags: true,
-        nationalMode: true,
-        strictMode: true,
-        formatAsYouType: true,
-        countrySelectorMode: 'AUTO',
-
-        loadUtils: () => import('intl-tel-input/utils'),
+        loadUtils: () =>
+            import('intl-tel-input/utils'),
     });
 
-    function syncCountryData() {
+    function syncPhoneData() {
         const country = iti.getSelectedCountryData();
 
         if (countryCodeInput) {
@@ -69,81 +68,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function hidePhoneError() {
-        if (!phoneError) {
-            return;
-        }
+    phoneInput.addEventListener(
+        'countrychange',
+        syncPhoneData
+    );
 
-        phoneError.textContent = '';
-        phoneError.classList.add('hidden');
+    syncPhoneData();
 
-        phoneInput
-            .closest('.iti-premium-wrapper')
-            ?.classList.remove('phone-has-error');
-    }
-
-    function showPhoneError(message) {
-        if (!phoneError) {
-            return;
-        }
-
-        phoneError.textContent = message;
-        phoneError.classList.remove('hidden');
-
-        phoneInput
-            .closest('.iti-premium-wrapper')
-            ?.classList.add('phone-has-error');
-    }
-
-    phoneInput.addEventListener('countrychange', () => {
-        syncCountryData();
-        hidePhoneError();
-    });
-
-    phoneInput.addEventListener('input', hidePhoneError);
-
-    syncCountryData();
-
-    if (!form) {
-        return;
-    }
-
-    form.addEventListener('submit', async (event) => {
+    form?.addEventListener('submit', async function (event) {
         event.preventDefault();
-
-        hidePhoneError();
-        syncCountryData();
 
         try {
             await iti.promise;
         } catch (error) {
-            console.error(
-                'تعذر تحميل أدوات التحقق من الهاتف:',
-                error
-            );
+            console.error(error);
         }
 
-        const numberValue = phoneInput.value.trim();
-
-        if (!numberValue) {
-            showPhoneError('يرجى إدخال رقم الهاتف.');
-            phoneInput.focus();
-            return;
-        }
+        syncPhoneData();
 
         if (!iti.isValidNumber()) {
-            showPhoneError(
+            phoneInput.setCustomValidity(
                 'رقم الهاتف غير صحيح بالنسبة للدولة المختارة.'
             );
 
+            phoneInput.reportValidity();
             phoneInput.focus();
+
             return;
         }
 
-        /*
-         * نرسل الرقم المحلي إلى Laravel.
-         * RegisteredUserController سيحوّله إلى E.164.
-         */
+        phoneInput.setCustomValidity('');
+
         form.submit();
     });
 });

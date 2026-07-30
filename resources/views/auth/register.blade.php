@@ -376,7 +376,6 @@
                         @csrf
 
                         {{-- الصورة الشخصية --}}
-                       {{-- الصورة الشخصية --}}
 <div class="space-y-3">
 
     <label
@@ -489,7 +488,6 @@
 </div>
 
                         {{-- الاسم والهاتف --}}
-{{-- الاسم والهاتف --}}
 <div class="grid gap-6 sm:grid-cols-2">
 
     {{-- الاسم الكامل --}}
@@ -546,7 +544,7 @@
             رقم الهاتف
         </label>
 
-        <div class="iti-premium-wrapper">
+        <div class="premium-phone-field">
             <input
                 id="phone"
                 type="tel"
