@@ -545,17 +545,18 @@
     </label>
 
     <div class="premium-phone-field">
-        <input
-            id="phone"
-            type="tel"
-            name="phone"
-            value="{{ old('phone') }}"
-            required
-            autocomplete="tel"
-            placeholder="599000000"
-            dir="ltr"
-            class="w-full py-4 pr-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
-        >
+       <input
+    id="phone"
+    type="tel"
+    name="phone"
+    value="{{ old('phone') }}"
+    required
+    autocomplete="off"
+    inputmode="tel"
+    placeholder="599000000"
+    dir="ltr"
+    class="w-full py-4 pr-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
+>
 
         <input
             id="country_code"
