@@ -552,12 +552,134 @@
 
                             <div>
 
-                                <label
-                                    for="phone"
-                                    class="block mb-3 text-sm font-bold text-slate-200"
-                                >
-                                    رقم الهاتف
-                                </label>
+                               <div class="sm:col-span-2">
+
+    <label
+        for="phone"
+        class="block mb-3 text-sm font-bold text-slate-200"
+    >
+        رقم الهاتف
+    </label>
+
+    <div class="grid gap-3 sm:grid-cols-[180px_1fr]">
+
+        <div>
+            <select
+                id="country_code"
+                name="country_code"
+                required
+                class="w-full px-4 py-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            >
+                <option value="">اختر الدولة</option>
+
+                <option value="PS" data-dial="+970" @selected(old('country_code') === 'PS')>
+                    فلسطين +970
+                </option>
+
+                <option value="SA" data-dial="+966" @selected(old('country_code') === 'SA')>
+                    السعودية +966
+                </option>
+
+                <option value="JO" data-dial="+962" @selected(old('country_code') === 'JO')>
+                    الأردن +962
+                </option>
+
+                <option value="EG" data-dial="+20" @selected(old('country_code') === 'EG')>
+                    مصر +20
+                </option>
+
+                <option value="AE" data-dial="+971" @selected(old('country_code') === 'AE')>
+                    الإمارات +971
+                </option>
+
+                <option value="QA" data-dial="+974" @selected(old('country_code') === 'QA')>
+                    قطر +974
+                </option>
+
+                <option value="KW" data-dial="+965" @selected(old('country_code') === 'KW')>
+                    الكويت +965
+                </option>
+
+                <option value="BH" data-dial="+973" @selected(old('country_code') === 'BH')>
+                    البحرين +973
+                </option>
+
+                <option value="OM" data-dial="+968" @selected(old('country_code') === 'OM')>
+                    عُمان +968
+                </option>
+
+                <option value="IQ" data-dial="+964" @selected(old('country_code') === 'IQ')>
+                    العراق +964
+                </option>
+
+                <option value="SY" data-dial="+963" @selected(old('country_code') === 'SY')>
+                    سوريا +963
+                </option>
+
+                <option value="LB" data-dial="+961" @selected(old('country_code') === 'LB')>
+                    لبنان +961
+                </option>
+
+                <option value="TR" data-dial="+90" @selected(old('country_code') === 'TR')>
+                    تركيا +90
+                </option>
+
+                <option value="GB" data-dial="+44" @selected(old('country_code') === 'GB')>
+                    بريطانيا +44
+                </option>
+
+                <option value="US" data-dial="+1" @selected(old('country_code') === 'US')>
+                    الولايات المتحدة +1
+                </option>
+            </select>
+        </div>
+
+        <div class="flex overflow-hidden border rounded-2xl border-white/10 bg-slate-950/70 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
+
+            <div
+                id="dial_code_display"
+                class="flex items-center justify-center px-4 font-bold border-l min-w-20 border-white/10 text-cyan-300"
+                dir="ltr"
+            >
+                +970
+            </div>
+
+            <input
+                id="phone"
+                type="tel"
+                name="phone"
+                value="{{ old('phone') }}"
+                required
+                autocomplete="tel"
+                placeholder="599000000"
+                class="w-full px-4 py-4 bg-transparent border-0 outline-none text-slate-100 placeholder:text-slate-600 focus:ring-0"
+                dir="ltr"
+            >
+
+            <input
+                id="dial_code"
+                type="hidden"
+                name="dial_code"
+                value="{{ old('dial_code', '+970') }}"
+            >
+
+        </div>
+
+    </div>
+
+    @error('country_code')
+        <p class="mt-2 text-sm text-red-300">
+            {{ $message }}
+        </p>
+    @enderror
+
+    @error('phone')
+        <p class="mt-2 text-sm text-red-300">
+            {{ $message }}
+        </p>
+    @enderror
+
+</div>
 
                                 <div class="relative">
 
@@ -921,6 +1043,34 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+const countrySelect = document.getElementById('country_code');
+const dialCodeInput = document.getElementById('dial_code');
+const dialCodeDisplay = document.getElementById('dial_code_display');
+
+function updateDialCode() {
+    if (!countrySelect || !dialCodeInput || !dialCodeDisplay) {
+        return;
+    }
+
+    const selectedOption =
+        countrySelect.options[countrySelect.selectedIndex];
+
+    const dialCode =
+        selectedOption?.dataset?.dial || '+970';
+
+    dialCodeInput.value = dialCode;
+    dialCodeDisplay.textContent = dialCode;
+}
+
+if (countrySelect) {
+    countrySelect.addEventListener(
+        'change',
+        updateDialCode
+    );
+
+    updateDialCode();
+}
 </script>
 
 </x-guest-layout>

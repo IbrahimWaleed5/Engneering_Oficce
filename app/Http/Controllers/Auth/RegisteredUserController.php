@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 
 class RegisteredUserController extends Controller
 {
@@ -28,65 +31,112 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+   public function store(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'name' => [
+            'required',
+            'string',
+            'max:255',
+        ],
 
-            'phone' => [
-                'required',
-                'string',
-                'max:20',
-                'unique:users,phone',
-            ],
+        'country_code' => [
+            'required',
+            'string',
+            'size:2',
+        ],
 
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                'unique:' . User::class,
-            ],
+        'dial_code' => [
+            'required',
+            'string',
+            'max:8',
+        ],
 
-            'password' => [
-                'required',
-                'confirmed',
-                Rules\Password::defaults(),
-            ],
+        'phone' => [
+            'required',
+            'string',
+            'max:25',
+        ],
 
-            'profile_photo' => [
-                'required',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:512000',
-            ],
-        ]);
+        'email' => [
+            'required',
+            'string',
+            'lowercase',
+            'email',
+            'max:255',
+            'unique:' . User::class,
+        ],
 
-        $profilePhotoPath = $request
-            ->file('profile_photo')
-            ->store('profile-photos', 'public');
+        'password' => [
+            'required',
+            'confirmed',
+            Rules\Password::defaults(),
+        ],
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'profile_photo' => $profilePhotoPath,
-            'role' => 'customer',
-            'status' => 'active',
-        ]);
+        'profile_photo' => [
+            'required',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'max:2048',
+        ],
+    ]);
 
-        event(new Registered($user));
+    $countryCode = strtoupper($validated['country_code']);
 
-        Auth::login($user);
+    try {
+        $phoneUtil = PhoneNumberUtil::getInstance();
 
-        return redirect(
-            route('dashboard', absolute: false)
+        $parsedPhone = $phoneUtil->parse(
+            $validated['phone'],
+            $countryCode
         );
+
+        if (! $phoneUtil->isValidNumber($parsedPhone)) {
+            throw ValidationException::withMessages([
+                'phone' => 'رقم الهاتف غير صحيح بالنسبة للدولة المختارة.',
+            ]);
+        }
+
+        $internationalPhone = $phoneUtil->format(
+            $parsedPhone,
+            PhoneNumberFormat::E164
+        );
+    } catch (NumberParseException) {
+        throw ValidationException::withMessages([
+            'phone' => 'تعذر قراءة رقم الهاتف. تأكد من الدولة والرقم.',
+        ]);
     }
+
+    if (
+        User::query()
+            ->where('phone', $internationalPhone)
+            ->exists()
+    ) {
+        throw ValidationException::withMessages([
+            'phone' => 'رقم الهاتف مستخدم في حساب آخر.',
+        ]);
+    }
+
+    $profilePhotoPath = $request
+        ->file('profile_photo')
+        ->store('profile-photos', 'public');
+
+    $user = User::create([
+        'name' => $validated['name'],
+        'country_code' => $countryCode,
+        'dial_code' => $validated['dial_code'],
+        'phone' => $internationalPhone,
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'profile_photo' => $profilePhotoPath,
+        'role' => 'customer',
+        'status' => 'active',
+    ]);
+
+    event(new Registered($user));
+
+    Auth::login($user);
+
+    return redirect()->route('verification.notice');
+}
 }

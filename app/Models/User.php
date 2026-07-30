@@ -2,42 +2,51 @@
 
 namespace App\Models;
 
+use App\Models\EngineerReview;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\EngineerReview;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
-
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    use TwoFactorAuthenticatable;
 
-protected $fillable = [
-    'name',
-    'phone',
-    'email',
-    'password',
-    'profile_photo',
-    'role',
-    'status',
-    'engineer_membership_status',
-    'engineer_active_until',
-];
-
-    protected $hidden = [
+    protected $fillable = [
+        'name',
+        'country_code',
+        'dial_code',
+        'phone',
+        'phone_verified_at',
+        'email',
         'password',
-        'remember_token',
+        'profile_photo',
+        'role',
+        'status',
+        'engineer_membership_status',
+        'engineer_active_until',
     ];
 
+    protected $hidden = [
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+];
     protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'engineer_active_until' => 'datetime',
-        ];
-    }
+{
+    return [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'engineer_active_until' => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
+    ];
+}
 
     public function employeeProfile()
     {
