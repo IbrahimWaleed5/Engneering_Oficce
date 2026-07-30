@@ -536,64 +536,48 @@
     </div>
 
     {{-- رقم الهاتف الدولي --}}
-    <div>
-        <label
-            for="phone"
-            class="block mb-3 text-sm font-bold text-slate-200"
+   <div>
+    <label
+        for="phone"
+        class="block mb-3 text-sm font-bold text-slate-200"
+    >
+        رقم الهاتف
+    </label>
+
+    <div class="premium-phone-field">
+        <input
+            id="phone"
+            type="tel"
+            name="phone"
+            value="{{ old('phone') }}"
+            required
+            autocomplete="tel"
+            placeholder="599000000"
+            dir="ltr"
+            class="w-full py-4 pr-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
         >
-            رقم الهاتف
-        </label>
 
-        <div class="premium-phone-field">
-            <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value="{{ old('phone') }}"
-                required
-                autocomplete="tel"
-                placeholder="599000000"
-                dir="ltr"
-            >
+        <input
+            id="country_code"
+            type="hidden"
+            name="country_code"
+            value="{{ old('country_code', 'PS') }}"
+        >
 
-            <input
-                id="country_code"
-                type="hidden"
-                name="country_code"
-                value="{{ old('country_code', 'PS') }}"
-            >
-
-            <input
-                id="dial_code"
-                type="hidden"
-                name="dial_code"
-                value="{{ old('dial_code', '+970') }}"
-            >
-        </div>
-
-        <p
-            id="phone-client-error"
-            class="hidden mt-2 text-sm font-bold text-red-300"
-        ></p>
-
-        @error('country_code')
-            <p class="mt-2 text-sm font-bold text-red-300">
-                {{ $message }}
-            </p>
-        @enderror
-
-        @error('dial_code')
-            <p class="mt-2 text-sm font-bold text-red-300">
-                {{ $message }}
-            </p>
-        @enderror
-
-        @error('phone')
-            <p class="mt-2 text-sm font-bold text-red-300">
-                {{ $message }}
-            </p>
-        @enderror
+        <input
+            id="dial_code"
+            type="hidden"
+            name="dial_code"
+            value="{{ old('dial_code', '+970') }}"
+        >
     </div>
+
+    @error('phone')
+        <p class="mt-2 text-sm font-bold text-red-300">
+            {{ $message }}
+        </p>
+    @enderror
+</div>
 
 </div>
                         {{-- البريد الإلكتروني --}}
