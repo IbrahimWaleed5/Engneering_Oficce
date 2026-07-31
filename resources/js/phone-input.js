@@ -1,8 +1,9 @@
 import intlTelInput from 'intl-tel-input/intlTelInputWithUtils';
-import 'intl-tel-input/styles';
 
 function initializePhoneInput() {
-    const phoneInput = document.getElementById('phone');
+    const phoneInput = document.querySelector(
+        '#phone[type="tel"]'
+    );
 
     if (
         !phoneInput ||
@@ -10,8 +11,6 @@ function initializePhoneInput() {
     ) {
         return;
     }
-
-    phoneInput.dataset.itiInitialized = 'true';
 
     const countryCodeInput =
         document.getElementById('country_code');
@@ -21,107 +20,153 @@ function initializePhoneInput() {
 
     const form = phoneInput.closest('form');
 
-    const iti = intlTelInput(phoneInput, {
-        initialCountry: (
-            countryCodeInput?.value || 'PS'
-        ).toLowerCase(),
-
-        separateDialCode: true,
-        nationalMode: true,
-        countrySearch: true,
-        showFlags: true,
-        formatAsYouType: true,
-        strictMode: true,
-
-        countryOrder: [
-            'ps',
-            'sa',
-            'ae',
-            'jo',
-            'eg',
-            'qa',
-            'kw',
-            'bh',
-            'om',
-            'iq',
-            'lb',
-            'sy',
-            'tr',
-            'gb',
-            'us',
-        ],
-    });
-
-    function updateCountryData() {
-        const country = iti.getSelectedCountryData();
-
-        if (countryCodeInput) {
-            countryCodeInput.value =
-                country.iso2?.toUpperCase() || 'PS';
-        }
-
-        if (dialCodeInput) {
-            dialCodeInput.value = country.dialCode
-                ? `+${country.dialCode}`
-                : '+970';
-        }
-    }
-
-    phoneInput.addEventListener(
-        'countrychange',
-        updateCountryData
+    const fieldWrapper = phoneInput.closest(
+        '.premium-phone-field'
     );
 
-    phoneInput.addEventListener('input', () => {
-        phoneInput.setCustomValidity('');
-    });
+    const initialCountry = (
+        countryCodeInput?.value || 'PS'
+    ).toLowerCase();
 
-    updateCountryData();
+    try {
+        const iti = intlTelInput(phoneInput, {
+            initialCountry: initialCountry,
 
-    form?.addEventListener('submit', (event) => {
-        event.preventDefault();
+            separateDialCode: true,
+            countrySelectorMode: 'DROPDOWN',
+            dropdownParent: document.body,
+            countrySearch: true,
+            showFlags: true,
+
+            nationalMode: true,
+            formatAsYouType: true,
+            strictMode: true,
+
+            countryNameLocale: 'ar',
+
+            countryOrder: [
+                'ps',
+                'sa',
+                'ae',
+                'jo',
+                'eg',
+                'qa',
+                'kw',
+                'bh',
+                'om',
+                'iq',
+                'lb',
+                'sy',
+                'tr',
+                'gb',
+                'us',
+            ],
+        });
+
+        phoneInput.dataset.itiInitialized = 'true';
+
+        function clearPhoneError() {
+            phoneInput.setCustomValidity('');
+
+            fieldWrapper?.classList.remove(
+                'phone-has-error'
+            );
+        }
+
+        function showPhoneError(message) {
+            phoneInput.setCustomValidity(message);
+
+            fieldWrapper?.classList.add(
+                'phone-has-error'
+            );
+
+            phoneInput.reportValidity();
+            phoneInput.focus();
+        }
+
+        function updateCountryData() {
+            const country = iti.getSelectedCountryData();
+
+            if (countryCodeInput) {
+                countryCodeInput.value =
+                    country?.iso2?.toUpperCase() || 'PS';
+            }
+
+            if (dialCodeInput) {
+                dialCodeInput.value = country?.dialCode
+                    ? `+${country.dialCode}`
+                    : '+970';
+            }
+        }
 
         updateCountryData();
 
-        if (!phoneInput.value.trim()) {
-            phoneInput.setCustomValidity(
-                'يرجى إدخال رقم الهاتف.'
-            );
+        phoneInput.addEventListener(
+            'countrychange',
+            () => {
+                updateCountryData();
+                clearPhoneError();
+            }
+        );
 
-            phoneInput.reportValidity();
-            phoneInput.focus();
-            return;
-        }
+        phoneInput.addEventListener(
+            'input',
+            clearPhoneError
+        );
 
-        if (!iti.isValidNumber()) {
-            phoneInput.setCustomValidity(
-                'رقم الهاتف غير صحيح للدولة المختارة.'
-            );
+        form?.addEventListener('submit', (event) => {
+            clearPhoneError();
+            updateCountryData();
 
-            phoneInput.reportValidity();
-            phoneInput.focus();
-            return;
-        }
+            if (!phoneInput.value.trim()) {
+                event.preventDefault();
 
-        phoneInput.setCustomValidity('');
+                showPhoneError(
+                    'يرجى إدخال رقم الهاتف.'
+                );
 
-        const fullNumber = iti.getNumber();
+                return;
+            }
 
-        if (fullNumber) {
-            phoneInput.value = fullNumber;
-        }
+            if (!iti.isValidNumber()) {
+                event.preventDefault();
 
-        form.submit();
-    });
+                showPhoneError(
+                    'رقم الهاتف غير صحيح للدولة المختارة.'
+                );
 
-    window.phoneInputInstance = iti;
+                return;
+            }
+
+            const fullNumber = iti.getNumber();
+
+            if (fullNumber) {
+                phoneInput.value = fullNumber;
+            }
+        });
+
+        window.phoneInputInstance = iti;
+    } catch (error) {
+        delete phoneInput.dataset.itiInitialized;
+
+        console.error(
+            'تعذر تشغيل قائمة الدول لحقل الهاتف:',
+            error
+        );
+    }
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener(
-        'DOMContentLoaded',
-        initializePhoneInput
-    );
-} else {
+if (document.readyState === 'complete') {
     initializePhoneInput();
+} else {
+    window.addEventListener(
+        'load',
+        initializePhoneInput,
+        { once: true }
+    );
 }
+
+window.addEventListener(
+    'pageshow',
+    initializePhoneInput
+);

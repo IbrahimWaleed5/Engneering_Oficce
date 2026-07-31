@@ -368,6 +368,7 @@
                     @endif
 
                     <form
+                        id="register-form"
                         method="POST"
                         action="{{ route('register') }}"
                         enctype="multipart/form-data"
@@ -991,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             countrySelectorMode: 'DROPDOWN',
 
-            dropdownParent: document.body,
+            dropdownContainer: document.body,
 
             strictMode: true,
 

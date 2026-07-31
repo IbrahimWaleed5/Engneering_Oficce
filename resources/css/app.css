@@ -1,3 +1,5 @@
+@import "intl-tel-input/styles";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -558,3 +560,35 @@ select.form-control option {
         border-radius: 1.5rem 1.5rem 0 0 !important;
     }
 }
+
+/* =========================================================
+   Final fixes for intl-tel-input with RTL + overflow-hidden
+   ========================================================= */
+
+.premium-phone-field {
+    direction: ltr;
+    overflow: visible !important;
+}
+
+.premium-phone-field .iti {
+    width: 100% !important;
+}
+
+.premium-phone-field .iti__tel-input {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.iti__dropdown-content {
+    z-index: 9999999 !important;
+}
+
+.iti__country-list {
+    overflow-y: auto !important;
+}
+
+body > .iti,
+body > .iti__dropdown-content {
+    z-index: 9999999 !important;
+}
+
