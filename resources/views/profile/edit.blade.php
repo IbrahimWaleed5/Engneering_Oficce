@@ -1,9 +1,34 @@
 <x-app-layout>
 
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css"
+>
+
+<style>
+    #profile_crop_modal .cropper-view-box,
+    #profile_crop_modal .cropper-face {
+        border-radius: 50%;
+    }
+
+    #profile_crop_modal .cropper-view-box {
+        outline: 2px solid rgba(34, 211, 238, 0.9);
+    }
+
+    #profile_crop_modal .cropper-line,
+    #profile_crop_modal .cropper-point {
+        background-color: #22d3ee;
+    }
+
+    #profile_crop_modal .cropper-modal {
+        background-color: #020617;
+        opacity: 0.75;
+    }
+</style>
+
     <div
         class="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.12),_transparent_25%),linear-gradient(to_bottom,_#020617,_#071132,_#020617)]"
         dir="rtl"
-        x-data="{ photoPreview: null }"
     >
         <div class="max-w-5xl px-4 py-10 mx-auto sm:px-6 lg:px-8">
 
@@ -113,10 +138,10 @@
                 يمكنك تحريك الصورة وتكبيرها واختيار الجزء الذي تريد ظهوره.
             </p>
 
-            <button
+            <label
+                for="profile_photo"
                 id="choose_profile_photo"
-                type="button"
-                class="inline-flex items-center justify-center gap-2 px-5 py-3 mt-4 text-sm font-black transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 mt-4 text-sm font-black transition border cursor-pointer rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20"
             >
                 <svg
                     class="w-5 h-5"
@@ -132,7 +157,7 @@
                 </svg>
 
                 تعديل الصورة
-            </button>
+            </label>
 
             <input
                 id="profile_photo"
@@ -387,4 +412,223 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.getElementById('profile_photo');
+    const preview = document.getElementById('profile_photo_preview');
+    const modal = document.getElementById('profile_crop_modal');
+    const cropImage = document.getElementById('profile_crop_image');
+    const saveButton = document.getElementById('save_profile_crop');
+    const cancelButtons = document.querySelectorAll('[data-cancel-profile-crop]');
+    const zoomInButton = document.getElementById('crop_zoom_in');
+    const zoomOutButton = document.getElementById('crop_zoom_out');
+    const rotateLeftButton = document.getElementById('crop_rotate_left');
+    const rotateRightButton = document.getElementById('crop_rotate_right');
+    const resetButton = document.getElementById('crop_reset');
+    const photoName = document.getElementById('profile_photo_name');
+
+    if (!fileInput || !preview || !modal || !cropImage || !saveButton) {
+        return;
+    }
+
+    let cropper = null;
+    let sourceUrl = null;
+    let previewUrl = null;
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function destroyCropper() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+
+        if (sourceUrl) {
+            URL.revokeObjectURL(sourceUrl);
+            sourceUrl = null;
+        }
+
+        cropImage.removeAttribute('src');
+    }
+
+    function cancelCropping() {
+        fileInput.value = '';
+        destroyCropper();
+        closeModal();
+    }
+
+    fileInput.addEventListener('change', function () {
+        const file = fileInput.files && fileInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert('اختر صورة بصيغة JPG أو PNG أو WEBP.');
+            fileInput.value = '';
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('حجم الصورة يجب ألا يتجاوز 5MB.');
+            fileInput.value = '';
+            return;
+        }
+
+        if (typeof Cropper === 'undefined') {
+            alert('تعذر تحميل أداة تعديل الصورة. حدّث الصفحة وحاول مرة أخرى.');
+            fileInput.value = '';
+            return;
+        }
+
+        destroyCropper();
+        sourceUrl = URL.createObjectURL(file);
+        cropImage.src = sourceUrl;
+        openModal();
+
+        cropImage.onload = function () {
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                responsive: true,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                background: false,
+                movable: true,
+                rotatable: true,
+                scalable: true,
+                zoomable: true,
+                zoomOnTouch: true,
+                zoomOnWheel: true,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                checkOrientation: true
+            });
+        };
+    });
+
+    zoomInButton?.addEventListener('click', function () {
+        cropper?.zoom(0.1);
+    });
+
+    zoomOutButton?.addEventListener('click', function () {
+        cropper?.zoom(-0.1);
+    });
+
+    rotateLeftButton?.addEventListener('click', function () {
+        cropper?.rotate(-90);
+    });
+
+    rotateRightButton?.addEventListener('click', function () {
+        cropper?.rotate(90);
+    });
+
+    resetButton?.addEventListener('click', function () {
+        cropper?.reset();
+    });
+
+    cancelButtons.forEach(function (button) {
+        button.addEventListener('click', cancelCropping);
+    });
+
+    saveButton.addEventListener('click', function () {
+        if (!cropper) {
+            return;
+        }
+
+        saveButton.disabled = true;
+        saveButton.textContent = 'جاري تجهيز الصورة...';
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 800,
+            height: 800,
+            fillColor: '#ffffff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+
+        if (!canvas) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'حفظ الصورة';
+            alert('تعذر قص الصورة.');
+            return;
+        }
+
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                saveButton.disabled = false;
+                saveButton.textContent = 'حفظ الصورة';
+                alert('تعذر تجهيز الصورة.');
+                return;
+            }
+
+            const croppedFile = new File(
+                [blob],
+                'profile-' + Date.now() + '.jpg',
+                {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                }
+            );
+
+            const transfer = new DataTransfer();
+            transfer.items.add(croppedFile);
+            fileInput.files = transfer.files;
+
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
+            previewUrl = URL.createObjectURL(blob);
+            preview.src = previewUrl;
+
+            if (photoName) {
+                photoName.textContent = 'تم تجهيز الصورة. اضغط حفظ التعديلات.';
+            }
+
+            destroyCropper();
+            closeModal();
+
+            saveButton.disabled = false;
+            saveButton.textContent = 'حفظ الصورة';
+        }, 'image/jpeg', 0.9);
+    });
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            cancelCropping();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+            cancelCropping();
+        }
+    });
+});
+</script>
+
 </x-app-layout>
