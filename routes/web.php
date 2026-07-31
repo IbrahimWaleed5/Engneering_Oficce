@@ -19,7 +19,7 @@ use App\Http\Middleware\EnsureActiveEngineerMembership;
 use App\Http\Controllers\EngineerReviewController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ReviewController;
-
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -560,5 +560,18 @@ Route::middleware('auth')->group(function () {
         [ReviewController::class, 'destroy']
     )->name('reviews.destroy');
 });
+Route::get(
+    '/email/verification-status',
+    function (Request $request) {
+        $user = $request->user()?->fresh();
+
+        return response()->json([
+            'verified' =>
+                $user?->hasVerifiedEmail() ?? false,
+        ]);
+    }
+)
+    ->middleware('auth')
+    ->name('verification.status');
 
 require __DIR__.'/auth.php';

@@ -532,4 +532,73 @@
 
     </div>
 
+
+    @auth
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const statusUrl = @json(route('verification.status'));
+                const dashboardUrl = @json(route('dashboard'));
+                const loginUrl = @json(route('login'));
+
+                let isChecking = false;
+
+                async function checkEmailVerification() {
+                    if (isChecking) {
+                        return;
+                    }
+
+                    isChecking = true;
+
+                    try {
+                        const response = await fetch(statusUrl, {
+                            method: 'GET',
+                            credentials: 'same-origin',
+                            cache: 'no-store',
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (response.status === 401) {
+                            window.location.replace(loginUrl);
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            return;
+                        }
+
+                        const data = await response.json();
+
+                        if (data.verified === true) {
+                            window.location.replace(dashboardUrl);
+                        }
+                    } catch (error) {
+                        // نتجاهل انقطاع الشبكة المؤقت ثم نحاول مرة أخرى.
+                    } finally {
+                        isChecking = false;
+                    }
+                }
+
+                checkEmailVerification();
+
+                const verificationTimer = window.setInterval(
+                    checkEmailVerification,
+                    3000
+                );
+
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) {
+                        checkEmailVerification();
+                    }
+                });
+
+                window.addEventListener('beforeunload', function () {
+                    window.clearInterval(verificationTimer);
+                }, { once: true });
+            });
+        </script>
+    @endauth
+
 </x-guest-layout>
