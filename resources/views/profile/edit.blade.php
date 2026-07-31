@@ -70,78 +70,88 @@
                     @csrf
                     @method('PATCH')
 
-                    {{-- الصورة --}}
-                    <div
-                        class="p-5 border rounded-3xl border-white/10 bg-white/[0.02]"
-                    >
-                        <label class="block mb-4 text-lg font-bold text-white">
-                            الصورة الشخصية
-                        </label>
+                    {{-- الصورة الشخصية --}}
+<div class="space-y-4">
 
-                        <div class="flex flex-col gap-5 md:flex-row md:items-center">
+    <label class="block text-sm font-black text-white">
+        الصورة الشخصية
+    </label>
 
-                            <div
-                                class="flex items-center justify-center overflow-hidden border w-28 h-28 rounded-3xl border-cyan-400/20 bg-slate-900/70"
-                            >
-                                <template x-if="photoPreview">
-                                    <img
-                                        :src="photoPreview"
-                                        alt="معاينة الصورة"
-                                        class="object-cover w-full h-full"
-                                    >
-                                </template>
+    <div
+        class="flex flex-col items-center gap-5 p-6 border sm:flex-row rounded-3xl border-white/10 bg-slate-950/50"
+    >
+        <div class="relative flex-none">
 
-                                <template x-if="!photoPreview">
-                                    <div class="w-full h-full">
-                                        @if ($user->profile_photo)
-                                            <img
-                                                src="{{ asset('storage/' . $user->profile_photo) }}"
-                                                alt="{{ $user->name }}"
-                                                class="object-cover w-full h-full"
-                                            >
-                                        @else
-                                            <img
-                                                src="{{ asset('images/Mainlogo.png') }}"
-                                                alt="{{ $user->name }}"
-                                                class="object-contain w-full h-full p-3"
-                                            >
-                                        @endif
-                                    </div>
-                                </template>
-                            </div>
+            <img
+                id="profile_photo_preview"
+                src="{{ auth()->user()->profile_photo
+                    ? asset('storage/' . auth()->user()->profile_photo)
+                    : asset('images/default-avatar.png') }}"
+                alt="الصورة الشخصية"
+                class="object-cover w-32 h-32 border-4 rounded-full shadow-xl border-cyan-400/20 bg-slate-800"
+            >
 
-                            <div class="flex-1">
-                                <label
-                                    class="inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white transition cursor-pointer bg-gradient-to-l from-cyan-500 to-blue-600 rounded-2xl hover:scale-[1.02]"
-                                >
-                                    <span>📁</span>
-                                    <span>اختيار صورة</span>
+            <div
+                id="profile_photo_icon"
+                class="absolute inset-0 items-center justify-center hidden rounded-full bg-slate-900"
+            >
+                👤
+            </div>
 
-                                    <input
-                                        type="file"
-                                        name="profile_photo"
-                                        accept=".jpg,.jpeg,.png,.webp"
-                                        class="hidden"
-                                        @change="
-                                            const file = $event.target.files[0];
+        </div>
 
-                                            if (file) {
-                                                photoPreview =
-                                                    URL.createObjectURL(file);
-                                            } else {
-                                                photoPreview = null;
-                                            }
-                                        "
-                                    >
-                                </label>
+        <div class="flex-1 text-center sm:text-right">
 
-                                <p class="mt-3 text-sm leading-7 text-slate-400">
-                                    JPG أو PNG أو WEBP، وبحجم أقصى 2MB.
-                                </p>
-                            </div>
+            <h3 class="font-black text-white">
+                اختر صورة مناسبة لحسابك
+            </h3>
 
-                        </div>
-                    </div>
+            <p
+                id="profile_photo_name"
+                class="mt-2 text-sm leading-7 text-slate-400"
+            >
+                يمكنك تحريك الصورة وتكبيرها واختيار الجزء الذي تريد ظهوره.
+            </p>
+
+            <button
+                id="choose_profile_photo"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 mt-4 text-sm font-black transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20"
+            >
+                <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path d="M12 20h9" />
+                    <path
+                        d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"
+                    />
+                </svg>
+
+                تعديل الصورة
+            </button>
+
+            <input
+                id="profile_photo"
+                name="profile_photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+            >
+
+        </div>
+    </div>
+
+    @error('profile_photo')
+        <p class="text-sm font-bold text-red-300">
+            {{ $message }}
+        </p>
+    @enderror
+
+</div>
 
                     <div class="grid gap-6 md:grid-cols-2">
 
@@ -203,13 +213,32 @@
                             رقم الهاتف
                         </label>
 
-                        <input
-                            id="phone"
-                            type="text"
-                            name="phone"
-                            value="{{ old('phone', $user->phone) }}"
-                            class="w-full px-5 py-4 text-white border rounded-2xl border-white/10 bg-slate-900/60 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-500/20"
-                        >
+                        <div class="premium-phone-field">
+                            <input
+                                id="phone"
+                                type="tel"
+                                name="phone"
+                                value="{{ old('phone', $user->phone) }}"
+                                dir="ltr"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                class="w-full px-5 py-4 text-white border rounded-2xl border-white/10 bg-slate-900/60 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-500/20"
+                            >
+
+                            <input
+                                id="country_code"
+                                type="hidden"
+                                name="country_code"
+                                value="{{ old('country_code', $user->country_code ?? 'PS') }}"
+                            >
+
+                            <input
+                                id="dial_code"
+                                type="hidden"
+                                name="dial_code"
+                                value="{{ old('dial_code', $user->dial_code ?? '+970') }}"
+                            >
+                        </div>
 
                         @error('phone')
                             <p class="mt-2 text-sm text-red-300">
@@ -233,5 +262,129 @@
 
         </div>
     </div>
+{{-- نافذة التحكم وقص الصورة --}}
+<div
+    id="profile_crop_modal"
+    class="fixed inset-0 z-[999999] hidden overflow-y-auto bg-slate-950/90 p-4 backdrop-blur-sm"
+>
+    <div
+        class="flex items-center justify-center min-h-full py-6"
+    >
+        <div
+            class="w-full max-w-3xl overflow-hidden border shadow-2xl rounded-3xl border-white/10 bg-slate-900"
+            dir="rtl"
+        >
+            {{-- رأس النافذة --}}
+            <div
+                class="flex items-center justify-between gap-4 px-6 py-5 border-b border-white/10"
+            >
+                <div>
+                    <h2 class="text-xl font-black text-white">
+                        تعديل الصورة الشخصية
+                    </h2>
 
+                    <p class="mt-1 text-sm text-slate-400">
+                        حرّك الصورة واختر الجزء الذي تريد ظهوره.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    data-cancel-profile-crop
+                    class="flex items-center justify-center flex-none w-10 h-10 transition rounded-xl bg-white/5 text-slate-400 hover:bg-red-500/10 hover:text-red-300"
+                    aria-label="إغلاق"
+                >
+                    ✕
+                </button>
+            </div>
+
+            {{-- مساحة الصورة --}}
+            <div class="p-4 sm:p-6">
+
+                <div
+                    class="flex items-center justify-center w-full overflow-hidden rounded-2xl bg-slate-950"
+                    style="height: min(55vh, 520px);"
+                >
+                    <img
+                        id="profile_crop_image"
+                        src=""
+                        alt="قص الصورة"
+                        class="block max-w-full"
+                    >
+                </div>
+
+                {{-- أدوات التحكم --}}
+                <div
+                    class="grid grid-cols-5 gap-2 mt-5"
+                    dir="ltr"
+                >
+                    <button
+                        id="crop_zoom_in"
+                        type="button"
+                        class="px-3 py-3 font-bold transition border rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        title="تكبير"
+                    >
+                        ＋
+                    </button>
+
+                    <button
+                        id="crop_zoom_out"
+                        type="button"
+                        class="px-3 py-3 font-bold transition border rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        title="تصغير"
+                    >
+                        −
+                    </button>
+
+                    <button
+                        id="crop_rotate_left"
+                        type="button"
+                        class="px-3 py-3 font-bold transition border rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        title="تدوير لليسار"
+                    >
+                        ↶
+                    </button>
+
+                    <button
+                        id="crop_rotate_right"
+                        type="button"
+                        class="px-3 py-3 font-bold transition border rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        title="تدوير لليمين"
+                    >
+                        ↷
+                    </button>
+
+                    <button
+                        id="crop_reset"
+                        type="button"
+                        class="px-3 py-3 text-sm font-bold transition border rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                    >
+                        إعادة
+                    </button>
+                </div>
+            </div>
+
+            {{-- الأزرار --}}
+            <div
+                class="flex flex-col-reverse gap-3 px-6 py-5 border-t sm:flex-row border-white/10"
+            >
+                <button
+                    type="button"
+                    data-cancel-profile-crop
+                    class="flex-1 px-6 py-4 font-bold transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                >
+                    إلغاء
+                </button>
+
+                <button
+                    id="save_profile_crop"
+                    type="button"
+                    class="flex-1 px-6 py-4 font-black text-white transition shadow-xl rounded-2xl bg-gradient-to-l from-blue-600 to-cyan-500 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    حفظ الصورة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </x-app-layout>

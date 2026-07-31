@@ -1,6 +1,6 @@
 import './bootstrap';
 import './phone-input';
-
+import './profile-photo-cropper';
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;

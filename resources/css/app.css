@@ -693,4 +693,33 @@ body > .iti,
 body > .iti__dropdown-content {
     z-index: 9999999 !important;
 }
+/* شكل قص الصورة الشخصية مثل فيسبوك */
+#profile_crop_modal .cropper-container {
+    max-width: 100%;
+}
+
+#profile_crop_modal .cropper-view-box,
+#profile_crop_modal .cropper-face {
+    border-radius: 50%;
+}
+
+#profile_crop_modal .cropper-view-box {
+    outline: 2px solid rgba(34, 211, 238, 0.9);
+    outline-color: rgba(34, 211, 238, 0.9);
+}
+
+#profile_crop_modal .cropper-line,
+#profile_crop_modal .cropper-point {
+    background-color: #22d3ee;
+}
+
+#profile_crop_modal .cropper-modal {
+    background-color: #020617;
+    opacity: 0.75;
+}
+
+#profile_crop_modal .cropper-bg {
+    background-image: none;
+    background-color: #020617;
+}
 

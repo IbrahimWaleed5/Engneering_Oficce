@@ -8,11 +8,6 @@ use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -25,28 +20,39 @@ class ProfileUpdateRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
+                'lowercase',
                 'email',
                 'max:255',
-
-                Rule::unique(
-                    User::class,
-                    'email'
-                )->ignore(
-                    $this->user()->id
-                ),
+                Rule::unique(User::class)
+                    ->ignore($this->user()->id),
             ],
 
             'phone' => [
+                'required',
+                'string',
+                'max:25',
+                Rule::unique(User::class)
+                    ->ignore($this->user()->id),
+            ],
+
+            'country_code' => [
                 'nullable',
                 'string',
-                'max:30',
+                'size:2',
+            ],
+
+            'dial_code' => [
+                'nullable',
+                'string',
+                'max:10',
             ],
 
             'profile_photo' => [
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:2048',
+                'max:5120',
+                'dimensions:min_width=200,min_height=200',
             ],
         ];
     }
@@ -61,19 +67,28 @@ class ProfileUpdateRequest extends FormRequest
                 'البريد الإلكتروني مطلوب.',
 
             'email.email' =>
-                'صيغة البريد الإلكتروني غير صحيحة.',
+                'البريد الإلكتروني غير صحيح.',
 
             'email.unique' =>
-                'هذا البريد الإلكتروني مستخدم مسبقًا.',
+                'البريد الإلكتروني مستخدم مسبقًا.',
+
+            'phone.required' =>
+                'رقم الهاتف مطلوب.',
+
+            'phone.unique' =>
+                'رقم الهاتف مستخدم مسبقًا.',
 
             'profile_photo.image' =>
-                'يجب أن يكون الملف صورة.',
+                'الملف المختار يجب أن يكون صورة.',
 
             'profile_photo.mimes' =>
-                'الصورة يجب أن تكون JPG أو JPEG أو PNG أو WEBP.',
+                'الصورة يجب أن تكون JPG أو PNG أو WEBP.',
 
             'profile_photo.max' =>
-                'حجم الصورة يجب ألا يتجاوز 2MB.',
+                'حجم الصورة يجب ألا يتجاوز 5MB.',
+
+            'profile_photo.dimensions' =>
+                'يجب ألا تقل أبعاد الصورة عن 200×200.',
         ];
     }
 }
