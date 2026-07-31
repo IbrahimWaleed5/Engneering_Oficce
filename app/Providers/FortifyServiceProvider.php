@@ -6,55 +6,128 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\LoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Fortify;
-
 
 class FortifyServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * تسجيل خدمات التطبيق.
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            LoginResponseContract::class,
+            LoginResponse::class
+        );
     }
 
     /**
-     * Bootstrap any application services.
+     * تشغيل خدمات Fortify.
      */
     public function boot(): void
     {
-        Fortify::createUsersUsing(CreateNewUser::class);
-        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
-        Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
+        /*
+        |--------------------------------------------------------------------------
+        | إجراءات المستخدم
+        |--------------------------------------------------------------------------
+        */
 
-        RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+        Fortify::createUsersUsing(
+            CreateNewUser::class
+        );
 
-            return Limit::perMinute(5)->by($throttleKey);
+        Fortify::updateUserProfileInformationUsing(
+            UpdateUserProfileInformation::class
+        );
+
+        Fortify::updateUserPasswordsUsing(
+            UpdateUserPassword::class
+        );
+
+        Fortify::resetUserPasswordsUsing(
+            ResetUserPassword::class
+        );
+
+        Fortify::redirectUserForTwoFactorAuthenticationUsing(
+            RedirectIfTwoFactorAuthenticatable::class
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | صفحات المصادقة
+        |--------------------------------------------------------------------------
+        */
+
+        Fortify::loginView(function () {
+            return view('auth.login');
         });
 
-        RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
+        Fortify::registerView(function () {
+            return view('auth.register');
         });
 
-        RateLimiter::for('passkeys', function (Request $request) {
-            $credentialId = $request->input('credential.id');
-
-            return Limit::perMinute(10)->by(
-                ($credentialId ?: $request->session()->getId()).'|'.$request->ip()
-            );
-        });
         Fortify::verifyEmailView(function () {
-    return view('auth.verify-email');
-});
+            return view('auth.verify-email');
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | حدود محاولات تسجيل الدخول
+        |--------------------------------------------------------------------------
+        */
+
+        RateLimiter::for(
+            'login',
+            function (Request $request) {
+                $throttleKey = Str::transliterate(
+                    Str::lower(
+                        $request->input(
+                            Fortify::username()
+                        )
+                    ).'|'.$request->ip()
+                );
+
+                return Limit::perMinute(5)
+                    ->by($throttleKey);
+            }
+        );
+
+        RateLimiter::for(
+            'two-factor',
+            function (Request $request) {
+                return Limit::perMinute(5)
+                    ->by(
+                        $request
+                            ->session()
+                            ->get('login.id')
+                    );
+            }
+        );
+
+        RateLimiter::for(
+            'passkeys',
+            function (Request $request) {
+                $credentialId = $request->input(
+                    'credential.id'
+                );
+
+                return Limit::perMinute(10)->by(
+                    (
+                        $credentialId
+                        ?: $request->session()->getId()
+                    )
+                    .'|'
+                    .$request->ip()
+                );
+            }
+        );
     }
 }
