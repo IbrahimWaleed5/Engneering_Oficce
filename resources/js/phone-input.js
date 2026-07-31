@@ -1,4 +1,8 @@
 import intlTelInput from 'intl-tel-input/intlTelInputWithUtils';
+import { ar } from 'intl-tel-input/locale';
+
+// استخدم هذا السطر فقط إذا لم تحمل CSS المكتبة من مكان آخر
+import 'intl-tel-input/styles';
 
 function initializePhoneInput() {
     const phoneInput = document.querySelector(
@@ -30,11 +34,14 @@ function initializePhoneInput() {
 
     try {
         const iti = intlTelInput(phoneInput, {
-            initialCountry: initialCountry,
+            initialCountry,
 
             separateDialCode: true,
             countrySelectorMode: 'DROPDOWN',
+
+            // يمنع قص قائمة الدول بسبب overflow-hidden
             dropdownParent: document.body,
+
             countrySearch: true,
             showFlags: true,
 
@@ -42,8 +49,18 @@ function initializePhoneInput() {
             formatAsYouType: true,
             strictMode: true,
 
+            // أسماء الدول بالعربية
             countryNameLocale: 'ar',
 
+            // ترجمة البحث ورسائل القائمة للعربية
+            uiTranslations: {
+                ...ar,
+                searchPlaceholder: 'ابحث عن دولة',
+                searchEmptyState: 'لم يتم العثور على نتائج',
+            },
+
+            // هذه الدول تظهر أول القائمة
+            // وباقي الدول تبقى موجودة بعدها
             countryOrder: [
                 'ps',
                 'sa',
@@ -156,14 +173,14 @@ function initializePhoneInput() {
     }
 }
 
-if (document.readyState === 'complete') {
-    initializePhoneInput();
-} else {
-    window.addEventListener(
-        'load',
+if (document.readyState === 'loading') {
+    document.addEventListener(
+        'DOMContentLoaded',
         initializePhoneInput,
         { once: true }
     );
+} else {
+    initializePhoneInput();
 }
 
 window.addEventListener(
