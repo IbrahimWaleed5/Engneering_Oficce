@@ -536,7 +536,8 @@
     </div>
 
     {{-- رقم الهاتف الدولي --}}
-   <div>
+ {{-- رقم الهاتف الدولي --}}
+<div>
     <label
         for="phone"
         class="block mb-3 text-sm font-bold text-slate-200"
@@ -545,18 +546,18 @@
     </label>
 
     <div class="premium-phone-field">
-       <input
-    id="phone"
-    type="tel"
-    name="phone"
-    value="{{ old('phone') }}"
-    required
-    autocomplete="off"
-    inputmode="tel"
-    placeholder="599000000"
-    dir="ltr"
-    class="w-full py-4 pr-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
->
+        <input
+            id="phone"
+            type="tel"
+            name="phone"
+            value="{{ old('phone') }}"
+            required
+            autocomplete="tel"
+            inputmode="tel"
+            placeholder="599000000"
+            dir="ltr"
+            class="w-full py-4 transition border outline-none rounded-2xl border-white/10 bg-slate-950/70 text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
+        >
 
         <input
             id="country_code"
@@ -572,6 +573,13 @@
             value="{{ old('dial_code', '+970') }}"
         >
     </div>
+
+    <p
+        id="phone-client-error"
+        class="phone-client-error"
+    >
+        يرجى إدخال رقم هاتف صحيح.
+    </p>
 
     @error('phone')
         <p class="mt-2 text-sm font-bold text-red-300">
@@ -850,49 +858,263 @@
     </div>
     <script>
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            const input = document.getElementById(button.dataset.passwordToggle);
-            const label = button.querySelector('[data-toggle-text]');
-            if (!input || !label) return;
-            const hidden = input.type === 'password';
-            input.type = hidden ? 'text' : 'password';
-            label.textContent = hidden ? 'إخفاء' : 'إظهار';
-        });
-    });
 
-    const photoInput = document.querySelector('[data-profile-photo-input]');
-    const preview = document.getElementById('profile_photo_preview');
-    const icon = document.getElementById('profile_photo_icon');
-    const fileName = document.getElementById('profile_photo_name');
+    /*
+    |--------------------------------------------------------------------------
+    | إظهار وإخفاء كلمات المرور
+    |--------------------------------------------------------------------------
+    */
+
+    document
+        .querySelectorAll('[data-password-toggle]')
+        .forEach(function (button) {
+
+            button.addEventListener('click', function () {
+                const input = document.getElementById(
+                    button.dataset.passwordToggle
+                );
+
+                const label = button.querySelector(
+                    '[data-toggle-text]'
+                );
+
+                if (!input || !label) {
+                    return;
+                }
+
+                const isHidden = input.type === 'password';
+
+                input.type = isHidden ? 'text' : 'password';
+
+                label.textContent = isHidden
+                    ? 'إخفاء'
+                    : 'إظهار';
+            });
+        });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | معاينة الصورة الشخصية
+    |--------------------------------------------------------------------------
+    */
+
+    const photoInput = document.querySelector(
+        '[data-profile-photo-input]'
+    );
+
+    const preview = document.getElementById(
+        'profile_photo_preview'
+    );
+
+    const icon = document.getElementById(
+        'profile_photo_icon'
+    );
+
+    const fileName = document.getElementById(
+        'profile_photo_name'
+    );
 
     if (photoInput && preview && icon && fileName) {
+
         photoInput.addEventListener('change', function () {
-            const file = photoInput.files && photoInput.files[0];
+            const file = photoInput.files
+                ? photoInput.files[0]
+                : null;
 
             if (!file) {
                 preview.src = '';
+
                 preview.classList.add('hidden');
+
                 icon.classList.remove('hidden');
-                fileName.textContent = 'JPG أو JPEG أو PNG أو WEBP';
+
+                fileName.textContent =
+                    'JPG أو JPEG أو PNG أو WEBP';
+
                 return;
             }
 
             fileName.textContent = file.name;
+
             const reader = new FileReader();
 
             reader.addEventListener('load', function (event) {
                 preview.src = event.target.result;
+
                 preview.classList.remove('hidden');
+
                 icon.classList.add('hidden');
             });
 
             reader.readAsDataURL(file);
         });
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | حقل رقم الهاتف الدولي
+    |--------------------------------------------------------------------------
+    */
+
+    const phoneInput = document.getElementById('phone');
+
+    const countryCodeInput =
+        document.getElementById('country_code');
+
+    const dialCodeInput =
+        document.getElementById('dial_code');
+
+    const phoneError =
+        document.getElementById('phone-client-error');
+
+    const registerForm =
+        document.getElementById('register-form');
+
+    if (
+        phoneInput &&
+        countryCodeInput &&
+        dialCodeInput &&
+        registerForm &&
+        window.intlTelInput
+    ) {
+        const oldCountryCode =
+            countryCodeInput.value || 'PS';
+
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: oldCountryCode.toLowerCase(),
+
+            separateDialCode: true,
+
+            countrySearch: true,
+
+            countrySelectorMode: 'DROPDOWN',
+
+            dropdownParent: document.body,
+
+            strictMode: true,
+
+            formatAsYouType: true,
+
+            loadUtils: function () {
+                return import(
+                    'https://cdn.jsdelivr.net/npm/intl-tel-input@29.1.2/dist/js/utils.js'
+                );
+            }
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | تحديث الدولة ومفتاح الاتصال
+        |--------------------------------------------------------------------------
+        */
+
+        function updateCountryFields() {
+            const selectedCountry =
+                iti.getSelectedCountryData();
+
+            if (!selectedCountry) {
+                return;
+            }
+
+            countryCodeInput.value =
+                selectedCountry.iso2
+                    ? selectedCountry.iso2.toUpperCase()
+                    : '';
+
+            dialCodeInput.value =
+                selectedCountry.dialCode
+                    ? '+' + selectedCountry.dialCode
+                    : '';
+        }
+
+
+        updateCountryFields();
+
+
+        phoneInput.addEventListener(
+            'countrychange',
+            function () {
+                updateCountryFields();
+
+                if (phoneError) {
+                    phoneError.classList.remove('active');
+                }
+            }
+        );
+
+
+        phoneInput.addEventListener('input', function () {
+            if (phoneError) {
+                phoneError.classList.remove('active');
+            }
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | التحقق قبل إرسال النموذج
+        |--------------------------------------------------------------------------
+        */
+
+        registerForm.addEventListener(
+            'submit',
+            async function (event) {
+
+                event.preventDefault();
+
+                try {
+                    await iti.promise;
+                } catch (error) {
+                    console.error(
+                        'تعذر تحميل أدوات الهاتف:',
+                        error
+                    );
+                }
+
+                updateCountryFields();
+
+                if (!phoneInput.value.trim()) {
+                    if (phoneError) {
+                        phoneError.textContent =
+                            'رقم الهاتف مطلوب.';
+
+                        phoneError.classList.add('active');
+                    }
+
+                    phoneInput.focus();
+
+                    return;
+                }
+
+                if (!iti.isValidNumber()) {
+                    if (phoneError) {
+                        phoneError.textContent =
+                            'رقم الهاتف غير صحيح للدولة المختارة.';
+
+                        phoneError.classList.add('active');
+                    }
+
+                    phoneInput.focus();
+
+                    return;
+                }
+
+                /*
+                 * تحويل الرقم إلى الصيغة الدولية:
+                 * +970599000000
+                 */
+                phoneInput.value = iti.getNumber();
+
+                /*
+                 * إرسال النموذج دون تشغيل حدث submit مرة أخرى
+                 */
+                registerForm.submit();
+            }
+        );
+    }
 });
-
-
 </script>
-
 </x-guest-layout>
