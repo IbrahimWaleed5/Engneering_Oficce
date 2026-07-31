@@ -7,9 +7,11 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\LoginResponse;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
@@ -19,7 +21,7 @@ use Laravel\Fortify\Fortify;
 class FortifyServiceProvider extends ServiceProvider
 {
     /**
-     * تسجيل خدمات التطبيق.
+     * Register any application services.
      */
     public function register(): void
     {
@@ -30,16 +32,10 @@ class FortifyServiceProvider extends ServiceProvider
     }
 
     /**
-     * تشغيل خدمات Fortify.
+     * Bootstrap any application services.
      */
     public function boot(): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | إجراءات المستخدم
-        |--------------------------------------------------------------------------
-        */
-
         Fortify::createUsersUsing(
             CreateNewUser::class
         );
@@ -62,7 +58,38 @@ class FortifyServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | صفحات المصادقة
+        | رابط تأكيد عام وآمن
+        |--------------------------------------------------------------------------
+        |
+        | لا يعتمد على الحساب المسجل دخوله في الهاتف.
+        | التوقيع نسبي حتى لا يفشل خلف Railway بسبب اختلاف http / https.
+        |
+        */
+
+        VerifyEmail::createUrlUsing(
+            function (object $notifiable): string {
+                $relativeUrl = URL::temporarySignedRoute(
+                    'verification.public.verify',
+                    now()->addMinutes(60),
+                    [
+                        'id' => $notifiable->getKey(),
+                        'hash' => sha1(
+                            $notifiable->getEmailForVerification()
+                        ),
+                    ],
+                    absolute: false
+                );
+
+                return rtrim(
+                    (string) config('app.url'),
+                    '/'
+                ).$relativeUrl;
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | صفحات Fortify
         |--------------------------------------------------------------------------
         */
 
@@ -80,7 +107,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | حدود محاولات تسجيل الدخول
+        | Rate Limiters
         |--------------------------------------------------------------------------
         */
 
@@ -103,12 +130,11 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for(
             'two-factor',
             function (Request $request) {
-                return Limit::perMinute(5)
-                    ->by(
-                        $request
-                            ->session()
-                            ->get('login.id')
-                    );
+                return Limit::perMinute(5)->by(
+                    $request
+                        ->session()
+                        ->get('login.id')
+                );
             }
         );
 

@@ -536,9 +536,8 @@
     @auth
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const statusUrl = @json(route('verification.status'));
-                const dashboardUrl = @json(route('dashboard'));
-                const loginUrl = @json(route('login'));
+                const verificationPageUrl = @json(route('verification.notice'));
+                const currentPath = new URL(verificationPageUrl).pathname;
 
                 let isChecking = false;
 
@@ -550,32 +549,38 @@
                     isChecking = true;
 
                     try {
-                        const response = await fetch(statusUrl, {
-                            method: 'GET',
-                            credentials: 'same-origin',
-                            cache: 'no-store',
-                            headers: {
-                                Accept: 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                        });
+                        const separator = verificationPageUrl.includes('?')
+                            ? '&'
+                            : '?';
 
-                        if (response.status === 401) {
-                            window.location.replace(loginUrl);
-                            return;
-                        }
+                        const response = await fetch(
+                            verificationPageUrl
+                                + separator
+                                + '_verification_check='
+                                + Date.now(),
+                            {
+                                method: 'GET',
+                                credentials: 'same-origin',
+                                redirect: 'follow',
+                                cache: 'no-store',
+                                headers: {
+                                    Accept: 'text/html',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            }
+                        );
 
-                        if (!response.ok) {
-                            return;
-                        }
+                        const responseUrl = new URL(response.url);
 
-                        const data = await response.json();
-
-                        if (data.verified === true) {
-                            window.location.replace(dashboardUrl);
+                        /*
+                         * عندما يصبح البريد مؤكداً، Fortify يحول طلب
+                         * /email/verify إلى الصفحة المحددة في fortify.home.
+                         */
+                        if (responseUrl.pathname !== currentPath) {
+                            window.location.replace(response.url);
                         }
                     } catch (error) {
-                        // نتجاهل انقطاع الشبكة المؤقت ثم نحاول مرة أخرى.
+                        // نحاول مجدداً عند عودة الاتصال.
                     } finally {
                         isChecking = false;
                     }
@@ -585,18 +590,25 @@
 
                 const verificationTimer = window.setInterval(
                     checkEmailVerification,
-                    3000
+                    2500
                 );
 
-                document.addEventListener('visibilitychange', function () {
-                    if (!document.hidden) {
-                        checkEmailVerification();
+                document.addEventListener(
+                    'visibilitychange',
+                    function () {
+                        if (!document.hidden) {
+                            checkEmailVerification();
+                        }
                     }
-                });
+                );
 
-                window.addEventListener('beforeunload', function () {
-                    window.clearInterval(verificationTimer);
-                }, { once: true });
+                window.addEventListener(
+                    'beforeunload',
+                    function () {
+                        window.clearInterval(verificationTimer);
+                    },
+                    { once: true }
+                );
             });
         </script>
     @endauth

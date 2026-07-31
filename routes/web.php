@@ -20,6 +20,8 @@ use App\Http\Controllers\EngineerReviewController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\PublicEmailVerificationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -573,5 +575,34 @@ Route::get(
 )
     ->middleware('auth')
     ->name('verification.status');
+Route::get(
+    '/email/verify-public/{id}/{hash}',
+    [
+        PublicEmailVerificationController::class,
+        'verify',
+    ]
+)
+    ->middleware([
+        'signed:relative',
+        'throttle:6,1',
+    ])
+    ->name('verification.public.verify');
 
+Route::get(
+    '/email/verified-success',
+    [
+        PublicEmailVerificationController::class,
+        'success',
+    ]
+)->name('verification.public.success');
+
+Route::get(
+    '/email/verification-status',
+    [
+        PublicEmailVerificationController::class,
+        'status',
+    ]
+)
+    ->middleware('auth')
+    ->name('verification.status');
 require __DIR__.'/auth.php';
