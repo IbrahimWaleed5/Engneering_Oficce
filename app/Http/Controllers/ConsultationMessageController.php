@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ConsultationMessageSent;
 use App\Models\Consultation;
 use App\Models\ConsultationMessage;
 use App\Notifications\SystemNotification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ConsultationMessageController extends Controller
@@ -35,7 +38,7 @@ class ConsultationMessageController extends Controller
     public function store(
         Request $request,
         Consultation $consultation
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $this->authorize(
             'sendMessage',
             $consultation
@@ -81,19 +84,34 @@ class ConsultationMessageController extends Controller
                 );
         }
 
-        ConsultationMessage::create([
-            'consultation_id' =>
-                $consultation->id,
+        try {
+            $message = ConsultationMessage::create([
+                'consultation_id' =>
+                    $consultation->id,
 
-            'sender_id' =>
-                $request->user()->id,
+                'sender_id' =>
+                    $request->user()->id,
 
-            'message' =>
-                $validated['message'] ?? null,
+                'message' =>
+                    $validated['message'] ?? null,
 
-            'attachment' =>
-                $attachmentPath,
-        ]);
+                'attachment' =>
+                    $attachmentPath,
+            ]);
+
+            $message->load('sender');
+
+            broadcast(
+                new ConsultationMessageSent($message)
+            )->toOthers();
+        } catch (\Throwable $exception) {
+            if ($attachmentPath) {
+                Storage::disk('private')
+                    ->delete($attachmentPath);
+            }
+
+            throw $exception;
+        }
 
         $consultation->load([
             'customer',
@@ -120,6 +138,14 @@ class ConsultationMessageController extends Controller
                     )
                 )
             );
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' =>
+                    (new ConsultationMessageSent($message))
+                        ->broadcastWith()['message'],
+            ], 201);
         }
 
         return back()->with(

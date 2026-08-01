@@ -93,7 +93,7 @@
                         @endif
 
                         <span
-                            class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-950"
+                            class="absolute bottom-0 left-0 w-3 h-3 border-2 rounded-full presence-dot bg-slate-500 border-slate-950"
                         ></span>
 
                     </div>
@@ -111,7 +111,7 @@
                         </p>
 
                         <p class="mt-1 text-xs text-slate-500">
-                            اضغط لعرض صفحة المهندس
+                            <span class="presence-status">غير متصل</span>
                         </p>
 
                     </div>
@@ -151,7 +151,7 @@
                         @endif
 
                         <span
-                            class="absolute bottom-0 left-0 w-3 h-3 bg-green-400 border-2 rounded-full border-slate-950"
+                            class="absolute bottom-0 left-0 w-3 h-3 border-2 rounded-full presence-dot bg-slate-500 border-slate-950"
                         ></span>
 
                     </div>
@@ -165,6 +165,10 @@
                         <p class="mt-1 text-sm text-slate-400">
                             {{ $otherUser?->name
                                 ?? 'المستخدم' }}
+                        </p>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            <span class="presence-status">غير متصل</span>
                         </p>
 
                     </div>
@@ -835,7 +839,7 @@
 
                         </div>
 
-                        <div class="space-y-7">
+                        <div id="messagesList" class="space-y-7">
 
                             @forelse ($messages as $message)
 
@@ -874,6 +878,7 @@
                                 @endphp
 
                                 <div
+                                    data-message-id="{{ $message->id }}"
                                     class="flex items-end gap-3 {{ $isMine
                                         ? 'flex-row-reverse justify-start'
                                         : 'justify-start' }}"
@@ -1166,6 +1171,13 @@
 
                         </div>
 
+                        <div
+                            id="typingIndicator"
+                            class="hidden mt-5 text-sm font-bold text-cyan-300"
+                        >
+                            يكتب الآن...
+                        </div>
+
                     </div>
 
                     {{-- إرسال رسالة --}}
@@ -1174,6 +1186,7 @@
                     >
 
                         <form
+                            id="chatForm"
                             method="POST"
                             action="{{ route(
                                 'consultations.messages.store',
@@ -1240,6 +1253,7 @@
                                     </div>
 
                                     <button
+                                        id="sendButton"
                                         type="submit"
                                         class="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-black text-white transition shadow-lg rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 hover:-translate-y-0.5"
                                     >
@@ -1278,20 +1292,370 @@
     </div>
 
     <script>
-        document.addEventListener(
-            'DOMContentLoaded',
-            function () {
-                const messagesContainer =
-                    document.getElementById(
-                        'messagesContainer'
-                    );
+        document.addEventListener('DOMContentLoaded', function () {
+            const consultationId = @json($consultation->id);
+            const currentUserId = @json(auth()->id());
+            const form = document.getElementById('chatForm');
+            const textarea = document.getElementById('message');
+            const attachment = document.getElementById('attachment');
+            const sendButton = document.getElementById('sendButton');
+            const messagesContainer =
+                document.getElementById('messagesContainer');
+            const messagesList =
+                document.getElementById('messagesList');
+            const typingIndicator =
+                document.getElementById('typingIndicator');
+            const presenceDots =
+                document.querySelectorAll('.presence-dot');
+            const presenceStatuses =
+                document.querySelectorAll('.presence-status');
 
+            let channel = null;
+            let typingTimer = null;
+
+            const scrollToBottom = () => {
                 if (messagesContainer) {
                     messagesContainer.scrollTop =
                         messagesContainer.scrollHeight;
                 }
+            };
+
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value ?? '';
+                return div.innerHTML;
+            };
+
+            const setPresence = (online) => {
+                presenceDots.forEach((dot) => {
+                    dot.classList.toggle('bg-green-400', online);
+                    dot.classList.toggle('bg-slate-500', !online);
+                });
+
+                presenceStatuses.forEach((status) => {
+                    status.textContent = online
+                        ? 'نشط الآن'
+                        : 'غير متصل';
+
+                    status.classList.toggle(
+                        'text-green-400',
+                        online
+                    );
+                });
+            };
+
+            const messageExists = (id) => {
+                return document.querySelector(
+                    `[data-message-id="${id}"]`
+                ) !== null;
+            };
+
+            const appendMessage = (message, mine) => {
+                if (!messagesList || messageExists(message.id)) {
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.dataset.messageId = message.id;
+                wrapper.className =
+                    `flex items-end gap-3 ${
+                        mine
+                            ? 'flex-row-reverse justify-start'
+                            : 'justify-start'
+                    }`;
+
+                const initial = escapeHtml(
+                    (message.sender_name || 'م').charAt(0)
+                );
+
+                let avatar = `
+                    <div class="flex-none">
+                        ${
+                            message.sender_profile_photo_url
+                                ? `<img
+                                    src="${escapeHtml(
+                                        message.sender_profile_photo_url
+                                    )}"
+                                    alt="${escapeHtml(
+                                        message.sender_name
+                                    )}"
+                                    class="object-cover border rounded-full w-11 h-11 border-white/10"
+                                >`
+                                : `<div
+                                    class="flex items-center justify-center w-11 h-11 font-black text-white border rounded-full border-white/10 ${
+                                        mine
+                                            ? 'bg-gradient-to-br from-blue-600 to-violet-600'
+                                            : 'bg-gradient-to-br from-cyan-600 to-emerald-600'
+                                    }"
+                                >${initial}</div>`
+                        }
+                    </div>
+                `;
+
+                let attachmentHtml = '';
+
+                if (message.attachment_url) {
+                    if (message.attachment_is_image) {
+                        attachmentHtml = `
+                            <a
+                                href="${escapeHtml(
+                                    message.attachment_url
+                                )}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="block mt-4 overflow-hidden border rounded-2xl border-white/10"
+                            >
+                                <img
+                                    src="${escapeHtml(
+                                        message.attachment_url
+                                    )}"
+                                    alt="مرفق"
+                                    class="object-cover w-full max-h-80"
+                                >
+                            </a>
+                        `;
+                    } else {
+                        attachmentHtml = `
+                            <a
+                                href="${escapeHtml(
+                                    message.attachment_url
+                                )}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="flex items-center justify-between gap-4 p-3 mt-4 transition border rounded-2xl border-white/10 bg-black/15 hover:bg-black/25"
+                            >
+                                <div class="flex items-center min-w-0 gap-3">
+                                    <div
+                                        class="flex items-center justify-center flex-none text-xs font-black w-11 h-11 rounded-xl bg-cyan-500/20 text-cyan-200"
+                                    >
+                                        ${escapeHtml(
+                                            (
+                                                message.attachment_extension
+                                                || 'FILE'
+                                            ).toUpperCase()
+                                        )}
+                                    </div>
+
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-bold truncate">
+                                            ${escapeHtml(
+                                                message.attachment_name
+                                            )}
+                                        </p>
+                                        <p class="mt-1 text-xs opacity-60">
+                                            اضغط لفتح الملف
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <span
+                                    class="flex items-center justify-center flex-none w-10 h-10 border rounded-full border-white/10"
+                                >↓</span>
+                            </a>
+                        `;
+                    }
+                }
+
+                wrapper.innerHTML = `
+                    ${avatar}
+
+                    <div class="w-full max-w-[80%] sm:max-w-[65%]">
+                        <div
+                            class="p-4 shadow-xl sm:p-5 rounded-3xl ${
+                                mine
+                                    ? 'rounded-br-md bg-gradient-to-br from-blue-600 to-indigo-700 text-white'
+                                    : 'rounded-bl-md border border-white/5 bg-slate-800/95 text-slate-100'
+                            }"
+                        >
+                            <div
+                                class="flex items-center justify-between gap-4 mb-3"
+                            >
+                                <p class="text-sm font-black">
+                                    ${
+                                        mine
+                                            ? 'أنت'
+                                            : escapeHtml(
+                                                message.sender_name
+                                            )
+                                    }
+                                </p>
+
+                                <span
+                                    class="text-[11px] ${
+                                        mine
+                                            ? 'text-blue-100/70'
+                                            : 'text-slate-500'
+                                    }"
+                                >
+                                    ${escapeHtml(message.time)}
+                                </span>
+                            </div>
+
+                            ${
+                                message.body
+                                    ? `<p
+                                        class="text-sm leading-7 whitespace-pre-line sm:text-base"
+                                    >${escapeHtml(message.body)}</p>`
+                                    : ''
+                            }
+
+                            ${attachmentHtml}
+
+                            ${
+                                mine
+                                    ? `<div
+                                        class="mt-2 text-xs text-left text-cyan-200"
+                                    >✓</div>`
+                                    : ''
+                            }
+                        </div>
+                    </div>
+                `;
+
+                messagesList.appendChild(wrapper);
+                scrollToBottom();
+            };
+
+            scrollToBottom();
+
+            if (window.Echo) {
+                channel = window.Echo.join(
+                    `consultation.${consultationId}`
+                )
+                    .here((users) => {
+                        setPresence(
+                            users.some(
+                                (user) =>
+                                    Number(user.id)
+                                    !== Number(currentUserId)
+                            )
+                        );
+                    })
+                    .joining((user) => {
+                        if (
+                            Number(user.id)
+                            !== Number(currentUserId)
+                        ) {
+                            setPresence(true);
+                        }
+                    })
+                    .leaving((user) => {
+                        if (
+                            Number(user.id)
+                            !== Number(currentUserId)
+                        ) {
+                            setPresence(false);
+                        }
+                    })
+                    .listen(
+                        '.consultation.message.sent',
+                        (event) => {
+                            appendMessage(
+                                event.message,
+                                Number(event.message.sender_id)
+                                    === Number(currentUserId)
+                            );
+                        }
+                    )
+                    .listenForWhisper(
+                        'typing',
+                        (event) => {
+                            if (
+                                Number(event.user_id)
+                                === Number(currentUserId)
+                            ) {
+                                return;
+                            }
+
+                            typingIndicator?.classList.remove(
+                                'hidden'
+                            );
+
+                            clearTimeout(typingTimer);
+
+                            typingTimer = setTimeout(() => {
+                                typingIndicator?.classList.add(
+                                    'hidden'
+                                );
+                            }, 1500);
+                        }
+                    );
             }
-        );
+
+            textarea?.addEventListener('input', () => {
+                channel?.whisper('typing', {
+                    user_id: currentUserId,
+                });
+            });
+
+            form?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const hasMessage =
+                    textarea?.value.trim().length > 0;
+                const hasAttachment =
+                    attachment?.files?.length > 0;
+
+                if (!hasMessage && !hasAttachment) {
+                    return;
+                }
+
+                sendButton.disabled = true;
+                sendButton.classList.add(
+                    'opacity-60',
+                    'cursor-not-allowed'
+                );
+
+                try {
+                    const formData = new FormData(form);
+
+                    const response = await window.axios.post(
+                        form.action,
+                        formData,
+                        {
+                            headers: {
+                                Accept: 'application/json',
+                                'Content-Type':
+                                    'multipart/form-data',
+                            },
+                        }
+                    );
+
+                    appendMessage(
+                        response.data.message,
+                        true
+                    );
+
+                    form.reset();
+
+                    if (window.Alpine) {
+                        form.dispatchEvent(
+                            new Event(
+                                'reset',
+                                { bubbles: true }
+                            )
+                        );
+                    }
+                } catch (error) {
+                    const errors =
+                        error.response?.data?.errors;
+
+                    const message = errors
+                        ? Object.values(errors)
+                            .flat()
+                            .join('\n')
+                        : 'تعذر إرسال الرسالة. حاول مرة أخرى.';
+
+                    alert(message);
+                } finally {
+                    sendButton.disabled = false;
+                    sendButton.classList.remove(
+                        'opacity-60',
+                        'cursor-not-allowed'
+                    );
+                }
+            });
+        });
     </script>
 
 </x-app-layout>
