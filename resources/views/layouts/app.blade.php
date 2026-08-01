@@ -38,6 +38,8 @@
         'resources/js/app.js'
     ])
 
+    @stack('styles')
+
     <style>
         [x-cloak] {
             display: none !important;
@@ -50,54 +52,63 @@
     class="min-h-screen font-sans antialiased text-slate-100"
 >
 
+    @php
+        $isConsultationChat =
+            request()->routeIs('consultations.messages.*');
+    @endphp
+
     <div class="relative min-h-screen overflow-x-hidden">
 
-        <div
-            class="fixed rounded-full pointer-events-none -top-32 -right-32 h-96 w-96 bg-blue-600/10 blur-3xl"
-        ></div>
+        @unless ($isConsultationChat)
 
-        <div
-            class="fixed rounded-full pointer-events-none -bottom-36 -left-28 h-96 w-96 bg-cyan-500/10 blur-3xl"
-        ></div>
+            <div
+                class="fixed rounded-full pointer-events-none -top-32 -right-32 h-96 w-96 bg-blue-600/10 blur-3xl"
+            ></div>
 
-        @include('layouts.navigation')
+            <div
+                class="fixed rounded-full pointer-events-none -bottom-36 -left-28 h-96 w-96 bg-cyan-500/10 blur-3xl"
+            ></div>
 
-        @isset($header)
+            @include('layouts.navigation')
 
-            <header
-                class="border-b border-white/5 bg-slate-950/40 backdrop-blur-xl"
-            >
+            @isset($header)
 
-                <div class="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <header
+                    class="border-b border-white/5 bg-slate-950/40 backdrop-blur-xl"
+                >
 
-                    {{ $header }}
+                    <div class="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-                </div>
+                        {{ $header }}
 
-            </header>
+                    </div>
 
-        @endisset
+                </header>
 
-        @auth
+            @endisset
 
-            @if (auth()->user()->role === 'engineer')
+            @auth
 
-                <div class="relative z-10 px-4 pt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                @if (auth()->user()->role === 'engineer')
 
-                    <a
-                        href="{{ route('engineer.works.mine') }}"
-                        class="inline-block px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
-                    >
-                        أعمالي
-                    </a>
+                    <div class="relative z-10 px-4 pt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-                </div>
+                        <a
+                            href="{{ route('engineer.works.mine') }}"
+                            class="inline-block px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                        >
+                            أعمالي
+                        </a>
 
-            @endif
+                    </div>
 
-        @endauth
+                @endif
 
-        <main class="relative z-10">
+            @endauth
+
+        @endunless
+
+        <main class="{{ $isConsultationChat ? '' : 'relative z-10' }}">
 
             @if (isset($slot))
 
@@ -112,6 +123,8 @@
         </main>
 
     </div>
+
+    @stack('scripts')
 
 </body>
 
