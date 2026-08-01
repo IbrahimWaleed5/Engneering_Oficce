@@ -5,11 +5,11 @@ namespace App\Models;
 use App\Models\EngineerReview;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -33,21 +33,22 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $hidden = [
-    'password',
-    'remember_token',
-    'two_factor_secret',
-    'two_factor_recovery_codes',
-];
-    protected function casts(): array
-{
-    return [
-        'email_verified_at' => 'datetime',
-        'phone_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'engineer_active_until' => 'datetime',
-        'two_factor_confirmed_at' => 'datetime',
+        'password',
+        'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
-}
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'engineer_active_until' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+        ];
+    }
 
     public function employeeProfile()
     {
@@ -56,83 +57,138 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function consultations()
     {
-        return $this->hasMany(Consultation::class, 'customer_id');
+        return $this->hasMany(
+            Consultation::class,
+            'customer_id'
+        );
     }
 
     public function sentMessages()
     {
-        return $this->hasMany(ConsultationMessage::class, 'sender_id');
+        return $this->hasMany(
+            ConsultationMessage::class,
+            'sender_id'
+        );
     }
+
     public function assignedConsultations()
-{
-    return $this->hasMany(
-        Consultation::class,
-        'engineer_id'
-    );
-}
-public function engineerWorks()
-{
-    return $this->hasMany(
-        EngineerWork::class,
-        'engineer_id'
-    );
-}
-public function engineerApplications()
-{
-    return $this->hasMany(
-        EngineerApplication::class
-    );
-}
-public function hasActiveEngineerMembership(): bool
-{
-    return $this->role === 'engineer'
-        && $this->engineer_membership_status === 'active'
-        && $this->engineer_active_until !== null
-        && $this->engineer_active_until->isFuture();
-}
+    {
+        return $this->hasMany(
+            Consultation::class,
+            'engineer_id'
+        );
+    }
 
-public function isInactiveEngineer(): bool
-{
-    return $this->role === 'engineer'
-        && ! $this->hasActiveEngineerMembership();
-}
-public function receivedEngineerReviews()
-{
-    return $this->hasMany(
-        EngineerReview::class,
-        'engineer_id'
-    );
-}
+    public function engineerWorks()
+    {
+        return $this->hasMany(
+            EngineerWork::class,
+            'engineer_id'
+        );
+    }
 
-public function writtenEngineerReviews()
-{
-    return $this->hasMany(
-        EngineerReview::class,
-        'customer_id'
-    );
-}
+    public function engineerApplications()
+    {
+        return $this->hasMany(
+            EngineerApplication::class
+        );
+    }
 
-public function getEngineerRatingAverageAttribute(): float
-{
-    return round(
-        (float) $this
+    public function hasActiveEngineerMembership(): bool
+    {
+        return $this->role === 'engineer'
+            && $this->engineer_membership_status === 'active'
+            && $this->engineer_active_until !== null
+            && $this->engineer_active_until->isFuture();
+    }
+
+    public function isInactiveEngineer(): bool
+    {
+        return $this->role === 'engineer'
+            && ! $this->hasActiveEngineerMembership();
+    }
+
+    public function receivedEngineerReviews()
+    {
+        return $this->hasMany(
+            EngineerReview::class,
+            'engineer_id'
+        );
+    }
+
+    public function writtenEngineerReviews()
+    {
+        return $this->hasMany(
+            EngineerReview::class,
+            'customer_id'
+        );
+    }
+
+    public function getEngineerRatingAverageAttribute(): float
+    {
+        return round(
+            (float) $this
+                ->receivedEngineerReviews()
+                ->avg('rating'),
+            1
+        );
+    }
+
+    public function getEngineerReviewsCountAttribute(): int
+    {
+        return $this
             ->receivedEngineerReviews()
-            ->avg('rating'),
-        1
-    );
-}
+            ->count();
+    }
 
-public function getEngineerReviewsCountAttribute(): int
-{
-    return $this
-        ->receivedEngineerReviews()
-        ->count();
-}
-public function reviews(): HasMany
-{
-    return $this->hasMany(
-        Review::class,
-        'customer_id'
-    );
-}
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(
+            Review::class,
+            'customer_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | المحادثات العامة
+    |--------------------------------------------------------------------------
+    */
+
+    public function conversations(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(
+                Conversation::class,
+                'conversation_participants'
+            )
+            ->withPivot([
+                'last_read_at',
+                'is_muted',
+            ])
+            ->withTimestamps();
+    }
+
+    public function conversationParticipants(): HasMany
+    {
+        return $this->hasMany(
+            ConversationParticipant::class
+        );
+    }
+
+    public function conversationMessages(): HasMany
+    {
+        return $this->hasMany(
+            ConversationMessage::class,
+            'sender_id'
+        );
+    }
+
+    public function createdConversations(): HasMany
+    {
+        return $this->hasMany(
+            Conversation::class,
+            'created_by'
+        );
+    }
 }

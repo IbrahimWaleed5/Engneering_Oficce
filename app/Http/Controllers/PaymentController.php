@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Consultation;
+use App\Models\Conversation;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
@@ -237,6 +238,10 @@ class PaymentController extends Controller
                 $payment
             );
 
+            $this->createConsultationConversation(
+                $payment->consultation
+            );
+
             return redirect()
                 ->route('payments.index')
                 ->with(
@@ -270,6 +275,10 @@ class PaymentController extends Controller
                     'payment_status' => 'paid',
                     'status' => 'pending',
                 ]);
+
+                $this->createConsultationConversation(
+                    $consultation
+                );
 
                 return $this->createInvoice(
                     $payment->fresh([
@@ -421,6 +430,48 @@ class PaymentController extends Controller
                 'success',
                 'تم رفض الدفعة وإبلاغ العميل بالسبب.'
             );
+    }
+
+    /**
+     * إنشاء محادثة الاستشارة بعد تأكيد الدفع.
+     */
+    private function createConsultationConversation(
+        Consultation $consultation
+    ): Conversation {
+        $conversation = Conversation::firstOrCreate(
+            [
+                'type' => 'consultation',
+                'consultation_id' => $consultation->id,
+            ],
+            [
+                'created_by' => auth()->id(),
+                'last_message_at' => null,
+            ]
+        );
+
+        $participantIds = array_values(
+            array_unique(
+                array_filter([
+                    $consultation->customer_id,
+                    $consultation->engineer_id,
+                ])
+            )
+        );
+
+        foreach ($participantIds as $participantId) {
+            $conversation
+                ->participants()
+                ->syncWithoutDetaching([
+                    $participantId => [
+                        'last_read_at' => null,
+                        'is_muted' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                ]);
+        }
+
+        return $conversation;
     }
 
     /**

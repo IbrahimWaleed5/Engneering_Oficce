@@ -3,6 +3,9 @@
 use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\ConsultationMessageController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\ConversationFileController;
+use App\Http\Controllers\ConversationMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EngineerApplicationController;
@@ -651,4 +654,82 @@ Route::middleware([
         ]
     )->name('payments.receipt');
 });
+
+/*
+|--------------------------------------------------------------------------
+| المحادثات الموحدة
+|--------------------------------------------------------------------------
+|
+| المحادثات المباشرة يبدأها المدير.
+| محادثات الاستشارات لا تُفتح للعميل والمهندس إلا بعد تأكيد الدفع.
+|
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->group(function () {
+    Route::get('/conversations', [
+        ConversationController::class,
+        'index',
+    ])->name('conversations.index');
+
+    Route::post('/admin/conversations/direct/{user}', [
+        ConversationController::class,
+        'startDirect',
+    ])
+        ->whereNumber('user')
+        ->name('admin.conversations.start');
+
+    Route::get('/conversations/{conversation}', [
+        ConversationController::class,
+        'show',
+    ])
+        ->whereNumber('conversation')
+        ->name('conversations.show');
+
+    Route::post('/conversations/{conversation}/messages', [
+        ConversationMessageController::class,
+        'store',
+    ])
+        ->whereNumber('conversation')
+        ->name('conversations.messages.store');
+
+    Route::delete(
+        '/conversations/{conversation}/messages/{message}',
+        [
+            ConversationMessageController::class,
+            'destroy',
+        ]
+    )
+        ->whereNumber('conversation')
+        ->whereNumber('message')
+        ->scopeBindings()
+        ->name('conversations.messages.destroy');
+
+    Route::get(
+        '/conversations/{conversation}/messages/{message}/attachment',
+        [
+            ConversationFileController::class,
+            'show',
+        ]
+    )
+        ->whereNumber('conversation')
+        ->whereNumber('message')
+        ->scopeBindings()
+        ->name('conversations.messages.attachment');
+
+    Route::get(
+        '/conversations/{conversation}/messages/{message}/download',
+        [
+            ConversationFileController::class,
+            'download',
+        ]
+    )
+        ->whereNumber('conversation')
+        ->whereNumber('message')
+        ->scopeBindings()
+        ->name('conversations.messages.download');
+});
+
 require __DIR__.'/auth.php';

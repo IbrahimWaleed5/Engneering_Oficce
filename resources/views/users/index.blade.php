@@ -394,6 +394,46 @@
 
                                         <div class="flex flex-wrap gap-2">
 
+                                            @if (
+                                                $user->id !== auth()->id()
+                                                && in_array(
+                                                    $user->role,
+                                                    [
+                                                        'engineer',
+                                                        'customer',
+                                                        'employee',
+                                                    ],
+                                                    true
+                                                )
+                                            )
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route(
+                                                        'admin.conversations.start',
+                                                        $user
+                                                    ) }}"
+                                                >
+                                                    @csrf
+
+                                                    <button
+                                                        type="submit"
+                                                        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition text-emerald-300 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20"
+                                                    >
+                                                        <svg
+                                                            class="w-4 h-4"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="2"
+                                                        >
+                                                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+                                                        </svg>
+
+                                                        محادثة
+                                                    </button>
+                                                </form>
+                                            @endif
+
                                             <a
                                                 href="{{ route('users.edit', $user) }}"
                                                 class="px-4 py-2 text-xs font-bold text-blue-300 transition rounded-xl bg-blue-500/10 hover:bg-blue-500/20"

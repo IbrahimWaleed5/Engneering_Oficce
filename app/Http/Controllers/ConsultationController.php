@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Consultation;
+use App\Models\Conversation;
 use App\Models\ConsultationType;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ConsultationController extends Controller
 {
@@ -459,22 +461,39 @@ class ConsultationController extends Controller
             }
         }
 
-        $consultation->update([
-            'engineer_id' =>
-                $engineer?->id,
+        $previousEngineerId =
+            $consultation->engineer_id;
 
-            'status' =>
-                $validated['status'],
+        DB::transaction(
+            function () use (
+                $consultation,
+                $engineer,
+                $validated,
+                $previousEngineerId
+            ): void {
+                $consultation->update([
+                    'engineer_id' =>
+                        $engineer?->id,
 
-            'started_at' =>
-                $validated['started_at'],
+                    'status' =>
+                        $validated['status'],
 
-            'expected_delivery_at' =>
-                $validated['expected_delivery_at'],
+                    'started_at' =>
+                        $validated['started_at'],
 
-            'delivered_at' =>
-                null,
-        ]);
+                    'expected_delivery_at' =>
+                        $validated['expected_delivery_at'],
+
+                    'delivered_at' =>
+                        null,
+                ]);
+
+                $this->syncConsultationConversation(
+                    $consultation->fresh(),
+                    $previousEngineerId
+                );
+            }
+        );
 
         if ($engineer) {
             $engineer->notify(
@@ -666,6 +685,69 @@ class ConsultationController extends Controller
             'consultations.chat',
             compact('consultation')
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | إنشاء أو تحديث محادثة الاستشارة
+    |--------------------------------------------------------------------------
+    */
+
+    private function syncConsultationConversation(
+        Consultation $consultation,
+        ?int $previousEngineerId = null
+    ): Conversation {
+        $conversation = Conversation::firstOrCreate(
+            [
+                'type' => 'consultation',
+                'consultation_id' =>
+                    $consultation->id,
+            ],
+            [
+                'created_by' => auth()->id(),
+                'last_message_at' => null,
+            ]
+        );
+
+        /*
+         * إزالة المهندس السابق عند تغيير التعيين،
+         * حتى لا يبقى قادرًا على دخول المحادثة.
+         */
+        if (
+            $previousEngineerId
+            && (int) $previousEngineerId
+                !== (int) $consultation->engineer_id
+            && (int) $previousEngineerId
+                !== (int) $consultation->customer_id
+        ) {
+            $conversation
+                ->participants()
+                ->detach($previousEngineerId);
+        }
+
+        $participantIds = array_values(
+            array_unique(
+                array_filter([
+                    $consultation->customer_id,
+                    $consultation->engineer_id,
+                ])
+            )
+        );
+
+        foreach ($participantIds as $participantId) {
+            $conversation
+                ->participants()
+                ->syncWithoutDetaching([
+                    $participantId => [
+                        'last_read_at' => null,
+                        'is_muted' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                ]);
+        }
+
+        return $conversation;
     }
 
     /*
