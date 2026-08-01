@@ -23,8 +23,7 @@
 
     @push('styles')
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    @endpush
+@endpush
 
     <style>
         .cp-page {
@@ -58,12 +57,7 @@
         .cp-scroll::-webkit-scrollbar { width: 6px; }
         .cp-scroll::-webkit-scrollbar-track { background: #0b1326; }
         .cp-scroll::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 10px; }
-
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        @media (max-width: 1023px) {
+@media (max-width: 1023px) {
             .cp-desktop-sidebar { display: none !important; }
             .cp-main { margin-right: 0 !important; }
             .cp-topbar { right: 0 !important; }
@@ -75,7 +69,7 @@
         <aside class="cp-desktop-sidebar fixed right-0 top-0 z-50 hidden h-full w-64 flex-col border-l border-white/5 bg-[#171f33] py-8 shadow-lg lg:flex">
             <div class="flex items-center gap-3 px-6 mb-10">
                 <div class="flex items-center justify-center w-10 h-10 cp-neon rounded-xl">
-                    <span class="text-white material-symbols-outlined">psychology</span>
+                    <svg class="inline-block w-5 h-5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4.5A3.5 3.5 0 0 0 6 8v1a3 3 0 0 0-2 2.83V13a3 3 0 0 0 2 2.83V17a3.5 3.5 0 0 0 3.5 3.5V4.5Z"/><path d="M14.5 4.5A3.5 3.5 0 0 1 18 8v1a3 3 0 0 1 2 2.83V13a3 3 0 0 1-2 2.83V17a3.5 3.5 0 0 1-3.5 3.5V4.5Z"/><path d="M9.5 9H7.8M16.2 9h-1.7M9.5 15H7.8M16.2 15h-1.7"/></svg>
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-[#b4c5ff]">نظام الاستشارات</h1>
@@ -85,30 +79,30 @@
 
             <nav class="flex-1 px-4 space-y-2">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
-                    <span class="material-symbols-outlined">dashboard</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
                     <span>لوحة القيادة</span>
                 </a>
                 <a href="{{ route('consultations.mine') }}" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
-                    <span class="material-symbols-outlined">assignment</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8 9h8M8 13h8M8 17h5"/></svg>
                     <span>الطلبات</span>
                 </a>
                 <a href="#messagesContainer" class="flex items-center gap-4 rounded-xl border-r-4 border-[#b4c5ff] bg-[#b4c5ff]/5 px-4 py-3 text-[#b4c5ff] shadow-[0_0_15px_rgba(180,197,255,.15)]">
-                    <span class="material-symbols-outlined">chat</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/><path d="M8 9h8M8 13h5"/></svg>
                     <span>المحادثات</span>
                 </a>
                 <a href="#sharedFiles" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
-                    <span class="material-symbols-outlined">folder</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4H10l2 2h6.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
                     <span>الملفات</span>
                 </a>
                 <a href="{{ route('profile.edit') }}" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
-                    <span class="material-symbols-outlined">settings</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/></svg>
                     <span>الإعدادات</span>
                 </a>
             </nav>
 
             <div class="px-4 mt-auto">
                 <a href="{{ route('consultations.create') }}" class="flex items-center justify-center w-full gap-2 py-3 text-xs font-bold text-white transition cp-neon rounded-xl active:scale-95">
-                    <span class="material-symbols-outlined">add</span>
+                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                     <span>طلب جديد</span>
                 </a>
             </div>
@@ -118,21 +112,21 @@
             {{-- الشريط العلوي --}}
             <header class="cp-topbar fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-[#0b1326]/80 px-6 shadow-sm backdrop-blur-md lg:right-64">
                 <div class="hidden items-center rounded-full border border-white/5 bg-[#2d3449]/50 px-4 py-2 md:flex">
-                    <span class="material-symbols-outlined ml-2 text-[#c3c6d7]">search</span>
+                    <svg class="inline-block w-5 h-5 shrink-0 ml-2 text-[#c3c6d7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
                     <input class="w-64 border-none bg-transparent text-sm text-white placeholder:text-[#c3c6d7]/50 focus:ring-0" placeholder="بحث عن طلبات، عملاء..." type="text">
                 </div>
 
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <button class="relative flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
-                            <span class="material-symbols-outlined">notifications</span>
+                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
                             <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ffb1c7]"></span>
                         </button>
                         <button class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
-                            <span class="material-symbols-outlined">settings</span>
+                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/></svg>
                         </button>
                         <button id="toggleConsultationDetails" class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
-                            <span class="material-symbols-outlined">help</span>
+                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7M12 17h.01"/></svg>
                         </button>
                     </div>
 
@@ -159,7 +153,7 @@
                 <section class="flex flex-col gap-1">
                     <h2 class="text-3xl font-bold text-[#dae2fd]">أهلًا بك، {{ $currentUser->name }}</h2>
                     <div class="flex items-center gap-2 text-[#c3c6d7]">
-                        <span class="material-symbols-outlined text-sm text-[#b4c5ff]">schedule</span>
+                        <svg class="inline-block w-4 h-4 shrink-0 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                         <p>أنت الآن داخل محادثة الاستشارة رقم {{ $consultation->consultation_number }}.</p>
                     </div>
                 </section>
@@ -174,7 +168,7 @@
                                 <h3 class="text-3xl font-bold text-white">{{ $consultation->title }}</h3>
                                 <p class="max-w-md mt-2 text-white/80">{{ $consultation->description }}</p>
                             </div>
-                            <span class="text-6xl text-white material-symbols-outlined opacity-30">rocket_launch</span>
+                            <svg class="inline-block w-16 h-16 text-white shrink-0 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5c2.5-2.5 5.5-2 5.5-2S20 6 17.5 8.5L12 14l-4-4 6-5Z"/><path d="M9 11 5 12l-2 3 6-1M13 15l-1 4 3-2 1-4M7 17l-2 2M8.5 18.5 7 20"/><circle cx="16" cy="6.5" r="1.3"/></svg>
                         </div>
                         <div class="relative z-10 flex items-center gap-4 mt-8">
                             <a href="#messagesContainer" class="rounded-xl bg-white px-6 py-2.5 text-xs font-bold text-[#2563eb] transition hover:shadow-lg">فتح المحادثة</a>
@@ -190,7 +184,7 @@
                                 <p class="mt-2 text-xs text-[#c3c6d7]">إجمالي رسائل الاستشارة</p>
                             </div>
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#b4c5ff]/10 text-[#b4c5ff]">
-                                <span class="material-symbols-outlined">chat</span>
+                                <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/><path d="M8 9h8M8 13h5"/></svg>
                             </div>
                         </div>
 
@@ -201,7 +195,7 @@
                                 <p class="mt-2 text-xs text-[#c3c6d7]">{{ $consultation->payment_status === 'paid' ? 'تم تأكيد الدفع' : 'الدفع غير مؤكد' }}</p>
                             </div>
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ffb1c7]/10 text-[#ffb1c7]">
-                                <span class="material-symbols-outlined">insights</span>
+                                <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 8 5-4 6 5 5-4"/></svg>
                             </div>
                         </div>
                     </div>
@@ -243,7 +237,7 @@
                         <div class="flex gap-2">
                             @if ($otherUser && $otherUser->role === 'engineer')
                                 <a href="{{ route('engineers.show', ['user' => $otherUser->id]) }}" class="rounded-xl bg-[#b4c5ff]/10 p-2 text-[#b4c5ff] transition hover:bg-[#b4c5ff]/20">
-                                    <span class="material-symbols-outlined">person</span>
+                                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
                                 </a>
                             @endif
                         </div>
@@ -299,7 +293,7 @@
                                                                 <p class="mt-1 text-xs opacity-60">اضغط لفتح الملف</p>
                                                             </div>
                                                         </div>
-                                                        <span class="material-symbols-outlined">download</span>
+                                                        <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
                                                     </a>
                                                 @endif
                                             @endif
@@ -328,11 +322,11 @@
                             <div class="flex items-end gap-2 rounded-3xl border border-white/10 bg-[#222a3d] p-2">
                                 <textarea id="message" name="message" rows="1" placeholder="اكتب رسالتك هنا..." class="min-h-[48px] max-h-32 flex-1 resize-none border-0 bg-transparent px-3 py-3 text-sm text-white placeholder:text-[#c3c6d7]/50 focus:ring-0">{{ old('message') }}</textarea>
                                 <label for="attachment" class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-white/5 text-[#c3c6d7] transition hover:bg-white/10" title="إرفاق ملف">
-                                    <span class="material-symbols-outlined">attach_file</span>
+                                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="m20 11.5-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8.3-8.3"/></svg>
                                 </label>
                                 <input id="attachment" type="file" name="attachment" class="hidden" accept=".pdf,.dwg,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.zip" @change="selectFile($event)">
                                 <button id="sendButton" type="submit" class="flex items-center justify-center flex-none text-white transition rounded-full shadow-lg cp-neon h-11 w-11 hover:scale-105" aria-label="إرسال">
-                                    <span class="material-symbols-outlined">send</span>
+                                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
                                 </button>
                             </div>
                             <span x-show="fileName" x-text="fileName" class="block max-w-full truncate text-xs text-[#c3c6d7]"></span>
@@ -345,7 +339,7 @@
                     <section id="sharedFiles" class="p-6 cp-glass rounded-3xl">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-[#d2bbff]">folder_shared</span>
+                                <svg class="inline-block w-5 h-5 shrink-0 text-[#d2bbff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4H10l2 2h6.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/><circle cx="11" cy="12" r="2"/><path d="M7.5 17a3.5 3.5 0 0 1 7 0"/></svg>
                                 <h3 class="text-xl font-semibold">الملفات المشتركة</h3>
                             </div>
                         </div>
@@ -361,7 +355,7 @@
                                             <p class="text-xs text-[#c3c6d7]">{{ $fileMessage->created_at?->format('Y-m-d H:i') }}</p>
                                         </div>
                                     </div>
-                                    <span class="material-symbols-outlined text-[#c3c6d7] opacity-0 transition group-hover:opacity-100">download</span>
+                                    <svg class="inline-block w-5 h-5 shrink-0 text-[#c3c6d7] opacity-0 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
                                 </a>
                             @empty
                                 <p class="py-8 text-center text-sm text-[#c3c6d7]">لا توجد ملفات مشتركة</p>
@@ -371,7 +365,7 @@
 
                     <section class="p-6 cp-glass rounded-3xl">
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="material-symbols-outlined text-[#b4c5ff]">analytics</span>
+                            <svg class="inline-block w-5 h-5 shrink-0 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/></svg>
                             <h3 class="text-xl font-semibold">تفاصيل الاستشارة</h3>
                         </div>
 
@@ -394,7 +388,7 @@
                             </div>
                             <div class="rounded-2xl bg-[#2d3449]/20 p-4">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="material-symbols-outlined text-sm text-[#b4c5ff]">lightbulb</span>
+                                    <svg class="inline-block w-4 h-4 shrink-0 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18h6M10 22h4M8.5 15.5A7 7 0 1 1 15.5 15.5c-.9.7-1.5 1.4-1.5 2.5h-4c0-1.1-.6-1.8-1.5-2.5Z"/></svg>
                                     <span class="text-xs font-bold text-[#b4c5ff]">وصف الاستشارة</span>
                                 </div>
                                 <p class="text-xs leading-relaxed text-[#c3c6d7]">{{ $consultation->description }}</p>
