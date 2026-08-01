@@ -143,18 +143,140 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('dashboard') }}" class="relative flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50" title="لوحة التحكم">
-                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-                            <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ffb1c7]"></span>
-                        </a>
-                        <a href="{{ route('dashboard') }}" title="لوحة التحكم" class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
-                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/></svg>
-                        </a>
-                        <button data-open-info class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
-                            <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7M12 17h.01"/></svg>
-                        </button>
-                    </div>
+                   <div class="relative flex items-center gap-2">
+
+    {{-- الإشعارات --}}
+    <button
+        type="button"
+        id="toggleChatNotifications"
+        class="relative flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50 hover:text-white"
+        title="الإشعارات"
+    >
+        <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+        >
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+            <path d="M10 21h4"/>
+        </svg>
+
+        @if ($currentUser->unreadNotifications()->exists())
+            <span
+                class="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ffb1c7]"
+            ></span>
+        @endif
+    </button>
+
+    {{-- تفاصيل الاستشارة والملفات --}}
+    <button
+        type="button"
+        data-open-info
+        class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50 hover:text-white"
+        title="تفاصيل الاستشارة والملفات"
+    >
+        <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/>
+        </svg>
+    </button>
+
+    {{-- المساعدة --}}
+    <button
+        type="button"
+        id="toggleChatHelp"
+        class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50 hover:text-white"
+        title="مساعدة"
+    >
+        <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+        >
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7"/>
+            <path d="M12 17h.01"/>
+        </svg>
+    </button>
+
+    {{-- قائمة الإشعارات --}}
+    <div
+        id="chatNotificationsMenu"
+        class="absolute left-0 top-12 z-50 hidden w-80 overflow-hidden rounded-2xl border border-white/10 bg-[#171f33] shadow-2xl"
+    >
+        <div class="px-4 py-3 border-b border-white/10">
+            <p class="font-bold text-white">الإشعارات</p>
+        </div>
+
+        <div class="p-3 overflow-y-auto max-h-80">
+            @forelse ($currentUser->notifications()->latest()->take(8)->get() as $notification)
+
+                <a
+                    href="{{ $notification->data['url'] ?? '#' }}"
+                    class="block px-3 py-3 transition rounded-xl hover:bg-white/5"
+                >
+                    <p class="text-sm font-bold text-white">
+                        {{ $notification->data['title'] ?? 'إشعار جديد' }}
+                    </p>
+
+                    <p class="mt-1 text-xs leading-6 text-[#c3c6d7]">
+                        {{ $notification->data['message'] ?? '' }}
+                    </p>
+
+                    <p class="mt-1 text-[10px] text-[#7f8ba3]">
+                        {{ $notification->created_at?->diffForHumans() }}
+                    </p>
+                </a>
+
+            @empty
+
+                <p class="py-8 text-center text-sm text-[#c3c6d7]">
+                    لا توجد إشعارات حاليًا
+                </p>
+
+            @endforelse
+        </div>
+    </div>
+
+    {{-- نافذة المساعدة --}}
+    <div
+        id="chatHelpMenu"
+        class="absolute left-0 top-12 z-50 hidden w-80 rounded-2xl border border-white/10 bg-[#171f33] p-4 shadow-2xl"
+    >
+        <div class="flex items-center justify-between">
+            <p class="font-bold text-white">مساعدة المحادثة</p>
+
+            <button
+                type="button"
+                id="closeChatHelp"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-[#c3c6d7]"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="mt-4 space-y-3 text-sm leading-7 text-[#c3c6d7]">
+            <p>يمكنك إرسال رسالة نصية أو ملف أو تسجيل صوتي.</p>
+            <p>زر الإعدادات يفتح تفاصيل الاستشارة والملفات المشتركة.</p>
+            <p>جميع المرفقات محمية ولا تظهر إلا لأطراف الاستشارة.</p>
+        </div>
+    </div>
+
+</div>
 
                     <div class="w-px h-8 mx-2 bg-white/10"></div>
 
@@ -503,6 +625,51 @@
 
     <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const notificationsButton =
+    document.getElementById('toggleChatNotifications');
+
+const notificationsMenu =
+    document.getElementById('chatNotificationsMenu');
+
+const helpButton =
+    document.getElementById('toggleChatHelp');
+
+const helpMenu =
+    document.getElementById('chatHelpMenu');
+
+const closeHelpButton =
+    document.getElementById('closeChatHelp');
+
+notificationsButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    notificationsMenu?.classList.toggle('hidden');
+    helpMenu?.classList.add('hidden');
+});
+
+helpButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    helpMenu?.classList.toggle('hidden');
+    notificationsMenu?.classList.add('hidden');
+});
+
+closeHelpButton?.addEventListener('click', () => {
+    helpMenu?.classList.add('hidden');
+});
+
+notificationsMenu?.addEventListener('click', (event) => {
+    event.stopPropagation();
+});
+
+helpMenu?.addEventListener('click', (event) => {
+    event.stopPropagation();
+});
+
+document.addEventListener('click', () => {
+    notificationsMenu?.classList.add('hidden');
+    helpMenu?.classList.add('hidden');
+});
             const consultationId = @json($consultation->id);
             const currentUserId = @json(auth()->id());
             const form = document.getElementById('chatForm');
