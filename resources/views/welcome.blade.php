@@ -853,7 +853,7 @@
                                     </h3>
 
                                     <p class="mt-1 text-xs font-bold text-[#b4c5ff]">
-                                        مهندس معتمد في CreativeHome
+                                        مهندس معتمد في الوليد الهندسي
                                     </p>
                                 </div>
                             </div>
@@ -939,7 +939,7 @@
                         </h2>
 
                         <p class="max-w-2xl mx-auto mb-10 text-lg text-[#c3c6d7]">
-                            انضم إلى CreativeHome واحصل على استشارة هندسية احترافية من نخبة المهندسين.
+                            انضم إلى الوليد الهندسي واحصل على استشارة هندسية احترافية من نخبة المهندسين.
                         </p>
 
                         <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -1002,7 +1002,7 @@
                     </span>
 
                     <span class="text-xl font-black text-[#b4c5ff]">
-                        CreativeHome
+                        الوليد الهندسي
                     </span>
                 </div>
 
@@ -1047,7 +1047,7 @@
         </div>
 
         <div class="pt-8 mt-12 text-sm text-center border-t border-white/10 text-[#8d90a0]">
-            © {{ now()->year }} CreativeHome. جميع الحقوق محفوظة.
+            © {{ now()->year }} الوليد الهندسي. جميع الحقوق محفوظة.
         </div>
     </footer>
 
