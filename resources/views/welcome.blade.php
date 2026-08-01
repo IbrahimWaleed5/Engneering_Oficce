@@ -1,52 +1,100 @@
 <!DOCTYPE html>
-
-<html
-    lang="ar"
-    dir="rtl"
->
-
+<html lang="ar" dir="rtl" class="dark">
 <head>
-
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <meta
-        name="csrf-token"
-        content="{{ csrf_token() }}"
-    >
-
-    <title>
-        مكتب الوليد الهندسي | استشارات هندسية احترافية
-    </title>
+    <title>CreativeHome | استشارات هندسية احترافية</title>
 
     <meta
         name="description"
-        content="منصة متكاملة لطلب الاستشارات الهندسية واختيار المهندس المناسب ومتابعة المشاريع."
+        content="CreativeHome منصة متكاملة لطلب الاستشارات الهندسية واختيار المهندس المناسب ومتابعة المشاريع."
     >
 
-    <link
-        rel="preconnect"
-        href="https://fonts.bunny.net"
-    >
-
+    <link rel="preconnect" href="https://fonts.bunny.net">
     <link
         href="https://fonts.bunny.net/css?family=almarai:400,500,700,800&display=swap"
         rel="stylesheet"
     >
 
-   @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        :root {
+            --surface: #0b1326;
+            --surface-lowest: #060e20;
+            --surface-low: #131b2e;
+            --surface-container: #171f33;
+            --surface-high: #222a3d;
+            --surface-highest: #2d3449;
+            --on-surface: #dae2fd;
+            --on-surface-variant: #c3c6d7;
+            --primary: #b4c5ff;
+            --primary-container: #2563eb;
+            --secondary: #ffb1c7;
+            --tertiary: #d2bbff;
+            --outline: #8d90a0;
+            --outline-variant: #434655;
+        }
+
         html {
             scroll-behavior: smooth;
         }
 
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            color: var(--on-surface);
+            background: var(--surface);
+            font-family: Almarai, sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(45, 52, 73, .4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, .05);
+            transition: all .3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(45, 52, 73, .6);
+            border-color: rgba(180, 197, 255, .3);
+            transform: translateY(-4px);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #b4c5ff 0%, #d2bbff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all .8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nav-link::after {
+            display: block;
+            width: 0;
+            height: 2px;
+            content: "";
+            background: var(--primary);
+            transition: width .3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
         #welcome-mobile-menu {
-            animation: welcomeMenuIn 0.24s ease-out;
+            animation: welcomeMenuIn .24s ease-out;
         }
 
         @keyframes welcomeMenuIn {
@@ -61,1663 +109,1315 @@
             }
         }
     </style>
-
 </head>
 
-<body class="min-h-screen overflow-x-hidden font-sans text-white bg-slate-950">
+<body>
+    {{-- الخلفية المتحركة --}}
+    <div class="fixed inset-0 w-full h-full -z-10 opacity-40">
+        <canvas
+            id="creativehome-shader"
+            class="block w-full h-full"
+        ></canvas>
+    </div>
 
-    <div class="relative min-h-screen">
-
-        {{-- الخلفيات المتحركة --}}
-
-        <div class="fixed inset-0 pointer-events-none">
-
-            <div
-                class="absolute rounded-full -top-40 -right-40 h-[500px] w-[500px] bg-blue-600/20 blur-[120px]"
-            ></div>
-
-            <div
-                class="absolute rounded-full top-1/3 -left-52 h-[500px] w-[500px] bg-cyan-500/15 blur-[130px]"
-            ></div>
-
-            <div
-                class="absolute rounded-full -bottom-60 right-1/3 h-[600px] w-[600px] bg-purple-600/10 blur-[150px]"
-            ></div>
-
-        </div>
-
-        {{-- Navbar --}}
-
-        <nav
-            class="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-2xl"
-        >
-
-            <div class="flex items-center justify-between h-20 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                <a
-                    href="{{ route('home') }}"
-                    class="flex items-center gap-3 group"
+    {{-- شريط التنقل --}}
+    <header
+        class="fixed top-0 z-50 flex items-center w-full h-16 px-6 border-b shadow-sm bg-[#0b1326]/80 backdrop-blur-md border-[#434655]/10"
+    >
+        <div class="flex items-center justify-between w-full mx-auto max-w-7xl">
+            <a
+                href="{{ route('home') }}"
+                class="flex items-center gap-3"
+            >
+                <span
+                    class="flex items-center justify-center w-10 h-10 text-white rounded-xl bg-blue-600/20"
+                    aria-hidden="true"
                 >
-
-                    <div
-                        class="relative flex items-center justify-center w-12 h-12 overflow-hidden text-xl font-black transition border shadow-lg rounded-2xl border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500 shadow-blue-600/20 group-hover:scale-105"
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        class="w-6 h-6"
                     >
-                        م
+                        <path d="M3 11.5 12 4l9 7.5"/>
+                        <path d="M5.5 10.5V21h13V10.5"/>
+                        <path d="M9 21v-6h6v6"/>
+                    </svg>
+                </span>
 
-                        <div
-                            class="absolute inset-0 transition opacity-0 bg-white/10 group-hover:opacity-100"
-                        ></div>
-                    </div>
+                <span class="text-xl font-extrabold text-[#b4c5ff]">
+                    CreativeHome
+                </span>
+            </a>
 
-                    <div>
-
-                        <p class="text-lg font-extrabold text-white">
-                            مكتب الوليد الهندسي
-                        </p>
-
-                        <p class="text-xs text-slate-400">
-                            حلول هندسية موثوقة
-                        </p>
-
-                    </div>
-
+            <nav class="items-center hidden gap-8 text-sm font-bold md:flex text-[#c3c6d7]">
+                <a class="nav-link text-[#b4c5ff]" href="#home">
+                    الرئيسية
                 </a>
 
-                <div class="items-center hidden gap-1 lg:flex">
+                <a class="nav-link hover:text-white" href="#services">
+                    خدماتنا
+                </a>
 
+                <a class="nav-link hover:text-white" href="#works">
+                    أعمالنا
+                </a>
+
+                <a class="nav-link hover:text-white" href="#engineers">
+                    المهندسون
+                </a>
+
+                <a class="nav-link hover:text-white" href="#how-it-works">
+                    كيف نعمل
+                </a>
+            </nav>
+
+            <div class="items-center hidden gap-3 md:flex">
+                @auth
                     <a
-                        href="#home"
-                        class="px-4 py-2 text-sm font-semibold transition rounded-xl text-slate-300 hover:text-white hover:bg-white/5"
+                        href="{{ route('dashboard') }}"
+                        class="px-6 py-2 text-sm font-bold text-white transition bg-blue-600 rounded-full active:scale-95"
                     >
-                        الرئيسية
+                        لوحة التحكم
+                    </a>
+                @else
+                    <a
+                        href="{{ route('login') }}"
+                        class="px-4 py-2 text-sm font-bold text-[#c3c6d7] hover:text-white"
+                    >
+                        تسجيل الدخول
                     </a>
 
                     <a
-                        href="#services"
-                        class="px-4 py-2 text-sm font-semibold transition rounded-xl text-slate-300 hover:text-white hover:bg-white/5"
+                        href="{{ route('register') }}"
+                        class="px-6 py-2 text-sm font-bold text-white transition bg-blue-600 rounded-full active:scale-95"
                     >
-                        خدماتنا
+                        إنشاء حساب
                     </a>
+                @endauth
+            </div>
 
+            <button
+                id="welcome-mobile-menu-button"
+                type="button"
+                aria-controls="welcome-mobile-menu"
+                aria-expanded="false"
+                class="flex items-center justify-center border w-11 h-11 md:hidden rounded-xl border-white/10 bg-white/5"
+            >
+                <svg
+                    id="welcome-menu-open-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="w-6 h-6"
+                >
+                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+
+                <svg
+                    id="welcome-menu-close-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="hidden w-6 h-6"
+                >
+                    <path d="M6 18 18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    {{-- قائمة الهاتف --}}
+    <div
+        id="welcome-mobile-menu"
+        class="fixed top-16 right-0 left-0 z-40 hidden px-4 py-5 border-b shadow-2xl md:hidden border-white/10 bg-[#0b1326]/95 backdrop-blur-2xl"
+    >
+        <div class="space-y-2">
+            <a data-welcome-mobile-link href="#home" class="block px-4 py-3 rounded-xl hover:bg-white/5">
+                الرئيسية
+            </a>
+
+            <a data-welcome-mobile-link href="#services" class="block px-4 py-3 rounded-xl hover:bg-white/5">
+                خدماتنا
+            </a>
+
+            <a data-welcome-mobile-link href="#works" class="block px-4 py-3 rounded-xl hover:bg-white/5">
+                أعمالنا
+            </a>
+
+            <a data-welcome-mobile-link href="#engineers" class="block px-4 py-3 rounded-xl hover:bg-white/5">
+                المهندسون
+            </a>
+
+            <a data-welcome-mobile-link href="#how-it-works" class="block px-4 py-3 rounded-xl hover:bg-white/5">
+                كيف نعمل
+            </a>
+
+            <div class="pt-3 border-t border-white/10">
+                @auth
                     <a
-                        href="#works"
-                        class="px-4 py-2 text-sm font-semibold transition rounded-xl text-slate-300 hover:text-white hover:bg-white/5"
+                        href="{{ route('dashboard') }}"
+                        class="flex justify-center w-full px-6 py-3 font-bold text-white bg-blue-600 rounded-xl"
                     >
-                        أعمال المهندسين
+                        لوحة التحكم
                     </a>
-
-                    <a
-                        href="#engineers"
-                        class="px-4 py-2 text-sm font-semibold transition rounded-xl text-slate-300 hover:text-white hover:bg-white/5"
-                    >
-                        مهندسونا
-                    </a>
-
-                    <a
-                        href="#how-it-works"
-                        class="px-4 py-2 text-sm font-semibold transition rounded-xl text-slate-300 hover:text-white hover:bg-white/5"
-                    >
-                        كيف نعمل
-                    </a>
-
-                </div>
-
-                <div class="items-center hidden gap-3 lg:flex">
-
-                    @auth
-
-                        <a
-                            href="{{ route('dashboard') }}"
-                            class="secondary-button"
-                        >
-                            لوحة التحكم
-                        </a>
-
-                    @else
-
+                @else
+                    <div class="grid grid-cols-2 gap-3">
                         <a
                             href="{{ route('login') }}"
-                            class="px-4 py-2 text-sm font-bold text-slate-300 hover:text-white"
+                            class="flex justify-center px-4 py-3 font-bold border rounded-xl border-white/10 bg-white/5"
                         >
-                            تسجيل الدخول
+                            دخول
                         </a>
 
                         <a
                             href="{{ route('register') }}"
-                            class="primary-button"
+                            class="flex justify-center px-4 py-3 font-bold text-white bg-blue-600 rounded-xl"
                         >
-                            إنشاء حساب
+                            حساب جديد
                         </a>
+                    </div>
+                @endauth
+            </div>
+        </div>
+    </div>
 
-                    @endauth
-
-                </div>
-
-                <button
-                    id="welcome-mobile-menu-button"
-                    type="button"
-                    aria-controls="welcome-mobile-menu"
-                    aria-expanded="false"
-                    aria-label="فتح القائمة"
-                    class="relative flex items-center justify-center overflow-hidden transition-all duration-300 border shadow-lg w-11 h-11 lg:hidden rounded-xl border-cyan-400/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-cyan-300/40 hover:shadow-cyan-500/20 active:scale-95"
+    <main class="pt-16">
+        {{-- Hero --}}
+        <section
+            id="home"
+            class="relative flex items-center justify-center min-h-[921px] px-6 overflow-hidden"
+        >
+            <div class="z-10 max-w-4xl text-center reveal">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-bold text-blue-200 border rounded-full border-blue-300/20 bg-blue-400/10"
                 >
                     <svg
-                        id="welcome-menu-open-icon"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-6 h-6 transition text-slate-100"
-                        fill="none"
                         viewBox="0 0 24 24"
+                        fill="none"
                         stroke="currentColor"
+                        stroke-width="2"
+                        class="w-4 h-4"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"
-                        />
+                        <path d="M12 3v18M3 12h18"/>
                     </svg>
 
-                    <svg
-                        id="welcome-menu-close-icon"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="hidden w-6 h-6 transition text-slate-100"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
-
-            </div>
-
-            {{-- قائمة الهاتف --}}
-
-            <div
-                id="welcome-mobile-menu"
-                class="hidden px-4 pb-5 border-t shadow-2xl lg:hidden border-white/10 bg-slate-950/95 backdrop-blur-2xl"
-            >
-
-                <div class="pt-4 space-y-2">
-
-                    <a
-                        href="#home"
-                        data-welcome-mobile-link
-                        class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
-                    >
-                        الرئيسية
-                    </a>
-
-                    <a
-                        href="#services"
-                        data-welcome-mobile-link
-                        class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
-                    >
-                        خدماتنا
-                    </a>
-
-                    <a
-                        href="#works"
-                        data-welcome-mobile-link
-                        class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
-                    >
-                        أعمال المهندسين
-                    </a>
-
-                    <a
-                        href="#engineers"
-                        data-welcome-mobile-link
-                        class="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5"
-                    >
-                        مهندسونا
-                    </a>
-
-                    <div class="pt-3 border-t border-white/10">
-
-                        @auth
-
-                            <a
-                                href="{{ route('dashboard') }}"
-                                class="flex w-full primary-button"
-                            >
-                                لوحة التحكم
-                            </a>
-
-                        @else
-
-                            <div class="grid grid-cols-2 gap-3">
-
-                                <a
-                                    href="{{ route('login') }}"
-                                    class="secondary-button"
-                                >
-                                    دخول
-                                </a>
-
-                                <a
-                                    href="{{ route('register') }}"
-                                    class="primary-button"
-                                >
-                                    حساب جديد
-                                </a>
-
-                            </div>
-
-                        @endauth
-
-                    </div>
-
+                    منصة هندسية متكاملة
                 </div>
 
+                <h1 class="mb-6 text-5xl font-black leading-tight md:text-7xl">
+                    <span class="gradient-text">حوّل فكرتك</span>
+                    إلى مشروع هندسي ناجح
+                </h1>
+
+                <p class="max-w-2xl mx-auto mb-10 text-lg leading-9 md:text-xl text-[#c3c6d7]">
+                    نحن نوفر لك أفضل الخبرات الهندسية في جميع التخصصات،
+                    وتستطيع متابعة مراحل مشروعك والحصول على استشارات
+                    احترافية من مهندسين معتمدين.
+                </p>
+
+                <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                    @auth
+                        @if (auth()->user()->role === 'customer')
+                            <a
+                                href="{{ route('engineer.works.public') }}"
+                                class="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white transition bg-blue-600 shadow-lg rounded-xl active:scale-95"
+                            >
+                                <span>استكشف المهندسين</span>
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    class="w-5 h-5"
+                                >
+                                    <path d="m15 18-6-6 6-6"/>
+                                </svg>
+                            </a>
+
+                            <a
+                                href="{{ route('consultations.create') }}"
+                                class="px-8 py-4 text-lg font-bold transition border rounded-xl border-[#434655] bg-[#2d3449]/50 hover:bg-[#2d3449] active:scale-95"
+                            >
+                                طلب استشارة مباشرة
+                            </a>
+                        @else
+                            <a
+                                href="{{ route('dashboard') }}"
+                                class="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white transition bg-blue-600 shadow-lg rounded-xl active:scale-95"
+                            >
+                                الانتقال إلى لوحة التحكم
+                            </a>
+                        @endif
+                    @else
+                        <a
+                            href="{{ route('register') }}"
+                            class="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-white transition bg-blue-600 shadow-lg rounded-xl active:scale-95"
+                        >
+                            <span>ابدأ مشروعك الآن</span>
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                class="w-5 h-5"
+                            >
+                                <path d="M4 13h10"/>
+                                <path d="m10 7 6 6-6 6"/>
+                            </svg>
+                        </a>
+
+                        <a
+                            href="{{ route('engineer.works.public') }}"
+                            class="px-8 py-4 text-lg font-bold transition border rounded-xl border-[#434655] bg-[#2d3449]/50 hover:bg-[#2d3449] active:scale-95"
+                        >
+                            تصفح مكتبة الأعمال
+                        </a>
+                    @endauth
+                </div>
             </div>
+        </section>
 
-        </nav>
+        {{-- الإحصائيات --}}
+        <section class="px-6 py-20">
+            <div class="grid grid-cols-1 gap-8 mx-auto max-w-7xl sm:grid-cols-2 lg:grid-cols-4">
+                <article class="p-6 text-center glass-card rounded-2xl reveal">
+                    <div class="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-400/10 text-[#b4c5ff]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                            <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7"/>
+                        </svg>
+                    </div>
 
-        {{-- Hero --}}
+                    <h3 class="text-4xl font-black text-[#b4c5ff]">
+                        {{ $statistics['engineers'] }}
+                    </h3>
 
-        <main class="relative z-10">
+                    <p class="mt-2 text-sm font-bold text-[#c3c6d7]">
+                        مهندس فعّال
+                    </p>
+                </article>
 
-            <section
-                id="home"
-                class="relative flex items-center min-h-screen pt-28"
-            >
+                <article class="p-6 text-center glass-card rounded-2xl reveal">
+                    <div class="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-pink-400/10 text-[#ffb1c7]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+                        </svg>
+                    </div>
 
-                <div class="grid items-center gap-16 px-4 py-20 mx-auto max-w-7xl lg:grid-cols-2 sm:px-6 lg:px-8">
+                    <h3 class="text-4xl font-black text-[#ffb1c7]">
+                        {{ $statistics['consultations'] }}
+                    </h3>
 
-                    <div class="relative z-10">
+                    <p class="mt-2 text-sm font-bold text-[#c3c6d7]">
+                        استشارة مدفوعة
+                    </p>
+                </article>
 
-                        <div
-                            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold border rounded-full mb-7 fade-up border-cyan-400/20 bg-cyan-400/10 text-cyan-200"
+                <article class="p-6 text-center glass-card rounded-2xl reveal">
+                    <div class="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-2xl bg-purple-400/10 text-[#d2bbff]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                            <path d="m5 12 4 4L19 6"/>
+                            <circle cx="12" cy="12" r="9"/>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-4xl font-black text-[#d2bbff]">
+                        {{ $statistics['completed'] }}
+                    </h3>
+
+                    <p class="mt-2 text-sm font-bold text-[#c3c6d7]">
+                        مشروع مكتمل
+                    </p>
+                </article>
+
+                <article class="p-6 text-center glass-card rounded-2xl reveal">
+                    <div class="flex items-center justify-center mx-auto mb-4 w-14 h-14 rounded-2xl bg-cyan-400/10 text-cyan-300">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                            <rect x="3" y="3" width="18" height="18" rx="3"/>
+                            <path d="m7 15 3-3 2 2 4-5 2 3"/>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-4xl font-black text-cyan-300">
+                        {{ $statistics['works'] }}
+                    </h3>
+
+                    <p class="mt-2 text-sm font-bold text-[#c3c6d7]">
+                        عمل منشور
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        {{-- الخدمات --}}
+        <section
+            id="services"
+            class="px-6 py-24 bg-[#131b2e]/30"
+        >
+            <div class="mx-auto max-w-7xl">
+                <div class="mb-16 text-center reveal">
+                    <h2 class="mb-4 text-4xl font-black">
+                        خدماتنا الهندسية المتكاملة
+                    </h2>
+
+                    <p class="max-w-xl mx-auto text-[#c3c6d7]">
+                        نقدم حلولًا هندسية مبتكرة تغطي احتياجات مشروعك من التخطيط إلى التنفيذ.
+                    </p>
+                </div>
+
+                @php
+                    $services = [
+                        [
+                            'title' => 'التصميم المعماري',
+                            'description' => 'تصاميم عصرية تجمع بين الجمال والوظيفة، مع مراعاة أدق التفاصيل.',
+                            'icon' => 'architecture',
+                        ],
+                        [
+                            'title' => 'التصميم الإنشائي',
+                            'description' => 'دراسات إنشائية دقيقة تضمن أمان واستدامة المبنى.',
+                            'icon' => 'building',
+                        ],
+                        [
+                            'title' => 'التصميم الكهربائي',
+                            'description' => 'أنظمة كهربائية ذكية وآمنة تدعم كفاءة الطاقة.',
+                            'icon' => 'bolt',
+                        ],
+                        [
+                            'title' => 'الحلول البرمجية',
+                            'description' => 'تطوير أنظمة إدارة وربط العمليات التقنية بالعمل الميداني.',
+                            'icon' => 'code',
+                        ],
+                        [
+                            'title' => 'التصميم الداخلي',
+                            'description' => 'ابتكار مساحات داخلية تعكس شخصيتك وتستغل المساحة بكفاءة.',
+                            'icon' => 'paint',
+                        ],
+                        [
+                            'title' => 'استشارات تقنية',
+                            'description' => 'دعم واستشارات تخصصية لمراجعة المخططات وحل المشكلات.',
+                            'icon' => 'support',
+                        ],
+                    ];
+                @endphp
+
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($services as $index => $service)
+                        <article
+                            class="p-8 glass-card rounded-3xl reveal"
+                            style="transition-delay: {{ $index * 80 }}ms"
                         >
-                            <span class="relative flex w-2 h-2">
+                            <div class="flex items-center justify-center w-14 h-14 mb-6 rounded-2xl bg-blue-400/10 text-[#b4c5ff]">
+                                @switch($service['icon'])
+                                    @case('architecture')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7"/>
+                                        </svg>
+                                        @break
 
-                                <span
-                                    class="absolute inline-flex w-full h-full rounded-full opacity-75 bg-cyan-400 animate-ping"
-                                ></span>
+                                    @case('building')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <rect x="4" y="3" width="16" height="18" rx="2"/>
+                                            <path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/>
+                                        </svg>
+                                        @break
 
-                                <span
-                                    class="relative inline-flex w-2 h-2 rounded-full bg-cyan-400"
-                                ></span>
+                                    @case('bolt')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z"/>
+                                        </svg>
+                                        @break
 
-                            </span>
+                                    @case('code')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/>
+                                        </svg>
+                                        @break
 
-                            منصة هندسية متكاملة
+                                    @case('paint')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <path d="m14 4 6 6-9 9H5v-6l9-9Z"/>
+                                            <path d="m12 6 6 6"/>
+                                        </svg>
+                                        @break
 
-                        </div>
+                                    @default
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7">
+                                            <path d="M4 12a8 8 0 0 1 16 0v5a3 3 0 0 1-3 3h-2v-7h5M4 12v5a3 3 0 0 0 3 3h2v-7H4"/>
+                                        </svg>
+                                @endswitch
+                            </div>
 
-                        <h1
-                            class="text-4xl font-black leading-tight delay-100 fade-up sm:text-5xl lg:text-7xl"
-                        >
-                            حوّل فكرتك إلى
+                            <h3 class="mb-3 text-xl font-bold">
+                                {{ $service['title'] }}
+                            </h3>
 
-                            <span class="block mt-3 gradient-text">
-                                مشروع هندسي ناجح
-                            </span>
-                        </h1>
-
-                        <p
-                            class="max-w-2xl text-lg leading-9 delay-200 mt-7 fade-up text-slate-300"
-                        >
-                            اختر المهندس المناسب، أرسل تفاصيل مشروعك، تابع
-                            الاستشارة والدفع واستلم ملفاتك النهائية من خلال
-                            منصة واحدة آمنة وسهلة.
-                        </p>
-
-                        <div
-                            class="flex flex-col gap-4 mt-10 delay-300 fade-up sm:flex-row"
-                        >
+                            <p class="text-sm leading-7 text-[#c3c6d7]">
+                                {{ $service['description'] }}
+                            </p>
 
                             @auth
-
                                 @if (auth()->user()->role === 'customer')
+                                    <a
+                                        href="{{ route('consultations.create') }}"
+                                        class="inline-flex items-center gap-2 mt-6 text-sm font-bold text-[#b4c5ff]"
+                                    >
+                                        اطلب الخدمة
 
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                                            <path d="m15 18-6-6 6-6"/>
+                                        </svg>
+                                    </a>
+                                @endif
+                            @else
+                                <a
+                                    href="{{ route('register') }}"
+                                    class="inline-flex items-center gap-2 mt-6 text-sm font-bold text-[#b4c5ff]"
+                                >
+                                    ابدأ الآن
+
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                                        <path d="m15 18-6-6 6-6"/>
+                                    </svg>
+                                </a>
+                            @endauth
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        {{-- كيف نعمل --}}
+        <section
+            id="how-it-works"
+            class="px-6 py-24"
+        >
+            <div class="mx-auto max-w-7xl">
+                <div class="mb-20 text-center reveal">
+                    <h2 class="mb-4 text-4xl font-black">
+                        رحلتك نحو التميز
+                    </h2>
+
+                    <p class="text-[#c3c6d7]">
+                        أربع خطوات بسيطة تفصلك عن بدء مشروع أحلامك
+                    </p>
+                </div>
+
+                @php
+                    $steps = [
+                        [
+                            'number' => '١',
+                            'title' => 'اختر تخصصك',
+                            'description' => 'حدد المجال الهندسي الذي يتناسب مع احتياجات مشروعك.',
+                        ],
+                        [
+                            'number' => '٢',
+                            'title' => 'أرسل التفاصيل',
+                            'description' => 'زودنا بالمعلومات والمخططات الأولية للبدء في الدراسة.',
+                        ],
+                        [
+                            'number' => '٣',
+                            'title' => 'الدفع الإلكتروني',
+                            'description' => 'ارفع إيصال الدفع ليتم مراجعته من الإدارة.',
+                        ],
+                        [
+                            'number' => '٤',
+                            'title' => 'استلم مشروعك',
+                            'description' => 'احصل على ملفاتك بجودة عالية مع متابعة كاملة.',
+                        ],
+                    ];
+                @endphp
+
+                <div class="relative grid grid-cols-1 gap-8 md:grid-cols-4">
+                    <div class="absolute left-0 right-0 hidden h-px top-8 md:block bg-white/10"></div>
+
+                    @foreach ($steps as $index => $step)
+                        <article
+                            class="relative z-10 flex flex-col items-center text-center reveal"
+                            style="transition-delay: {{ $index * 100 }}ms"
+                        >
+                            <div
+                                class="flex items-center justify-center w-16 h-16 mb-6 text-2xl font-bold border rounded-full {{
+                                    $index === 0
+                                        ? 'bg-[#b4c5ff] text-[#002a78] border-[#b4c5ff]'
+                                        : 'bg-[#2d3449] text-[#b4c5ff] border-[#b4c5ff]/30'
+                                }}"
+                            >
+                                {{ $step['number'] }}
+                            </div>
+
+                            <h3 class="mb-2 text-lg font-bold">
+                                {{ $step['title'] }}
+                            </h3>
+
+                            <p class="px-4 text-sm leading-7 text-[#c3c6d7]">
+                                {{ $step['description'] }}
+                            </p>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        {{-- أحدث الأعمال --}}
+        <section
+            id="works"
+            class="px-6 py-24 bg-[#131b2e]/30"
+        >
+            <div class="mx-auto max-w-7xl">
+                <div class="flex flex-col items-start justify-between gap-6 mb-16 md:flex-row md:items-end reveal">
+                    <div>
+                        <h2 class="mb-4 text-4xl font-black">
+                            أحدث أعمال مهندسينا
+                        </h2>
+
+                        <p class="max-w-2xl text-[#c3c6d7]">
+                            استكشف بعض المشاريع التي أضافها مهندسو CreativeHome وتمت مراجعتها واعتمادها.
+                        </p>
+                    </div>
+
+                    <a
+                        href="{{ route('engineer.works.public') }}"
+                        class="inline-flex items-center gap-2 font-bold text-[#b4c5ff]"
+                    >
+                        عرض جميع الأعمال
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    @forelse ($latestWorks as $work)
+                        <article class="overflow-hidden glass-card rounded-3xl reveal">
+                            <div class="relative h-64 overflow-hidden">
+                                @if ($work->coverImage)
+                                    <img
+                                        src="{{ asset('storage/' . $work->coverImage->image_path) }}"
+                                        alt="{{ $work->title }}"
+                                        class="object-cover w-full h-full transition duration-700 hover:scale-110"
+                                    >
+                                @else
+                                    <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#222a3d] to-[#0b1326]">
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            class="w-16 h-16 text-[#b4c5ff]"
+                                        >
+                                            <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7"/>
+                                        </svg>
+                                    </div>
+                                @endif
+
+                                @if ($work->project_type)
+                                    <span
+                                        class="absolute px-3 py-2 text-xs font-bold border rounded-full top-4 right-4 border-white/10 bg-[#060e20]/80"
+                                    >
+                                        {{ $work->project_type }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold">
+                                    {{ $work->title }}
+                                </h3>
+
+                                <div class="flex items-center gap-3 mt-4">
+                                    <div class="flex items-center justify-center w-11 h-11 font-bold rounded-full bg-blue-600/20 text-[#b4c5ff]">
+                                        {{ mb_substr($work->engineer?->name ?? 'م', 0, 1) }}
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm font-bold">
+                                            {{ $work->engineer?->name ?? 'مهندس CreativeHome' }}
+                                        </p>
+
+                                        <p class="mt-1 text-xs text-[#c3c6d7]">
+                                            {{ $work->location ?? 'الموقع غير محدد' }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-3 mt-6">
+                                    <a
+                                        href="{{ route('engineer.works.show', $work) }}"
+                                        class="flex items-center justify-center flex-1 px-5 py-3 font-bold text-white bg-blue-600 rounded-xl"
+                                    >
+                                        عرض المشروع
+                                    </a>
+
+                                    @auth
+                                        @if (
+                                            auth()->user()->role === 'customer'
+                                            && $work->engineer
+                                        )
+                                            <a
+                                                href="{{ route(
+                                                    'consultations.create-for-engineer',
+                                                    $work->engineer
+                                                ) }}"
+                                                class="flex items-center justify-center w-12 h-12 border rounded-xl border-white/10 bg-white/5"
+                                                title="اطلب هذا المهندس"
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
+                                                    <path d="M4 5h16v14H4z"/>
+                                                    <path d="m4 7 8 6 8-6"/>
+                                                </svg>
+                                            </a>
+                                        @endif
+                                    @endauth
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="p-12 text-center col-span-full glass-card rounded-3xl">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                class="w-14 h-14 mx-auto mb-4 text-[#b4c5ff]"
+                            >
+                                <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-7h6v7"/>
+                            </svg>
+
+                            <h3 class="text-xl font-bold">
+                                لا توجد أعمال منشورة حاليًا
+                            </h3>
+
+                            <p class="mt-3 text-[#c3c6d7]">
+                                ستظهر هنا أحدث أعمال المهندسين بعد اعتمادها.
+                            </p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </section>
+
+        {{-- المهندسون --}}
+        <section
+            id="engineers"
+            class="px-6 py-24"
+        >
+            <div class="mx-auto max-w-7xl">
+                <div class="flex flex-col items-start justify-between gap-6 mb-16 md:flex-row md:items-end reveal">
+                    <div>
+                        <h2 class="mb-4 text-4xl font-black">
+                            نخبة المهندسين
+                        </h2>
+
+                        <p class="text-[#c3c6d7]">
+                            تعاون مع خبراء معتمدين ذوي خبرة واسعة في مجالات متعددة.
+                        </p>
+                    </div>
+
+                    <a
+                        href="{{ route('engineer.works.public') }}"
+                        class="inline-flex items-center gap-2 font-bold text-[#b4c5ff]"
+                    >
+                        عرض جميع المهندسين
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                    @forelse ($featuredEngineers as $engineer)
+                        <article class="p-6 glass-card rounded-3xl reveal">
+                            <div class="flex items-center gap-4 mb-6">
+                                @if ($engineer->profile_photo)
+                                    <img
+                                        src="{{ asset('storage/' . $engineer->profile_photo) }}"
+                                        alt="{{ $engineer->name }}"
+                                        class="object-cover w-16 h-16 border rounded-full border-white/10"
+                                    >
+                                @else
+                                    <div class="flex items-center justify-center w-16 h-16 text-xl font-black rounded-full bg-blue-600/20 text-[#b4c5ff]">
+                                        {{ mb_substr($engineer->name, 0, 1) }}
+                                    </div>
+                                @endif
+
+                                <div>
+                                    <h3 class="text-lg font-bold">
+                                        {{ $engineer->name }}
+                                    </h3>
+
+                                    <p class="mt-1 text-xs font-bold text-[#b4c5ff]">
+                                        مهندس معتمد في CreativeHome
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between px-2 mb-6">
+                                <div class="text-center">
+                                    <span class="block text-lg font-bold">
+                                        {{ $engineer->engineerWorks->count() }}
+                                    </span>
+
+                                    <span class="text-[10px] text-[#c3c6d7]">
+                                        أعمال
+                                    </span>
+                                </div>
+
+                                <div class="w-px h-8 bg-white/10"></div>
+
+                                <div class="text-center">
+                                    <span class="block text-lg font-bold">
+                                        5.0
+                                    </span>
+
+                                    <span class="text-[10px] text-[#b4c5ff]">
+                                        تقييم
+                                    </span>
+                                </div>
+
+                                <div class="w-px h-8 bg-white/10"></div>
+
+                                <div class="text-center">
+                                    <span class="block text-lg font-bold">
+                                        نشط
+                                    </span>
+
+                                    <span class="text-[10px] text-[#c3c6d7]">
+                                        الحالة
+                                    </span>
+                                </div>
+                            </div>
+
+                            @auth
+                                @if (auth()->user()->role === 'customer')
+                                    <a
+                                        href="{{ route(
+                                            'consultations.create-for-engineer',
+                                            $engineer
+                                        ) }}"
+                                        class="flex items-center justify-center w-full px-5 py-3 font-bold rounded-xl bg-[#2d3449] hover:bg-blue-600/20"
+                                    >
+                                        اطلب هذا المهندس
+                                    </a>
+                                @endif
+                            @else
+                                <a
+                                    href="{{ route('login') }}"
+                                    class="flex items-center justify-center w-full px-5 py-3 font-bold rounded-xl bg-[#2d3449] hover:bg-blue-600/20"
+                                >
+                                    سجّل لاختيار المهندس
+                                </a>
+                            @endauth
+                        </article>
+                    @empty
+                        <div class="p-10 text-center col-span-full glass-card rounded-3xl">
+                            لا يوجد مهندسون متاحون حاليًا.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </section>
+
+        {{-- CTA --}}
+        <section class="px-6 py-24">
+            <div class="mx-auto max-w-7xl">
+                <div
+                    class="relative p-12 overflow-hidden text-center border rounded-[2rem] border-white/10 bg-gradient-to-br from-[#171f33] to-[#222a3d]"
+                >
+                    <div class="absolute rounded-full -top-20 -right-20 w-60 h-60 bg-blue-600/20 blur-3xl"></div>
+                    <div class="absolute rounded-full -bottom-20 -left-20 w-60 h-60 bg-purple-600/20 blur-3xl"></div>
+
+                    <div class="relative z-10">
+                        <h2 class="mb-6 text-4xl font-black">
+                            مستعد لبدء مشروعك؟
+                        </h2>
+
+                        <p class="max-w-2xl mx-auto mb-10 text-lg text-[#c3c6d7]">
+                            انضم إلى CreativeHome واحصل على استشارة هندسية احترافية من نخبة المهندسين.
+                        </p>
+
+                        <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                            @auth
+                                @if (auth()->user()->role === 'customer')
                                     <a
                                         href="{{ route('engineer.works.public') }}"
-                                        class="primary-button"
+                                        class="px-8 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl"
                                     >
-                                        <span>استكشف المهندسين</span>
-                                        <span>←</span>
+                                        اختر مهندسًا
                                     </a>
 
                                     <a
                                         href="{{ route('consultations.create') }}"
-                                        class="secondary-button"
+                                        class="px-8 py-4 text-lg font-bold border rounded-xl border-white/10 bg-white/5"
                                     >
-                                        طلب استشارة مباشرة
+                                        طلب مباشر
                                     </a>
-
                                 @else
-
                                     <a
                                         href="{{ route('dashboard') }}"
-                                        class="primary-button"
+                                        class="px-8 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl"
                                     >
-                                        الانتقال إلى لوحة التحكم
+                                        لوحة التحكم
                                     </a>
-
                                 @endif
-
                             @else
-
                                 <a
                                     href="{{ route('register') }}"
-                                    class="primary-button"
+                                    class="px-8 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl"
                                 >
-                                    ابدأ مشروعك الآن
-                                    <span>←</span>
+                                    إنشاء حساب مجاني
                                 </a>
-
-                                <a
-                                    href="{{ route('engineer.works.public') }}"
-                                    class="secondary-button"
-                                >
-                                    تصفح مكتبة الأعمال
-                                </a>
-
-                            @endauth
-
-                        </div>
-
-                        <div
-                            class="flex flex-wrap items-center gap-6 mt-10 fade-up delay-400"
-                        >
-
-                            <div class="flex items-center gap-2">
-
-                                <div class="flex -space-x-2 space-x-reverse">
-
-                                    @foreach (['م', 'ع', 'ه', 'أ'] as $letter)
-
-                                        <div
-                                            class="flex items-center justify-center text-xs font-bold border-2 rounded-full w-9 h-9 border-slate-950 bg-gradient-to-br from-blue-500 to-cyan-500"
-                                        >
-                                            {{ $letter }}
-                                        </div>
-
-                                    @endforeach
-
-                                </div>
-
-                                <div>
-
-                                    <p class="text-sm font-bold text-white">
-                                        نخبة من المهندسين
-                                    </p>
-
-                                    <p class="text-xs text-slate-400">
-                                        خبرات متعددة
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            <div class="hidden w-px h-10 bg-white/10 sm:block"></div>
-
-                            <div>
-
-                                <div class="flex text-yellow-400">
-                                    ★★★★★
-                                </div>
-
-                                <p class="mt-1 text-xs text-slate-400">
-                                    جودة ومتابعة مستمرة
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    {{-- الرسم الهندسي --}}
-
-                    <div class="relative hidden lg:block fade-in">
-
-                        <div
-                            class="absolute inset-0 rounded-full bg-blue-500/20 blur-[100px]"
-                        ></div>
-
-                        <div
-                            class="relative p-6 glass-panel rounded-[2rem] float-animation"
-                        >
-
-                            <div class="flex items-center justify-between mb-6">
-
-                                <div>
-
-                                    <p class="text-sm text-slate-400">
-                                        متابعة المشروع
-                                    </p>
-
-                                    <p class="mt-1 text-lg font-bold">
-                                        التصميم المعماري
-                                    </p>
-
-                                </div>
-
-                                <div
-                                    class="flex items-center gap-2 px-3 py-2 text-xs font-bold text-green-200 rounded-full bg-green-500/10"
-                                >
-                                    <span class="w-2 h-2 bg-green-400 rounded-full"></span>
-                                    قيد التنفيذ
-                                </div>
-
-                            </div>
-
-                            <div
-                                class="relative overflow-hidden border aspect-[4/3] rounded-3xl border-white/10 bg-gradient-to-br from-slate-900 to-slate-800"
-                            >
-
-                                {{-- شكل مبنى CSS --}}
-
-                                <div class="absolute inset-x-0 bottom-0 h-20 bg-slate-950/70"></div>
-
-                                <div class="absolute bottom-16 left-1/2 h-[280px] w-[330px] -translate-x-1/2">
-
-                                    <div
-                                        class="absolute bottom-0 left-0 w-full h-56 border shadow-2xl rounded-t-2xl border-cyan-400/20 bg-gradient-to-br from-slate-700 to-slate-900"
-                                    ></div>
-
-                                    <div
-                                        class="absolute bottom-0 w-40 h-40 border right-14 border-blue-400/20 bg-slate-800"
-                                    ></div>
-
-                                    <div class="absolute grid grid-cols-4 gap-4 bottom-28 right-8 left-8">
-
-                                        @for ($i = 0; $i < 8; $i++)
-
-                                            <div
-                                                class="h-10 border rounded-sm border-cyan-300/20 bg-cyan-400/20 shadow-[0_0_18px_rgba(34,211,238,0.08)]"
-                                            ></div>
-
-                                        @endfor
-
-                                    </div>
-
-                                    <div
-                                        class="absolute bottom-0 w-20 h-24 translate-x-1/2 border border-b-0 right-1/2 border-cyan-300/20 bg-slate-950"
-                                    ></div>
-
-                                    <div
-                                        class="absolute w-64 h-5 -translate-x-1/2 rounded-full bottom-56 left-1/2 bg-gradient-to-r from-blue-500 to-cyan-400"
-                                    ></div>
-
-                                </div>
-
-                                <div
-                                    class="absolute w-32 h-32 border rounded-full top-10 right-10 border-cyan-400/10"
-                                ></div>
-
-                                <div
-                                    class="absolute w-20 h-20 border rounded-full top-16 right-16 border-cyan-400/20"
-                                ></div>
-
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-3 mt-5">
-
-                                <div class="p-4 border rounded-2xl border-white/10 bg-white/5">
-
-                                    <p class="text-xs text-slate-400">
-                                        الإنجاز
-                                    </p>
-
-                                    <p class="mt-2 text-xl font-black text-cyan-300">
-                                        75%
-                                    </p>
-
-                                </div>
-
-                                <div class="p-4 border rounded-2xl border-white/10 bg-white/5">
-
-                                    <p class="text-xs text-slate-400">
-                                        المهندس
-                                    </p>
-
-                                    <p class="mt-2 text-sm font-bold">
-                                        تم التعيين
-                                    </p>
-
-                                </div>
-
-                                <div class="p-4 border rounded-2xl border-white/10 bg-white/5">
-
-                                    <p class="text-xs text-slate-400">
-                                        حالة الدفع
-                                    </p>
-
-                                    <p class="mt-2 text-sm font-bold text-green-300">
-                                        مدفوع
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div
-                            class="absolute p-4 glass-panel -right-12 top-32 rounded-2xl pulse-glow"
-                        >
-                            <p class="text-xs text-slate-400">
-                                إشعار جديد
-                            </p>
-
-                            <p class="mt-1 text-sm font-bold">
-                                تم تعيين مهندس لمشروعك
-                            </p>
-                        </div>
-
-                        <div
-                            class="absolute p-4 glass-panel -left-12 bottom-20 rounded-2xl"
-                        >
-                            <p class="text-xs text-slate-400">
-                                الملف النهائي
-                            </p>
-
-                            <p class="mt-1 text-sm font-bold text-cyan-300">
-                                جاهز للتحميل ✓
-                            </p>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="absolute -translate-x-1/2 bottom-8 left-1/2">
-
-                    <a
-                        href="#services"
-                        class="flex items-center justify-center border rounded-full w-11 h-11 border-white/10 bg-white/5 animate-bounce"
-                    >
-                        ↓
-                    </a>
-
-                </div>
-
-            </section>
-
-            {{-- الإحصائيات --}}
-
-            <section class="relative py-10">
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div class="grid grid-cols-2 gap-4 p-5 glass-panel rounded-3xl lg:grid-cols-4">
-
-                        <div class="p-5 text-center">
-
-                            <p
-                                class="text-3xl font-black gradient-text md:text-4xl"
-                                data-counter="{{ $statistics['engineers'] }}"
-                            >
-                                {{ $statistics['engineers'] }}
-                            </p>
-
-                            <p class="mt-2 text-sm text-slate-400">
-                                مهندس فعّال
-                            </p>
-
-                        </div>
-
-                        <div class="p-5 text-center border-r border-white/5">
-
-                            <p
-                                class="text-3xl font-black gradient-text md:text-4xl"
-                                data-counter="{{ $statistics['consultations'] }}"
-                            >
-                                {{ $statistics['consultations'] }}
-                            </p>
-
-                            <p class="mt-2 text-sm text-slate-400">
-                                استشارة مدفوعة
-                            </p>
-
-                        </div>
-
-                        <div class="p-5 text-center lg:border-r border-white/5">
-
-                            <p
-                                class="text-3xl font-black gradient-text md:text-4xl"
-                                data-counter="{{ $statistics['completed'] }}"
-                            >
-                                {{ $statistics['completed'] }}
-                            </p>
-
-                            <p class="mt-2 text-sm text-slate-400">
-                                مشروع مكتمل
-                            </p>
-
-                        </div>
-
-                        <div class="p-5 text-center border-r border-white/5">
-
-                            <p
-                                class="text-3xl font-black gradient-text md:text-4xl"
-                                data-counter="{{ $statistics['works'] }}"
-                            >
-                                {{ $statistics['works'] }}
-                            </p>
-
-                            <p class="mt-2 text-sm text-slate-400">
-                                عمل منشور
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {{-- الخدمات --}}
-
-            <section
-                id="services"
-                class="relative py-24"
-            >
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div class="max-w-3xl mx-auto text-center mb-14">
-
-                        <div
-                            class="inline-flex px-4 py-2 mb-5 text-sm font-bold text-blue-200 border rounded-full border-blue-400/20 bg-blue-500/10"
-                        >
-                            خدماتنا
-                        </div>
-
-                        <h2 class="text-3xl font-black md:text-5xl">
-                            خدمات هندسية
-
-                            <span class="gradient-text">
-                                متكاملة
-                            </span>
-                        </h2>
-
-                        <p class="mt-5 leading-8 text-slate-400">
-                            نوفر لك متخصصين في مجالات هندسية متعددة مع متابعة
-                            كاملة من لحظة إرسال الطلب حتى استلام الملفات.
-                        </p>
-
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
-                        @php
-                            $services = [
-                                [
-                                    'icon' => '🏛️',
-                                    'title' => 'التصميم المعماري',
-                                    'description' => 'تصميم مخططات معمارية حديثة تجمع بين الوظيفة والجمال.',
-                                    'color' => 'blue',
-                                ],
-                                [
-                                    'icon' => '🏗️',
-                                    'title' => 'التصميم الإنشائي',
-                                    'description' => 'حلول إنشائية آمنة ودقيقة وفق المعايير الهندسية.',
-                                    'color' => 'cyan',
-                                ],
-                                [
-                                    'icon' => '⚡',
-                                    'title' => 'الهندسة الكهربائية',
-                                    'description' => 'تصميم الأنظمة الكهربائية وتوزيع الأحمال بكفاءة.',
-                                    'color' => 'yellow',
-                                ],
-                                [
-                                    'icon' => '💧',
-                                    'title' => 'هندسة البرمجة',
-                                    'description' => 'تصميم أنظمة ويب و تعديلات على الانظمة بكفاءة عالية.',
-                                    'color' => 'emerald',
-                                ],
-                                [
-                                    'icon' => '🎨',
-                                    'title' => 'التصميم الداخلي',
-                                    'description' => 'تحويل المساحات الداخلية إلى بيئات مريحة ومميزة.',
-                                    'color' => 'purple',
-                                ],
-                                [
-                                    'icon' => '📋',
-                                    'title' => 'الاستشارات الفنية',
-                                    'description' => 'مراجعة المخططات وتقديم الحلول والتقارير الفنية.',
-                                    'color' => 'rose',
-                                ],
-                            ];
-                        @endphp
-
-                        @foreach ($services as $index => $service)
-
-                            <article
-                                class="p-7 glass-card rounded-3xl fade-up"
-                                style="animation-delay: {{ $index * 0.08 }}s"
-                            >
-
-                                <div
-                                    class="relative z-10 flex items-center justify-center mb-6 text-3xl border w-14 h-14 rounded-2xl border-white/10 bg-white/5"
-                                >
-                                    {{ $service['icon'] }}
-                                </div>
-
-                                <div class="relative z-10">
-
-                                    <h3 class="text-xl font-extrabold">
-                                        {{ $service['title'] }}
-                                    </h3>
-
-                                    <p class="mt-4 leading-7 text-slate-400">
-                                        {{ $service['description'] }}
-                                    </p>
-
-                                    @auth
-
-                                        @if (auth()->user()->role === 'customer')
-
-                                            <a
-                                                href="{{ route('consultations.create') }}"
-                                                class="inline-flex items-center gap-2 mt-6 text-sm font-bold text-cyan-300 hover:text-cyan-200"
-                                            >
-                                                اطلب الخدمة
-                                                <span>←</span>
-                                            </a>
-
-                                        @endif
-
-                                    @else
-
-                                        <a
-                                            href="{{ route('register') }}"
-                                            class="inline-flex items-center gap-2 mt-6 text-sm font-bold text-cyan-300 hover:text-cyan-200"
-                                        >
-                                            ابدأ الآن
-                                            <span>←</span>
-                                        </a>
-
-                                    @endauth
-
-                                </div>
-
-                            </article>
-
-                        @endforeach
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {{-- كيف نعمل --}}
-
-            <section
-                id="how-it-works"
-                class="relative py-24 border-y border-white/5 bg-white/[0.02]"
-            >
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div class="grid items-center gap-14 lg:grid-cols-2">
-
-                        <div>
-
-                            <div
-                                class="inline-flex px-4 py-2 mb-5 text-sm font-bold border rounded-full border-cyan-400/20 bg-cyan-500/10 text-cyan-200"
-                            >
-                                خطوات بسيطة
-                            </div>
-
-                            <h2 class="text-3xl font-black leading-tight md:text-5xl">
-                                من الفكرة إلى الإنجاز
-
-                                <span class="block mt-3 gradient-text">
-                                    في أربع خطوات
-                                </span>
-                            </h2>
-
-                            <p class="mt-6 leading-8 text-slate-400">
-                                صممنا النظام ليكون واضحًا وسهلًا، مع متابعة
-                                مستمرة وإشعارات في كل مرحلة.
-                            </p>
-
-                            <div class="mt-9">
-
-                                <a
-                                    href="{{ route('engineer.works.public') }}"
-                                    class="primary-button"
-                                >
-                                    اختر مهندسك الآن
-                                </a>
-
-                            </div>
-
-                        </div>
-
-                        <div class="space-y-4">
-
-                            @php
-                                $steps = [
-                                    [
-                                        'number' => '01',
-                                        'title' => 'اختر المهندس',
-                                        'description' => 'تصفح مكتبة الأعمال واختر المهندس المناسب لمشروعك.',
-                                    ],
-                                    [
-                                        'number' => '02',
-                                        'title' => 'أرسل تفاصيل المشروع',
-                                        'description' => 'حدد نوع الاستشارة وارفع الملفات والمعلومات المطلوبة.',
-                                    ],
-                                    [
-                                        'number' => '03',
-                                        'title' => 'ارفع إيصال الدفع',
-                                        'description' => 'اختر طريقة الدفع وأرسل الإيصال لمراجعة الإدارة.',
-                                    ],
-                                    [
-                                        'number' => '04',
-                                        'title' => 'تابع واستلم العمل',
-                                        'description' => 'تابع حالة الطلب واستلم الملف النهائي من حسابك.',
-                                    ],
-                                ];
-                            @endphp
-
-                            @foreach ($steps as $step)
-
-                                <div
-                                    class="flex gap-5 p-5 glass-card rounded-2xl"
-                                >
-
-                                    <div
-                                        class="flex items-center justify-center flex-none font-black border w-14 h-14 rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-300"
-                                    >
-                                        {{ $step['number'] }}
-                                    </div>
-
-                                    <div>
-
-                                        <h3 class="text-lg font-extrabold">
-                                            {{ $step['title'] }}
-                                        </h3>
-
-                                        <p class="mt-2 leading-7 text-slate-400">
-                                            {{ $step['description'] }}
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            @endforeach
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {{-- أحدث الأعمال --}}
-
-            <section
-                id="works"
-                class="relative py-24"
-            >
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div class="flex flex-col gap-5 mb-12 md:flex-row md:items-end md:justify-between">
-
-                        <div>
-
-                            <div
-                                class="inline-flex px-4 py-2 mb-5 text-sm font-bold text-purple-200 border rounded-full border-purple-400/20 bg-purple-500/10"
-                            >
-                                معرض الأعمال
-                            </div>
-
-                            <h2 class="text-3xl font-black md:text-5xl">
-                                أحدث أعمال
-
-                                <span class="gradient-text">
-                                    مهندسينا
-                                </span>
-                            </h2>
-
-                            <p class="max-w-2xl mt-5 leading-8 text-slate-400">
-                                استكشف بعض المشاريع التي أضافها مهندسو المكتب
-                                وتمت مراجعتها واعتمادها.
-                            </p>
-
-                        </div>
-
-                        <a
-                            href="{{ route('engineer.works.public') }}"
-                            class="secondary-button"
-                        >
-                            عرض جميع الأعمال
-                            <span>←</span>
-                        </a>
-
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
-                        @forelse ($latestWorks as $work)
-
-                            <article class="group glass-card rounded-3xl">
-
-                                <div class="relative h-64 overflow-hidden">
-
-                                    @if ($work->coverImage)
-
-                                        <img
-                                            src="{{ asset('storage/' . $work->coverImage->image_path) }}"
-                                            alt="{{ $work->title }}"
-                                            class="object-cover w-full h-full transition duration-700 group-hover:scale-110"
-                                        >
-
-                                    @else
-
-                                        <div
-                                            class="flex items-center justify-center w-full h-full text-5xl bg-gradient-to-br from-slate-800 to-slate-900"
-                                        >
-                                            🏗️
-                                        </div>
-
-                                    @endif
-
-                                    <div
-                                        class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"
-                                    ></div>
-
-                                    @if ($work->project_type)
-
-                                        <span
-                                            class="absolute px-3 py-2 text-xs font-bold border rounded-full top-4 right-4 border-white/10 bg-slate-950/70 backdrop-blur-lg"
-                                        >
-                                            {{ $work->project_type }}
-                                        </span>
-
-                                    @endif
-
-                                </div>
-
-                                <div class="relative z-10 p-6">
-
-                                    <h3 class="text-xl font-extrabold">
-                                        {{ $work->title }}
-                                    </h3>
-
-                                    <div class="flex items-center gap-3 mt-4">
-
-                                        <div
-                                            class="flex items-center justify-center w-10 h-10 font-bold rounded-full bg-gradient-to-br from-blue-500 to-cyan-500"
-                                        >
-                                            {{ mb_substr($work->engineer?->name ?? 'م', 0, 1) }}
-                                        </div>
-
-                                        <div>
-
-                                            <p class="text-sm font-bold">
-                                                {{ $work->engineer?->name ?? 'مهندس المكتب' }}
-                                            </p>
-
-                                            <p class="text-xs text-slate-400">
-                                                {{ $work->location ?? 'الموقع غير محدد' }}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div class="flex gap-3 mt-6">
-
-                                        <a
-                                            href="{{ route('engineer.works.show', $work) }}"
-                                            class="flex-1 primary-button"
-                                        >
-                                            عرض المشروع
-                                        </a>
-
-                                        @auth
-
-                                            @if (
-                                                auth()->user()->role === 'customer'
-                                                && $work->engineer
-                                            )
-
-                                                <a
-                                                    href="{{ route(
-                                                        'consultations.create-for-engineer',
-                                                        $work->engineer
-                                                    ) }}"
-                                                    class="flex items-center justify-center w-12 h-12 border rounded-xl border-white/10 bg-white/5 hover:bg-green-500/20"
-                                                    title="اطلب هذا المهندس"
-                                                >
-                                                    ✉️
-                                                </a>
-
-                                            @endif
-
-                                        @endauth
-
-                                    </div>
-
-                                </div>
-
-                            </article>
-
-                        @empty
-
-                            <div
-                                class="p-12 text-center col-span-full glass-panel rounded-3xl"
-                            >
-
-                                <div class="mb-4 text-5xl">
-                                    🏗️
-                                </div>
-
-                                <h3 class="text-xl font-bold">
-                                    لا توجد أعمال منشورة حاليًا
-                                </h3>
-
-                                <p class="mt-3 text-slate-400">
-                                    ستظهر هنا أحدث أعمال المهندسين بعد اعتمادها.
-                                </p>
-
-                            </div>
-
-                        @endforelse
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {{-- المهندسون --}}
-
-            <section
-                id="engineers"
-                class="relative py-24 border-y border-white/5 bg-white/[0.02]"
-            >
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div class="max-w-3xl mx-auto text-center mb-14">
-
-                        <div
-                            class="inline-flex px-4 py-2 mb-5 text-sm font-bold text-green-200 border rounded-full border-green-400/20 bg-green-500/10"
-                        >
-                            فريقنا
-                        </div>
-
-                        <h2 class="text-3xl font-black md:text-5xl">
-                            مهندسون يمكنك
-
-                            <span class="gradient-text">
-                                الوثوق بهم
-                            </span>
-                        </h2>
-
-                        <p class="mt-5 leading-8 text-slate-400">
-                            تعرف على مهندسينا واختر صاحب الخبرة الأنسب لمشروعك.
-                        </p>
-
-                    </div>
-
-                    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
-                        @forelse ($featuredEngineers as $engineer)
-
-                            <article
-                                class="p-6 text-center glass-card rounded-3xl"
-                            >
-
-                           <div class="relative w-24 h-24 mx-auto">
-
-    @if ($engineer->profile_photo)
-
-        <img
-            src="{{ asset('storage/' . $engineer->profile_photo) }}"
-            alt="{{ $engineer->name }}"
-            class="object-cover w-24 h-24 border rounded-full shadow-xl border-cyan-400/20"
-        >
-
-    @else
-
-        <div
-            class="flex items-center justify-center w-24 h-24 text-3xl font-black border rounded-full shadow-xl border-cyan-400/20 bg-gradient-to-br from-blue-600 to-cyan-500 shadow-blue-600/20"
-        >
-            {{ mb_substr($engineer->name, 0, 1) }}
-        </div>
-
-    @endif
-
-    <span
-        class="absolute w-5 h-5 bg-green-400 border-4 rounded-full bottom-1 left-1 border-slate-900"
-    ></span>
-
-</div>
-
-                                <h3 class="mt-5 text-lg font-extrabold">
-                                    {{ $engineer->name }}
-                                </h3>
-
-                                <p class="mt-2 text-sm text-slate-400">
-                                    مهندس معتمد في المنصة
-                                </p>
-
-                                <div class="grid grid-cols-2 gap-3 mt-6">
-
-                                    <div class="p-3 rounded-xl bg-white/5">
-
-                                        <p class="font-black text-cyan-300">
-                                            {{ $engineer->engineerWorks->count() }}
-                                        </p>
-
-                                        <p class="mt-1 text-xs text-slate-400">
-                                            أعمال
-                                        </p>
-
-                                    </div>
-
-                                    <div class="p-3 rounded-xl bg-white/5">
-
-                                        <p class="font-black text-yellow-300">
-                                            ★ 5
-                                        </p>
-
-                                        <p class="mt-1 text-xs text-slate-400">
-                                            التقييم
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                                @auth
-
-                                    @if (auth()->user()->role === 'customer')
-
-                                        <a
-                                            href="{{ route(
-                                                'consultations.create-for-engineer',
-                                                $engineer
-                                            ) }}"
-                                            class="flex w-full mt-5 primary-button"
-                                        >
-                                            اطلب هذا المهندس
-                                        </a>
-
-                                    @endif
-
-                                @else
-
-                                    <a
-                                        href="{{ route('login') }}"
-                                        class="flex w-full mt-5 primary-button"
-                                    >
-                                        سجّل لاختيار المهندس
-                                    </a>
-
-                                @endauth
-
-                            </article>
-
-                        @empty
-
-                            <div
-                                class="p-10 text-center col-span-full glass-panel rounded-3xl"
-                            >
-                                لا يوجد مهندسون متاحون حاليًا.
-                            </div>
-
-                        @endforelse
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {{-- CTA --}}
-
-            <section class="relative py-24">
-
-                <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                    <div
-                        class="relative px-6 py-16 overflow-hidden text-center border rounded-[2.5rem] border-blue-400/20 bg-gradient-to-l from-blue-700/80 via-blue-600/70 to-cyan-600/70 shadow-2xl shadow-blue-950/40 md:px-14"
-                    >
-
-                        <div
-                            class="absolute w-64 h-64 rounded-full -top-32 -right-20 bg-white/10 blur-2xl"
-                        ></div>
-
-                        <div
-                            class="absolute w-64 h-64 rounded-full -bottom-32 -left-20 bg-purple-500/20 blur-2xl"
-                        ></div>
-
-                        <div class="relative z-10">
-
-                            <p class="font-bold text-cyan-100">
-                                هل لديك مشروع جديد؟
-                            </p>
-
-                            <h2 class="mt-4 text-3xl font-black md:text-5xl">
-                                دعنا نساعدك في تحويله إلى واقع
-                            </h2>
-
-                            <p class="max-w-2xl mx-auto mt-6 leading-8 text-blue-100">
-                                أرسل طلبك الآن واختر المهندس المناسب، وتابع جميع
-                                مراحل المشروع من حسابك.
-                            </p>
-
-                            <div class="flex flex-col justify-center gap-4 mt-9 sm:flex-row">
-
-                                @auth
-
-                                    @if (auth()->user()->role === 'customer')
-
-                                        <a
-                                            href="{{ route('engineer.works.public') }}"
-                                            class="py-4 font-extrabold text-blue-700 transition bg-white px-7 rounded-2xl hover:-translate-y-1 hover:shadow-xl"
-                                        >
-                                            اختر مهندسًا
-                                        </a>
-
-                                        <a
-                                            href="{{ route('consultations.create') }}"
-                                            class="py-4 font-extrabold text-white transition border px-7 rounded-2xl border-white/30 bg-white/10 hover:bg-white/20"
-                                        >
-                                            طلب مباشر
-                                        </a>
-
-                                    @else
-
-                                        <a
-                                            href="{{ route('dashboard') }}"
-                                            class="py-4 font-extrabold text-blue-700 bg-white px-7 rounded-2xl"
-                                        >
-                                            لوحة التحكم
-                                        </a>
-
-                                    @endif
-
-                                @else
-
-                                    <a
-                                        href="{{ route('register') }}"
-                                        class="py-4 font-extrabold text-blue-700 transition bg-white px-7 rounded-2xl hover:-translate-y-1"
-                                    >
-                                        إنشاء حساب مجاني
-                                    </a>
-
-                                    <a
-                                        href="{{ route('login') }}"
-                                        class="py-4 font-extrabold text-white border px-7 rounded-2xl border-white/30 bg-white/10"
-                                    >
-                                        تسجيل الدخول
-                                    </a>
-
-                                @endauth
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </main>
-
-        {{-- Footer --}}
-
-        <footer class="relative z-10 border-t border-white/10">
-
-            <div class="px-4 mx-auto py-14 max-w-7xl sm:px-6 lg:px-8">
-
-                <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-
-                    <div>
-
-                        <div class="flex items-center gap-3">
-
-                            <div
-                                class="flex items-center justify-center font-black w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500"
-                            >
-                                م
-                            </div>
-
-                            <div>
-
-                                <p class="font-extrabold">
-                                    المكتب الهندسي
-                                </p>
-
-                                <p class="text-xs text-slate-400">
-                                    إدارة الاستشارات والمشاريع
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <p class="mt-5 leading-7 text-slate-400">
-                            منصة تجمع العملاء والمهندسين وتسهّل إدارة
-                            الاستشارات والمدفوعات والملفات.
-                        </p>
-
-                    </div>
-
-                    <div>
-
-                        <h3 class="font-extrabold">
-                            روابط سريعة
-                        </h3>
-
-                        <div class="mt-5 space-y-3 text-sm text-slate-400">
-
-                            <a
-                                href="#services"
-                                class="block hover:text-cyan-300"
-                            >
-                                خدماتنا
-                            </a>
-
-                            <a
-                                href="#works"
-                                class="block hover:text-cyan-300"
-                            >
-                                معرض الأعمال
-                            </a>
-
-                            <a
-                                href="#engineers"
-                                class="block hover:text-cyan-300"
-                            >
-                                المهندسون
-                            </a>
-
-                            <a
-                                href="{{ route('engineer.works.public') }}"
-                                class="block hover:text-cyan-300"
-                            >
-                                المكتبة الكاملة
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                    <div>
-
-                        <h3 class="font-extrabold">
-                            الحساب
-                        </h3>
-
-                        <div class="mt-5 space-y-3 text-sm text-slate-400">
-
-                            @auth
-
-                                <a
-                                    href="{{ route('dashboard') }}"
-                                    class="block hover:text-cyan-300"
-                                >
-                                    لوحة التحكم
-                                </a>
-
-                                <a
-                                    href="{{ route('notifications.index') }}"
-                                    class="block hover:text-cyan-300"
-                                >
-                                    الإشعارات
-                                </a>
-
-                                <a
-                                    href="{{ route('profile.edit') }}"
-                                    class="block hover:text-cyan-300"
-                                >
-                                    الملف الشخصي
-                                </a>
-
-                            @else
 
                                 <a
                                     href="{{ route('login') }}"
-                                    class="block hover:text-cyan-300"
+                                    class="px-8 py-4 text-lg font-bold border rounded-xl border-white/10 bg-white/5"
                                 >
                                     تسجيل الدخول
                                 </a>
-
-                                <a
-                                    href="{{ route('register') }}"
-                                    class="block hover:text-cyan-300"
-                                >
-                                    إنشاء حساب
-                                </a>
-
                             @endauth
-
                         </div>
-
                     </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-                    <div>
+    {{-- Footer --}}
+    <footer class="px-6 py-16 border-t bg-[#060e20] border-white/10">
+        <div class="grid gap-12 mx-auto max-w-7xl md:grid-cols-4">
+            <div class="md:col-span-2">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-blue-600/20 text-[#b4c5ff]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6">
+                            <path d="M3 11.5 12 4l9 7.5"/>
+                            <path d="M5.5 10.5V21h13V10.5"/>
+                            <path d="M9 21v-6h6v6"/>
+                        </svg>
+                    </span>
 
-                        <h3 class="font-extrabold">
-                            تواصل معنا
-                        </h3>
-
-                        <div class="mt-5 space-y-4 text-sm text-slate-400">
-
-                            <p class="flex items-center gap-3">
-                                <span>📍</span>
-                                فلسطين
-                            </p>
-
-                            <p class="flex items-center gap-3">
-    <span>✉️</span>
-
-    <a
-        href="mailto:loea1039@gmail.com"
-        class="text-cyan-400 hover:underline"
-    >
-        loea1039@gmail.com
-    </a>
-</p>
-
-<p class="flex items-center gap-3">
-    <span>📞</span>
-
-    <a
-        href="tel:+970597349543"
-        class="text-cyan-400 hover:underline"
-    >
-        +970 597349543
-    </a>
-</p>
-                        </div>
-
-                    </div>
-
+                    <span class="text-xl font-black text-[#b4c5ff]">
+                        CreativeHome
+                    </span>
                 </div>
 
-                <div
-                    class="flex flex-col gap-3 mt-10 text-sm border-t pt-7 md:flex-row md:items-center md:justify-between border-white/10 text-slate-500"
-                >
-
-                    <p>
-                        © {{ date('Y') }} المكتب الهندسي. جميع الحقوق محفوظة.
-                    </p>
-
-                    <p>
-                        صُمم لإدارة المشاريع الهندسية بكفاءة.
-                    </p>
-
-                </div>
-
+                <p class="max-w-md mt-5 leading-8 text-[#c3c6d7]">
+                    منصة هندسية متكاملة تجمع العملاء والمهندسين وتسهّل طلب الاستشارات ومتابعة المشاريع.
+                </p>
             </div>
 
-        </footer>
+            <div>
+                <h3 class="mb-5 font-bold">
+                    روابط سريعة
+                </h3>
 
-        {{-- زر الصعود --}}
+                <div class="space-y-3 text-sm text-[#c3c6d7]">
+                    <a href="#services" class="block hover:text-white">خدماتنا</a>
+                    <a href="#works" class="block hover:text-white">أعمالنا</a>
+                    <a href="#engineers" class="block hover:text-white">المهندسون</a>
+                </div>
+            </div>
 
-        <button
-            id="welcome-scroll-button"
-            type="button"
-            aria-label="العودة إلى أعلى الصفحة"
-            class="fixed z-50 items-center justify-center hidden w-12 h-12 text-lg font-black transition-all duration-300 border rounded-full shadow-xl bottom-6 left-6 border-cyan-400/30 bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950 hover:-translate-y-1 hover:shadow-cyan-500/30 active:scale-95"
-        >
-            ↑
-        </button>
+            <div>
+                <h3 class="mb-5 font-bold">
+                    الحساب
+                </h3>
 
-    </div>
+                <div class="space-y-3 text-sm text-[#c3c6d7]">
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="block hover:text-white">
+                            لوحة التحكم
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="block hover:text-white">
+                            تسجيل الدخول
+                        </a>
+
+                        <a href="{{ route('register') }}" class="block hover:text-white">
+                            إنشاء حساب
+                        </a>
+                    @endauth
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-8 mt-12 text-sm text-center border-t border-white/10 text-[#8d90a0]">
+            © {{ now()->year }} CreativeHome. جميع الحقوق محفوظة.
+        </div>
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const nav = document.querySelector('nav');
-            const menuButton = document.getElementById(
-                'welcome-mobile-menu-button'
-            );
-            const mobileMenu = document.getElementById(
-                'welcome-mobile-menu'
-            );
-            const openIcon = document.getElementById(
-                'welcome-menu-open-icon'
-            );
-            const closeIcon = document.getElementById(
-                'welcome-menu-close-icon'
-            );
-            const mobileLinks = document.querySelectorAll(
-                '[data-welcome-mobile-link]'
-            );
-            const scrollButton = document.getElementById(
-                'welcome-scroll-button'
-            );
+            const menuButton =
+                document.getElementById(
+                    'welcome-mobile-menu-button'
+                );
 
-            function setMobileMenu(open) {
-                if (
-                    !menuButton
-                    || !mobileMenu
-                    || !openIcon
-                    || !closeIcon
-                ) {
-                    return;
-                }
+            const menu =
+                document.getElementById(
+                    'welcome-mobile-menu'
+                );
 
-                mobileMenu.classList.toggle('hidden', !open);
-                openIcon.classList.toggle('hidden', open);
-                closeIcon.classList.toggle('hidden', !open);
+            const openIcon =
+                document.getElementById(
+                    'welcome-menu-open-icon'
+                );
 
-                menuButton.setAttribute(
+            const closeIcon =
+                document.getElementById(
+                    'welcome-menu-close-icon'
+                );
+
+            const closeMenu = () => {
+                menu?.classList.add('hidden');
+                openIcon?.classList.remove('hidden');
+                closeIcon?.classList.add('hidden');
+                menuButton?.setAttribute(
                     'aria-expanded',
-                    open ? 'true' : 'false'
+                    'false'
                 );
+            };
 
-                menuButton.setAttribute(
-                    'aria-label',
-                    open ? 'إغلاق القائمة' : 'فتح القائمة'
-                );
+            menuButton?.addEventListener(
+                'click',
+                function () {
+                    const isOpen =
+                        ! menu.classList.contains(
+                            'hidden'
+                        );
 
-                if (window.innerWidth < 1024) {
-                    document.body.classList.toggle(
-                        'overflow-hidden',
-                        open
+                    menu.classList.toggle(
+                        'hidden'
+                    );
+
+                    openIcon.classList.toggle(
+                        'hidden',
+                        ! isOpen
+                    );
+
+                    closeIcon.classList.toggle(
+                        'hidden',
+                        isOpen
+                    );
+
+                    menuButton.setAttribute(
+                        'aria-expanded',
+                        String(! isOpen)
                     );
                 }
+            );
+
+            document
+                .querySelectorAll(
+                    '[data-welcome-mobile-link]'
+                )
+                .forEach((link) => {
+                    link.addEventListener(
+                        'click',
+                        closeMenu
+                    );
+                });
+
+            const observer =
+                new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach(
+                            (entry) => {
+                                if (
+                                    entry.isIntersecting
+                                ) {
+                                    entry.target
+                                        .classList
+                                        .add('active');
+
+                                    observer.unobserve(
+                                        entry.target
+                                    );
+                                }
+                            }
+                        );
+                    },
+                    {
+                        threshold: 0.12,
+                    }
+                );
+
+            document
+                .querySelectorAll('.reveal')
+                .forEach((element) => {
+                    observer.observe(element);
+                });
+
+            const canvas =
+                document.getElementById(
+                    'creativehome-shader'
+                );
+
+            if (! canvas) {
+                return;
             }
 
-            if (menuButton && mobileMenu) {
-                menuButton.addEventListener('click', function (event) {
-                    event.stopPropagation();
+            const gl =
+                canvas.getContext('webgl')
+                || canvas.getContext(
+                    'experimental-webgl'
+                );
 
-                    const isOpen =
-                        menuButton.getAttribute('aria-expanded')
-                        === 'true';
-
-                    setMobileMenu(!isOpen);
-                });
-
-                mobileLinks.forEach(function (link) {
-                    link.addEventListener('click', function () {
-                        setMobileMenu(false);
-                    });
-                });
-
-                document.addEventListener('click', function (event) {
-                    const isOpen =
-                        menuButton.getAttribute('aria-expanded')
-                        === 'true';
-
-                    if (
-                        isOpen
-                        && nav
-                        && !nav.contains(event.target)
-                    ) {
-                        setMobileMenu(false);
-                    }
-                });
-
-                document.addEventListener('keydown', function (event) {
-                    if (event.key === 'Escape') {
-                        setMobileMenu(false);
-                    }
-                });
-
-                window.addEventListener('resize', function () {
-                    if (window.innerWidth >= 1024) {
-                        setMobileMenu(false);
-                    }
-                });
+            if (! gl) {
+                return;
             }
 
-            function updateScrollButton() {
-                if (!scrollButton) {
-                    return;
+            const syncSize = () => {
+                const width =
+                    canvas.clientWidth
+                    || window.innerWidth;
+
+                const height =
+                    canvas.clientHeight
+                    || window.innerHeight;
+
+                if (
+                    canvas.width !== width
+                    || canvas.height !== height
+                ) {
+                    canvas.width = width;
+                    canvas.height = height;
                 }
+            };
 
-                const shouldShow = window.scrollY > 500;
+            const vertexShaderSource = `
+                attribute vec2 a_position;
+                varying vec2 v_texCoord;
 
-                scrollButton.classList.toggle(
-                    'hidden',
-                    !shouldShow
+                void main() {
+                    v_texCoord =
+                        a_position * 0.5 + 0.5;
+
+                    gl_Position =
+                        vec4(
+                            a_position,
+                            0.0,
+                            1.0
+                        );
+                }
+            `;
+
+            const fragmentShaderSource = `
+                precision highp float;
+
+                varying vec2 v_texCoord;
+
+                uniform float u_time;
+                uniform vec2 u_resolution;
+
+                void main() {
+                    vec2 uv = v_texCoord;
+
+                    float noise =
+                        sin(
+                            uv.x * 3.0
+                            + u_time * 0.5
+                        )
+                        * cos(
+                            uv.y * 2.0
+                            + u_time * 0.3
+                        );
+
+                    noise +=
+                        sin(
+                            uv.y * 5.0
+                            - u_time * 0.4
+                        ) * 0.5;
+
+                    vec3 color1 =
+                        vec3(
+                            0.043,
+                            0.075,
+                            0.149
+                        );
+
+                    vec3 color2 =
+                        vec3(
+                            0.145,
+                            0.388,
+                            0.922
+                        );
+
+                    vec3 color3 =
+                        vec3(
+                            0.537,
+                            0.122,
+                            0.941
+                        );
+
+                    vec3 finalColor =
+                        mix(
+                            color1,
+                            color2,
+                            noise * 0.2 + 0.1
+                        );
+
+                    finalColor =
+                        mix(
+                            finalColor,
+                            color3,
+                            clamp(
+                                sin(
+                                    u_time * 0.2
+                                    + uv.x * 2.0
+                                ) * 0.1,
+                                0.0,
+                                1.0
+                            )
+                        );
+
+                    gl_FragColor =
+                        vec4(
+                            finalColor,
+                            1.0
+                        );
+                }
+            `;
+
+            const compileShader = (
+                type,
+                source
+            ) => {
+                const shader =
+                    gl.createShader(type);
+
+                gl.shaderSource(
+                    shader,
+                    source
                 );
 
-                scrollButton.classList.toggle(
-                    'flex',
-                    shouldShow
+                gl.compileShader(shader);
+
+                return shader;
+            };
+
+            const program =
+                gl.createProgram();
+
+            gl.attachShader(
+                program,
+                compileShader(
+                    gl.VERTEX_SHADER,
+                    vertexShaderSource
+                )
+            );
+
+            gl.attachShader(
+                program,
+                compileShader(
+                    gl.FRAGMENT_SHADER,
+                    fragmentShaderSource
+                )
+            );
+
+            gl.linkProgram(program);
+            gl.useProgram(program);
+
+            const buffer =
+                gl.createBuffer();
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                buffer
+            );
+
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array([
+                    -1,
+                    -1,
+                    1,
+                    -1,
+                    -1,
+                    1,
+                    1,
+                    1,
+                ]),
+                gl.STATIC_DRAW
+            );
+
+            const position =
+                gl.getAttribLocation(
+                    program,
+                    'a_position'
                 );
-            }
 
-            if (scrollButton) {
-                scrollButton.addEventListener('click', function () {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth',
-                    });
-                });
+            gl.enableVertexAttribArray(
+                position
+            );
 
-                window.addEventListener(
-                    'scroll',
-                    updateScrollButton,
-                    { passive: true }
+            gl.vertexAttribPointer(
+                position,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            const timeUniform =
+                gl.getUniformLocation(
+                    program,
+                    'u_time'
                 );
 
-                updateScrollButton();
-            }
+            const resolutionUniform =
+                gl.getUniformLocation(
+                    program,
+                    'u_resolution'
+                );
+
+            const render = (time) => {
+                syncSize();
+
+                gl.viewport(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+                gl.uniform1f(
+                    timeUniform,
+                    time * 0.001
+                );
+
+                gl.uniform2f(
+                    resolutionUniform,
+                    canvas.width,
+                    canvas.height
+                );
+
+                gl.drawArrays(
+                    gl.TRIANGLE_STRIP,
+                    0,
+                    4
+                );
+
+                requestAnimationFrame(
+                    render
+                );
+            };
+
+            window.addEventListener(
+                'resize',
+                syncSize
+            );
+
+            requestAnimationFrame(
+                render
+            );
         });
     </script>
-
 </body>
-
 </html>
