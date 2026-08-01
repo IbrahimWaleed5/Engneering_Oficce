@@ -4,15 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultation;
 use App\Models\User;
+use Illuminate\View\View;
 
 class EngineerProfileController extends Controller
 {
-    public function show(User $user)
+    public function show(User $user): View
     {
         abort_unless(
             $user->role === 'engineer'
-            && $user->status === 'active'
-            && $user->hasActiveEngineerMembership(),
+            && $user->status === 'active',
+            404
+        );
+
+        $currentUser = auth()->user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | السماح بفتح ملف المهندس
+        |--------------------------------------------------------------------------
+        |
+        | الملف العام يحتاج عضوية مهندس فعالة.
+        | لكن العميل الذي لديه استشارة مع المهندس يستطيع فتح ملفه
+        | حتى لو انتهت العضوية بعد إنشاء الاستشارة.
+        |
+        */
+
+        $hasConsultationAccess = false;
+
+        if ($currentUser) {
+            $hasConsultationAccess =
+                $currentUser->role === 'admin'
+                || (int) $currentUser->id === (int) $user->id
+                || Consultation::query()
+                    ->where('engineer_id', $user->id)
+                    ->where('customer_id', $currentUser->id)
+                    ->exists();
+        }
+
+        abort_unless(
+            $user->hasActiveEngineerMembership()
+            || $hasConsultationAccess,
             404
         );
 
@@ -48,13 +79,13 @@ class EngineerProfileController extends Controller
         $reviewableConsultation = null;
 
         if (
-            auth()->check()
-            && auth()->id() !== $user->id
+            $currentUser
+            && (int) $currentUser->id !== (int) $user->id
         ) {
             $reviewableConsultation = Consultation::query()
                 ->where(
                     'customer_id',
-                    auth()->id()
+                    $currentUser->id
                 )
                 ->where(
                     'engineer_id',

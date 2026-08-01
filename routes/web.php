@@ -47,11 +47,15 @@ Route::get('/engineer-library/{engineerWork}', [
     'show',
 ])->name('engineer.works.show');
 
-Route::get('/engineers/{user}', [
-    EngineerProfileController::class,
-    'show',
-])->name('engineers.show');
-
+Route::get(
+    '/engineers/{user}',
+    [
+        EngineerProfileController::class,
+        'show',
+    ]
+)
+    ->whereNumber('user')
+    ->name('engineers.show');
 /*
 |--------------------------------------------------------------------------
 | Dashboard

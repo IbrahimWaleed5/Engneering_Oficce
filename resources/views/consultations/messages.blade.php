@@ -821,10 +821,13 @@
                         <div class="flex items-center min-w-0 gap-3">
                             @if ($otherUser && $otherUser->role === 'engineer')
                                 <a
-                                    href="{{ route('engineers.show', $otherUser) }}"
-                                    class="relative flex-none group"
-                                    title="فتح الملف الشخصي للمهندس"
-                                >
+    href="{{ route(
+        'engineers.show',
+        ['user' => $otherUser->id]
+    ) }}"
+    class="relative flex-none group"
+    title="فتح الملف الشخصي للمهندس"
+>
                                     @if ($otherUser->profile_photo)
                                         <img
                                             src="{{ asset('storage/' . $otherUser->profile_photo) }}"
