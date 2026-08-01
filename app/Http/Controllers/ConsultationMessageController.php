@@ -15,26 +15,24 @@ use Illuminate\View\View;
 
 class ConsultationMessageController extends Controller
 {
-    public function index(
-        Consultation $consultation
-    ): View {
-        $this->authorize(
-            'viewConversation',
-            $consultation
-        );
+   public function index(
+    Request $request,
+    Consultation $consultation
+) {
+    $conversation = $consultation->conversation;
 
-        $consultation->load([
-            'customer',
-            'engineer',
-            'consultationType',
-            'messages.sender',
-        ]);
-
-        return view(
-            'consultations.messages',
-            compact('consultation')
+    if (! $conversation) {
+        return back()->with(
+            'error',
+            'لم يتم إنشاء محادثة لهذه الاستشارة بعد.'
         );
     }
+
+    return redirect()->route(
+        'conversations.show',
+        $conversation
+    );
+}
 
     public function store(
         Request $request,
