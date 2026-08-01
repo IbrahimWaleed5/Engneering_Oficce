@@ -411,7 +411,9 @@
                                 @else
                                     <h5 class="font-bold text-[#dae2fd]">{{ $otherUser?->name ?? 'المستخدم' }}</h5>
                                 @endif
-                                <p class="text-sm text-[#c3c6d7]">{{ $otherUser?->role === 'engineer' ? 'المهندس المسؤول' : '{{ $roleLabels[$otherUser?->role] ?? 'المستخدم الآخر' }}' }}</p>
+                                <p class="text-sm text-[#c3c6d7]">{{ $otherUser?->role === 'engineer'
+    ? 'المهندس المسؤول'
+    : ($roleLabels[$otherUser?->role] ?? 'المستخدم الآخر') }}</p>
                                 <p class="mt-1 text-xs text-[#c3c6d7]"><span class="presence-status">غير متصل</span><span id="headerTypingStatus" class="hidden text-[#b4c5ff]"> · يكتب الآن...</span></p>
                             </div>
                         </div>
