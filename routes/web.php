@@ -1,31 +1,29 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\ConsultationController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\EngineerWorkController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ConsultationMessageController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\EngineerSpecialtyController;
-use App\Http\Controllers\EngineerProfileController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EngineerApplicationController;
-use App\Http\Middleware\EnsureActiveEngineerMembership;
+use App\Http\Controllers\EngineerProfileController;
 use App\Http\Controllers\EngineerReviewController;
+use App\Http\Controllers\EngineerSpecialtyController;
+use App\Http\Controllers\EngineerWorkController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Auth\PublicEmailVerificationController;
-
+use App\Http\Controllers\UserController;
+use App\Http\Middleware\EnsureActiveEngineerMembership;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SecureFileController;
 
 /*
 |--------------------------------------------------------------------------
-| الصفحة الرئيسية
+| الصفحة الرئيسية والصفحات العامة
 |--------------------------------------------------------------------------
 */
 
@@ -34,18 +32,39 @@ Route::get('/', [
     'index',
 ])->name('home');
 
+Route::view(
+    '/payment-information',
+    'payment-information'
+)->name('payment-information');
+
+Route::get('/engineer-library', [
+    EngineerWorkController::class,
+    'publicIndex',
+])->name('engineer.works.public');
+
+Route::get('/engineer-library/{engineerWork}', [
+    EngineerWorkController::class,
+    'show',
+])->name('engineer.works.show');
+
+Route::get('/engineers/{user}', [
+    EngineerProfileController::class,
+    'show',
+])->name('engineers.show');
+
 /*
 |--------------------------------------------------------------------------
 | Dashboard
 |--------------------------------------------------------------------------
 */
 
-Route::get(
-    '/dashboard',
-    [DashboardController::class, 'index']
-)
+Route::get('/dashboard', [
+    DashboardController::class,
+    'index',
+])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
 /*
 |--------------------------------------------------------------------------
 | إعدادات الحساب
@@ -53,32 +72,26 @@ Route::get(
 */
 
 Route::middleware('auth')->group(function () {
-
-    // صفحة البيانات الشخصية
     Route::get('/profile', [
         ProfileController::class,
         'edit',
     ])->name('profile.edit');
 
-    // صفحة تغيير كلمة المرور
     Route::get('/profile/password', [
         ProfileController::class,
         'editPassword',
     ])->name('profile.password.edit');
 
-    // صفحة حذف الحساب
     Route::get('/profile/delete', [
         ProfileController::class,
         'deleteAccount',
     ])->name('profile.delete');
 
-    // تحديث البيانات الشخصية
     Route::patch('/profile', [
         ProfileController::class,
         'update',
     ])->name('profile.update');
 
-    // حذف الحساب نهائيًا
     Route::delete('/profile', [
         ProfileController::class,
         'destroy',
@@ -87,10 +100,9 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| استشارات العميل
+| استشارات العميل وإنشاء الاستشارات
 |--------------------------------------------------------------------------
 */
-
 
 Route::get('/my-consultations', [
     ConsultationController::class,
@@ -98,11 +110,33 @@ Route::get('/my-consultations', [
 ])
     ->middleware([
         'auth',
+        'verified',
         'role:customer,engineer,admin',
     ])
     ->name('consultations.mine');
 
-    /*
+Route::middleware([
+    'auth',
+    'verified',
+    'role:customer,engineer,admin',
+])->group(function () {
+    Route::get('/consultations/create', [
+        ConsultationController::class,
+        'create',
+    ])->name('consultations.create');
+
+    Route::get('/consultations/create/{engineer}', [
+        ConsultationController::class,
+        'createForEngineer',
+    ])->name('consultations.create-for-engineer');
+
+    Route::post('/consultations', [
+        ConsultationController::class,
+        'store',
+    ])->name('consultations.store');
+});
+
+/*
 |--------------------------------------------------------------------------
 | عرض جميع الاستشارات — المدير والموظف
 |--------------------------------------------------------------------------
@@ -114,16 +148,10 @@ Route::get('/consultations', [
 ])
     ->middleware([
         'auth',
+        'verified',
         'role:admin,employee',
     ])
     ->name('consultations.index');
-/*
-|--------------------------------------------------------------------------
-| عرض جميع الاستشارات
-|--------------------------------------------------------------------------
-*/
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -133,9 +161,9 @@ Route::get('/consultations', [
 
 Route::middleware([
     'auth',
+    'verified',
     'role:admin',
 ])->group(function () {
-
     Route::get('/employees', [
         EmployeeController::class,
         'index',
@@ -160,9 +188,9 @@ Route::middleware([
 
 Route::middleware([
     'auth',
+    'verified',
     'role:admin',
 ])->group(function () {
-
     Route::get('/consultations/{consultation}/assign', [
         ConsultationController::class,
         'assignForm',
@@ -180,37 +208,48 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::get('/engineer/consultations', [
-    ConsultationController::class,
-    'engineerConsultations',
-])
-    ->middleware([
-        'auth',
-        'role:engineer',
-        EnsureActiveEngineerMembership::class,
-    ])
-    ->name('engineer.consultations');
-Route::post(
-    '/consultations/{consultation}/upload-engineer-file',
-    [
+Route::middleware([
+    'auth',
+    'verified',
+    'role:engineer',
+    EnsureActiveEngineerMembership::class,
+])->group(function () {
+    Route::get('/engineer/consultations', [
+        ConsultationController::class,
+        'engineerConsultations',
+    ])->name('engineer.consultations');
+
+    Route::post('/consultations/{consultation}/upload-engineer-file', [
         ConsultationController::class,
         'uploadEngineerFile',
-    ]
-)
-    ->middleware([
-        'auth',
-        'role:engineer,admin',
-    ])
-    ->name('consultations.engineer-file.upload');
+    ])->name('consultations.upload-engineer-file');
+
+    Route::prefix('engineer')
+        ->name('engineer.')
+        ->group(function () {
+            Route::get('/specialty', [
+                EngineerSpecialtyController::class,
+                'edit',
+            ])->name('specialty.edit');
+
+            Route::put('/specialty', [
+                EngineerSpecialtyController::class,
+                'update',
+            ])->name('specialty.update');
+        });
+});
 
 /*
 |--------------------------------------------------------------------------
-| الدفع
+| الدفع — العميل أو المدير
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-
+Route::middleware([
+    'auth',
+    'verified',
+    'role:customer,admin',
+])->group(function () {
     Route::get('/consultations/{consultation}/payment', [
         PaymentController::class,
         'create',
@@ -230,9 +269,9 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware([
     'auth',
+    'verified',
     'role:admin',
 ])->group(function () {
-
     Route::get('/payments', [
         PaymentController::class,
         'index',
@@ -242,6 +281,11 @@ Route::middleware([
         PaymentController::class,
         'confirm',
     ])->name('payments.confirm');
+
+    Route::patch('/payments/{payment}/reject', [
+        PaymentController::class,
+        'reject',
+    ])->name('payments.reject');
 });
 
 /*
@@ -250,8 +294,7 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [
         NotificationController::class,
         'index',
@@ -275,32 +318,16 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| مكتبة أعمال المهندسين العامة
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/engineer-library', [
-    EngineerWorkController::class,
-    'publicIndex',
-])->name('engineer.works.public');
-
-Route::get('/engineer-library/{engineerWork}', [
-    EngineerWorkController::class,
-    'show',
-])->name('engineer.works.show');
-
-/*
-|--------------------------------------------------------------------------
 | أعمال المهندس
 |--------------------------------------------------------------------------
 */
 
 Route::middleware([
     'auth',
+    'verified',
     'role:engineer',
     EnsureActiveEngineerMembership::class,
 ])->group(function () {
-
     Route::get('/engineer/my-works', [
         EngineerWorkController::class,
         'myWorks',
@@ -322,11 +349,17 @@ Route::middleware([
     ])->name('engineer.works.destroy');
 });
 
+/*
+|--------------------------------------------------------------------------
+| إدارة أعمال المهندسين — المدير فقط
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware([
     'auth',
+    'verified',
     'role:admin',
 ])->group(function () {
-
     Route::get('/admin/engineer-works', [
         EngineerWorkController::class,
         'index',
@@ -341,6 +374,11 @@ Route::middleware([
         EngineerWorkController::class,
         'reject',
     ])->name('admin.engineer-works.reject');
+
+    Route::delete('/admin/engineer-works/{engineerWork}', [
+        EngineerWorkController::class,
+        'destroy',
+    ])->name('admin.engineer-works.destroy');
 });
 
 /*
@@ -349,260 +387,264 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-
-    Route::get(
-        '/consultations/{consultation}/messages',
-        [
-            ConsultationMessageController::class,
-            'index',
-        ]
-    )->name('consultations.messages.index');
-
-    Route::post(
-        '/consultations/{consultation}/messages',
-        [
-            ConsultationMessageController::class,
-            'store',
-        ]
-    )->name('consultations.messages.store');
-});
-Route::middleware(['auth'])->group(function () {
-
-    Route::resource('users', UserController::class)
-        ->except(['show']);
-
-});
-
-Route::patch(
-    '/payments/{payment}/reject',
-    [PaymentController::class, 'reject']
-)->name('payments.reject');
-
-    Route::middleware([
-    'auth',
-    'role:engineer,admin',
-    EnsureActiveEngineerMembership::class,
-])
-    ->prefix('engineer')
-    ->name('engineer.')
-    ->group(function () {
-
-        Route::get(
-            '/specialty',
-            [EngineerSpecialtyController::class, 'edit']
-        )->name('specialty.edit');
-
-        Route::put(
-            '/specialty',
-            [EngineerSpecialtyController::class, 'update']
-        )->name('specialty.update');
-    });
-    Route::get(
-    '/engineers/{user}',
-    [EngineerProfileController::class, 'show']
-)->name('engineers.show');
 Route::middleware([
     'auth',
-    'role:customer,engineer',
-])->group(function () {
-
-    Route::get(
-        '/become-engineer',
-        [EngineerApplicationController::class, 'create']
-    )->name('engineer-applications.create');
-
-    Route::post(
-        '/become-engineer',
-        [EngineerApplicationController::class, 'store']
-    )->name('engineer-applications.store');
-});
-
-Route::middleware([
-    'auth',
+    'verified',
     'role:customer,engineer,admin',
 ])->group(function () {
+    Route::get('/consultations/{consultation}/messages', [
+        ConsultationMessageController::class,
+        'index',
+    ])->name('consultations.messages.index');
 
-    Route::get('/consultations/create', [
-        ConsultationController::class,
-        'create',
-    ])->name('consultations.create');
-
-    Route::get(
-        '/consultations/create/{engineer}',
-        [ConsultationController::class, 'createForEngineer']
-    )->name('consultations.create-for-engineer');
-
-    Route::post('/consultations', [
-        ConsultationController::class,
+    Route::post('/consultations/{consultation}/messages', [
+        ConsultationMessageController::class,
         'store',
-    ])->name('consultations.store');
+    ])->name('consultations.messages.store');
 });
+
+/*
+|--------------------------------------------------------------------------
+| إدارة المستخدمين — المدير فقط
+|--------------------------------------------------------------------------
+|
+| أبقينا أسماء المسارات users.* حتى لا تنكسر الواجهات الحالية.
+| أصبحت الروابط الفعلية تبدأ بـ /admin/users.
+|
+*/
+
 Route::middleware([
     'auth',
+    'verified',
     'role:admin',
 ])
     ->prefix('admin')
     ->group(function () {
-
-        Route::get(
-            '/engineer-applications',
-            [EngineerApplicationController::class, 'index']
-        )->name('engineer-applications.index');
-
-        Route::patch(
-            '/engineer-applications/{engineerApplication}/approve',
-            [EngineerApplicationController::class, 'approve']
-        )->name('engineer-applications.approve');
-
-        Route::patch(
-            '/engineer-applications/{engineerApplication}/reject',
-            [EngineerApplicationController::class, 'reject']
-        )->name('engineer-applications.reject');
+        Route::resource('users', UserController::class)
+            ->except(['show']);
     });
-    Route::middleware([
+
+/*
+|--------------------------------------------------------------------------
+| طلب الانضمام كمهندس
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
     'auth',
+    'verified',
     'role:customer,engineer',
 ])->group(function () {
+    Route::get('/become-engineer', [
+        EngineerApplicationController::class,
+        'create',
+    ])->name('engineer-applications.create');
 
-    Route::get(
-        '/consultations/{consultation}/review',
-        [EngineerReviewController::class, 'create']
-    )->name('engineer-reviews.create');
-
-    Route::post(
-        '/consultations/{consultation}/review',
-        [EngineerReviewController::class, 'store']
-    )->name('engineer-reviews.store');
+    Route::post('/become-engineer', [
+        EngineerApplicationController::class,
+        'store',
+    ])->name('engineer-applications.store');
 });
-Route::post(
-    '/consultations/{consultation}/upload-engineer-file',
-    [
-        ConsultationController::class,
-        'uploadEngineerFile',
-    ]
-)
-    ->middleware([
-        'auth',
-        'role:admin,engineer',
-    ])
-    ->name('consultations.upload-engineer-file');
-    /*
+
+/*
+|--------------------------------------------------------------------------
+| إدارة طلبات المهندسين — المدير فقط
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/engineer-applications', [
+            EngineerApplicationController::class,
+            'index',
+        ])->name('engineer-applications.index');
+
+        Route::patch('/engineer-applications/{engineerApplication}/approve', [
+            EngineerApplicationController::class,
+            'approve',
+        ])->name('engineer-applications.approve');
+
+        Route::patch('/engineer-applications/{engineerApplication}/reject', [
+            EngineerApplicationController::class,
+            'reject',
+        ])->name('engineer-applications.reject');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| تقييم المهندس المرتبط بالاستشارة
+|--------------------------------------------------------------------------
+|
+| تم إعطاء هذا النظام رابطًا مختلفًا لمنع تعارضه مع ReviewController.
+| أسماء المسارات engineer-reviews.* لم تتغير.
+|
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:customer,engineer',
+])->group(function () {
+    Route::get('/consultations/{consultation}/engineer-review', [
+        EngineerReviewController::class,
+        'create',
+    ])->name('engineer-reviews.create');
+
+    Route::post('/consultations/{consultation}/engineer-review', [
+        EngineerReviewController::class,
+        'store',
+    ])->name('engineer-reviews.store');
+});
+
+/*
 |--------------------------------------------------------------------------
 | الفواتير
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/invoices/{invoice}', [
+        InvoiceController::class,
+        'show',
+    ])->name('invoices.show');
 
-    Route::get(
-        '/invoices/{invoice}',
-        [
-            InvoiceController::class,
-            'show',
-        ]
-    )->name('invoices.show');
-
-    Route::get(
-        '/invoices/{invoice}/download',
-        [
-            InvoiceController::class,
-            'download',
-        ]
-    )->name('invoices.download');
-
+    Route::get('/invoices/{invoice}/download', [
+        InvoiceController::class,
+        'download',
+    ])->name('invoices.download');
 });
+
 /*
 |--------------------------------------------------------------------------
-| معلومات الدفع العامة
+| تقييمات العملاء
 |--------------------------------------------------------------------------
 */
 
-Route::view(
-    '/payment-information',
-    'payment-information'
-)->name('payment-information');
-Route::delete(
-    '/admin/engineer-works/{engineerWork}',
-    [EngineerWorkController::class, 'destroy']
-)->name('admin.engineer-works.destroy');
-Route::middleware('auth')->group(function () {
-    Route::get(
-        '/consultations/{consultation}/review',
-        [ReviewController::class, 'create']
-    )->name('reviews.create');
+Route::middleware([
+    'auth',
+    'verified',
+    'role:customer',
+])->group(function () {
+    Route::get('/consultations/{consultation}/review', [
+        ReviewController::class,
+        'create',
+    ])->name('reviews.create');
 
-    Route::post(
-        '/consultations/{consultation}/review',
-        [ReviewController::class, 'store']
-    )->name('reviews.store');
-
-    Route::get(
-        '/admin/reviews',
-        [ReviewController::class, 'index']
-    )->name('reviews.index');
-
-    Route::patch(
-        '/admin/reviews/{review}/approve',
-        [ReviewController::class, 'approve']
-    )->name('reviews.approve');
-
-    Route::patch(
-        '/admin/reviews/{review}/reject',
-        [ReviewController::class, 'reject']
-    )->name('reviews.reject');
-
-    Route::patch(
-        '/admin/reviews/{review}/featured',
-        [ReviewController::class, 'toggleFeatured']
-    )->name('reviews.featured');
-
-    Route::delete(
-        '/admin/reviews/{review}',
-        [ReviewController::class, 'destroy']
-    )->name('reviews.destroy');
+    Route::post('/consultations/{consultation}/review', [
+        ReviewController::class,
+        'store',
+    ])->name('reviews.store');
 });
-Route::get(
-    '/email/verification-status',
-    function (Request $request) {
-        $user = $request->user()?->fresh();
 
-        return response()->json([
-            'verified' =>
-                $user?->hasVerifiedEmail() ?? false,
-        ]);
-    }
-)
-    ->middleware('auth')
-    ->name('verification.status');
-Route::get(
-    '/email/verify-public/{id}/{hash}',
-    [
-        PublicEmailVerificationController::class,
-        'verify',
-    ]
-)
+/*
+|--------------------------------------------------------------------------
+| إدارة التقييمات — المدير فقط
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])->group(function () {
+    Route::get('/admin/reviews', [
+        ReviewController::class,
+        'index',
+    ])->name('reviews.index');
+
+    Route::patch('/admin/reviews/{review}/approve', [
+        ReviewController::class,
+        'approve',
+    ])->name('reviews.approve');
+
+    Route::patch('/admin/reviews/{review}/reject', [
+        ReviewController::class,
+        'reject',
+    ])->name('reviews.reject');
+
+    Route::patch('/admin/reviews/{review}/featured', [
+        ReviewController::class,
+        'toggleFeatured',
+    ])->name('reviews.featured');
+
+    Route::delete('/admin/reviews/{review}', [
+        ReviewController::class,
+        'destroy',
+    ])->name('reviews.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| التحقق العام من البريد الإلكتروني
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/email/verify-public/{id}/{hash}', [
+    PublicEmailVerificationController::class,
+    'verify',
+])
     ->middleware([
         'signed:relative',
         'throttle:6,1',
     ])
     ->name('verification.public.verify');
 
-Route::get(
-    '/email/verified-success',
-    [
-        PublicEmailVerificationController::class,
-        'success',
-    ]
-)->name('verification.public.success');
+Route::get('/email/verified-success', [
+    PublicEmailVerificationController::class,
+    'success',
+])->name('verification.public.success');
 
-Route::get(
-    '/email/verification-status',
-    [
-        PublicEmailVerificationController::class,
-        'status',
-    ]
-)
-    ->middleware('auth')
+Route::get('/email/verification-status', [
+    PublicEmailVerificationController::class,
+    'status',
+])
+    ->middleware(['auth', 'throttle:30,1'])
     ->name('verification.status');
+/*
+|--------------------------------------------------------------------------
+| تنزيل الملفات الخاصة
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->group(function () {
+    Route::get(
+        '/consultations/{consultation}/files/customer',
+        [
+            SecureFileController::class,
+            'consultationCustomerFile',
+        ]
+    )->name('consultations.files.customer');
+
+    Route::get(
+        '/consultations/{consultation}/files/engineer',
+        [
+            SecureFileController::class,
+            'consultationEngineerFile',
+        ]
+    )->name('consultations.files.engineer');
+
+    Route::get(
+        '/consultations/{consultation}/messages/{message}/attachment',
+        [
+            SecureFileController::class,
+            'messageAttachment',
+        ]
+    )->name('consultations.messages.attachment');
+
+    Route::get(
+        '/payments/{payment}/receipt',
+        [
+            SecureFileController::class,
+            'paymentReceipt',
+        ]
+    )->name('payments.receipt');
+});
 require __DIR__.'/auth.php';

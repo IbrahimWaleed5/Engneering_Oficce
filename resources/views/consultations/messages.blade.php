@@ -746,9 +746,12 @@
                                 @endphp
 
                                 <a
-                                    href="{{ asset(
-                                        'storage/' .
-                                        $fileMessage->attachment
+                                    href="{{ route(
+                                        'consultations.messages.attachment',
+                                        [
+                                            $consultation,
+                                            $fileMessage,
+                                        ]
                                     ) }}"
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -1028,10 +1031,12 @@
                                                 @if ($isImage)
 
                                                     <a
-                                                        href="{{ asset(
-                                                            'storage/' .
-                                                            $message
-                                                                ->attachment
+                                                        href="{{ route(
+                                                            'consultations.messages.attachment',
+                                                            [
+                                                                $consultation,
+                                                                $message,
+                                                            ]
                                                         ) }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
@@ -1039,10 +1044,12 @@
                                                     >
 
                                                         <img
-                                                            src="{{ asset(
-                                                                'storage/' .
-                                                                $message
-                                                                    ->attachment
+                                                            src="{{ route(
+                                                                'consultations.messages.attachment',
+                                                                [
+                                                                    $consultation,
+                                                                    $message,
+                                                                ]
                                                             ) }}"
                                                             alt="مرفق"
                                                             class="object-cover w-full max-h-80"
@@ -1053,10 +1060,12 @@
                                                 @else
 
                                                     <a
-                                                        href="{{ asset(
-                                                            'storage/' .
-                                                            $message
-                                                                ->attachment
+                                                        href="{{ route(
+                                                            'consultations.messages.attachment',
+                                                            [
+                                                                $consultation,
+                                                                $message,
+                                                            ]
                                                         ) }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
@@ -1218,7 +1227,7 @@
                                             type="file"
                                             name="attachment"
                                             class="hidden"
-                                            accept=".pdf,.dwg,.jpg,.jpeg,.png,.webp,.zip"
+                                            accept=".pdf,.dwg,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.zip"
                                             @change="selectFile($event)"
                                         >
 
@@ -1251,7 +1260,7 @@
                                 </span>
 
                                 <span>
-                                    الحد الأقصى للمرفق 10 ميجابايت
+                                    الحد الأقصى للمرفق 20 ميجابايت
                                 </span>
 
                             </div>

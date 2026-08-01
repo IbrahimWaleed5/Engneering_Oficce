@@ -496,8 +496,9 @@
                                         @if ($payment->receipt_image)
 
                                             @php
-                                                $receiptUrl = asset(
-                                                    'storage/' . $payment->receipt_image
+                                                $receiptUrl = route(
+                                                    'payments.receipt',
+                                                    $payment
                                                 );
 
                                                 $isPdf = str_ends_with(
@@ -562,7 +563,9 @@
 
                                     <td class="px-5 py-5">
 
-                                        @if ($payment->status === 'pending')
+                                        @if (auth()->user()->role === 'admin')
+
+                                            @if ($payment->status === 'pending')
 
                                             <span
                                                 class="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-yellow-300 border rounded-full border-yellow-400/20 bg-yellow-500/10"
@@ -752,6 +755,16 @@
                                                 </p>
 
                                             </div>
+
+                                            @endif
+
+                                        @else
+
+                                            <span
+                                                class="inline-flex px-3 py-2 text-xs border rounded-xl border-slate-600/30 bg-slate-800/50 text-slate-500"
+                                            >
+                                                غير مصرح
+                                            </span>
 
                                         @endif
 

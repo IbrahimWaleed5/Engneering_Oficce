@@ -7,28 +7,31 @@ return new class extends Migration
 {
     public function up(): void
     {
+        /*
+         * هذا التعديل خاص بـ MySQL.
+         * اختبارات Laravel تستخدم SQLite، لذلك نتجاوزه أثناء الاختبار.
+         */
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE consultations
-            MODIFY status ENUM(
-                'waiting_payment',
-                'pending',
-                'in_progress',
-                'completed',
-                'cancelled'
-            ) NOT NULL DEFAULT 'waiting_payment'
+            MODIFY status VARCHAR(30)
+            NOT NULL DEFAULT 'waiting_payment'
         ");
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE consultations
-            MODIFY status ENUM(
-                'pending',
-                'in_progress',
-                'completed',
-                'cancelled'
-            ) NOT NULL DEFAULT 'pending'
+            MODIFY status VARCHAR(30)
+            NOT NULL DEFAULT 'pending'
         ");
     }
 };

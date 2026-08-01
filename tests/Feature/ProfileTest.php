@@ -20,6 +20,9 @@ test('profile information can be updated', function () {
         ->patch('/profile', [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'country_code' => 'PS',
+            'dial_code' => '+970',
+            'phone' => '599123456',
         ]);
 
     $response
@@ -30,6 +33,7 @@ test('profile information can be updated', function () {
 
     $this->assertSame('Test User', $user->name);
     $this->assertSame('test@example.com', $user->email);
+    $this->assertSame('599123456', $user->phone);
     $this->assertNull($user->email_verified_at);
 });
 
@@ -41,13 +45,19 @@ test('email verification status is unchanged when the email address is unchanged
         ->patch('/profile', [
             'name' => 'Test User',
             'email' => $user->email,
+            'country_code' => 'PS',
+            'dial_code' => '+970',
+            'phone' => '599123456',
         ]);
 
     $response
         ->assertSessionHasNoErrors()
         ->assertRedirect('/profile');
 
-    $this->assertNotNull($user->refresh()->email_verified_at);
+    $user->refresh();
+
+$this->assertSame('599123456', $user->phone);
+$this->assertNotNull($user->email_verified_at);
 });
 
 test('user can delete their account', function () {

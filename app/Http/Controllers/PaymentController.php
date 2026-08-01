@@ -7,15 +7,17 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
     /**
-     * عرض جميع الدفعات للمدير.
+     * عرض جميع الدفعات للمدير فقط.
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         abort_unless(
             $request->user()->role === 'admin',
@@ -38,17 +40,15 @@ class PaymentController extends Controller
     }
 
     /**
-     * عرض صفحة إرسال إيصال الدفع.
+     * عرض صفحة رفع إيصال الدفع للعميل صاحب الاستشارة فقط.
      */
     public function create(
         Request $request,
         Consultation $consultation
-    ) {
-        abort_unless(
-            (int) $consultation->customer_id
-                === (int) $request->user()->id
-            || $request->user()->role === 'admin',
-            403
+    ): View|RedirectResponse {
+        $this->authorizeCustomerConsultation(
+            $request,
+            $consultation
         );
 
         if ($consultation->payment_status === 'paid') {
@@ -65,7 +65,7 @@ class PaymentController extends Controller
                 ->route('consultations.mine')
                 ->with(
                     'success',
-                    'تم إرسال الإيصال سابقًا وهو قيد الفحص.'
+                    'تم إرسال الإيصال سابقًا وهو قيد فحص المدير.'
                 );
         }
 
@@ -76,17 +76,15 @@ class PaymentController extends Controller
     }
 
     /**
-     * حفظ إيصال الدفع.
+     * حفظ إيصال الدفع في التخزين الخاص.
      */
     public function store(
         Request $request,
         Consultation $consultation
-    ) {
-        abort_unless(
-            (int) $consultation->customer_id
-                === (int) $request->user()->id
-            || $request->user()->role === 'admin',
-            403
+    ): RedirectResponse {
+        $this->authorizeCustomerConsultation(
+            $request,
+            $consultation
         );
 
         if ($consultation->payment_status !== 'unpaid') {
@@ -114,48 +112,79 @@ class PaymentController extends Controller
                 'required',
                 'file',
                 'mimes:jpg,jpeg,png,webp,pdf',
-                'max:512000',
+                'max:20480',
             ],
+        ], [
+            'payment_method.required' =>
+                'يرجى اختيار طريقة الدفع.',
+
+            'payment_method.in' =>
+                'طريقة الدفع المختارة غير صحيحة.',
+
+            'receipt_image.required' =>
+                'يرجى رفع صورة أو ملف إيصال الدفع.',
+
+            'receipt_image.mimes' =>
+                'يجب أن يكون الإيصال صورة أو ملف PDF.',
+
+            'receipt_image.max' =>
+                'حجم الإيصال يجب ألا يتجاوز 20 ميجابايت.',
         ]);
 
         $receiptPath = $request
             ->file('receipt_image')
             ->store(
                 'payment-receipts',
-                'public'
+                'private'
             );
 
-        Payment::create([
-            'consultation_id' =>
-                $consultation->id,
+        try {
+            DB::transaction(
+                function () use (
+                    $consultation,
+                    $validated,
+                    $receiptPath
+                ): void {
+                    Payment::create([
+                        'consultation_id' =>
+                            $consultation->id,
 
-            'customer_id' =>
-                $consultation->customer_id,
+                        'customer_id' =>
+                            $consultation->customer_id,
 
-            'amount' =>
-                $consultation->final_price,
+                        'amount' =>
+                            $consultation->final_price,
 
-            'payment_method' =>
-                $validated['payment_method'],
+                        'payment_method' =>
+                            $validated['payment_method'],
 
-            'transaction_reference' =>
-                $validated['transaction_reference']
-                ?? null,
+                        'transaction_reference' =>
+                            $validated['transaction_reference']
+                            ?? null,
 
-            'receipt_image' =>
-                $receiptPath,
+                        'receipt_image' =>
+                            $receiptPath,
 
-            'status' =>
-                'pending',
-        ]);
+                        'status' =>
+                            'pending',
+                    ]);
 
-        $consultation->update([
-            'payment_status' => 'pending',
-            'status' => 'waiting_payment',
-        ]);
+                    $consultation->update([
+                        'payment_status' => 'pending',
+                        'status' => 'waiting_payment',
+                    ]);
+                }
+            );
+        } catch (\Throwable $exception) {
+            \Illuminate\Support\Facades\Storage::disk('private')
+                ->delete($receiptPath);
+
+            throw $exception;
+        }
 
         $admins = User::query()
             ->where('role', 'admin')
+            ->where('status', 'active')
             ->get();
 
         foreach ($admins as $admin) {
@@ -164,10 +193,10 @@ class PaymentController extends Controller
                     title: 'إيصال دفع جديد',
                     message: 'تم رفع إيصال دفع للاستشارة رقم '
                         . $consultation->consultation_number
-                        . '.',
-                    url: '/payments',
+                        . ' وبانتظار المراجعة اليدوية.',
+                    url: route('payments.index'),
                     sendMail: false,
-                    buttonText: 'عرض الدفعات'
+                    buttonText: 'مراجعة الدفعة'
                 )
             );
         }
@@ -181,15 +210,14 @@ class PaymentController extends Controller
     }
 
     /**
-     * تأكيد الدفعة وإنشاء الفاتورة.
+     * تأكيد الدفعة يدويًا بواسطة المدير وإنشاء الفاتورة.
      */
     public function confirm(
-        Request $request,
         Payment $payment
-    ) {
-        abort_unless(
-            $request->user()->role === 'admin',
-            403
+    ): RedirectResponse {
+        $this->authorize(
+            'confirm',
+            $payment
         );
 
         $payment->load([
@@ -201,8 +229,8 @@ class PaymentController extends Controller
         ]);
 
         /*
-         * في حال تم تأكيد الدفعة سابقًا لكن لم تنشأ
-         * لها فاتورة، يتم إنشاء الفاتورة الآن.
+         * إذا كانت الدفعة مؤكدة سابقًا ولم تُنشأ فاتورة،
+         * يتم إنشاء الفاتورة بدون تكرار تأكيد الدفعة.
          */
         if ($payment->status === 'completed') {
             $invoice = $this->createInvoice(
@@ -223,15 +251,16 @@ class PaymentController extends Controller
                 ->route('payments.index')
                 ->with(
                     'error',
-                    'لا يمكن تأكيد هذه الدفعة.'
+                    'لا يمكن تأكيد هذه الدفعة لأنها تمت مراجعتها سابقًا.'
                 );
         }
 
         $invoice = DB::transaction(
-            function () use ($payment) {
+            function () use ($payment): Invoice {
                 $payment->update([
                     'status' => 'completed',
                     'paid_at' => now(),
+                    'rejection_reason' => null,
                 ]);
 
                 $consultation =
@@ -254,41 +283,27 @@ class PaymentController extends Controller
         );
 
         $consultation =
-            $payment->consultation;
-
-        /*
-        |--------------------------------------------------------------------------
-        | إشعار المهندس
-        |--------------------------------------------------------------------------
-        */
+            $payment->fresh([
+                'consultation.customer',
+                'consultation.engineer',
+                'customer',
+            ])->consultation;
 
         if ($consultation->engineer) {
             $consultation->engineer->notify(
                 new SystemNotification(
                     title: 'طلب استشارة جديد',
                     message: 'قام العميل '
-                        . (
-                            $consultation
-                                ->customer
-                                ?->name
-                            ?? 'عميل'
-                        )
+                        . ($consultation->customer?->name ?? 'عميل')
                         . ' بإرسال طلب الاستشارة رقم '
-                        . $consultation
-                            ->consultation_number
+                        . $consultation->consultation_number
                         . ' إليك.',
-                    url: '/engineer/consultations',
+                    url: route('engineer.consultations'),
                     sendMail: true,
                     buttonText: 'عرض الاستشارة'
                 )
             );
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | إشعار العميل
-        |--------------------------------------------------------------------------
-        */
 
         $customer = $payment->customer
             ?? $consultation->customer;
@@ -297,9 +312,9 @@ class PaymentController extends Controller
             $customer->notify(
                 new SystemNotification(
                     title: 'تم قبول الدفع وإصدار الفاتورة',
-                    message: 'تم قبول دفعتك للاستشارة رقم '
-                        . $consultation
-                            ->consultation_number
+                    message: 'راجع المدير إيصال دفعتك وقام بقبوله '
+                        . 'للاستشارة رقم '
+                        . $consultation->consultation_number
                         . '. رقم الفاتورة: '
                         . $invoice->invoice_number
                         . '.',
@@ -317,22 +332,22 @@ class PaymentController extends Controller
             ->route('payments.index')
             ->with(
                 'success',
-                'تم تأكيد الدفع وإصدار الفاتورة رقم '
+                'تم تأكيد الدفع بعد المراجعة وإصدار الفاتورة رقم '
                     . $invoice->invoice_number
                     . '.'
             );
     }
 
     /**
-     * رفض الدفعة.
+     * رفض الدفعة يدويًا بواسطة المدير.
      */
     public function reject(
         Request $request,
         Payment $payment
-    ) {
-        abort_unless(
-            $request->user()->role === 'admin',
-            403
+    ): RedirectResponse {
+        $this->authorize(
+            'reject',
+            $payment
         );
 
         $validated = $request->validate([
@@ -341,6 +356,9 @@ class PaymentController extends Controller
                 'string',
                 'max:1000',
             ],
+        ], [
+            'rejection_reason.required' =>
+                'يرجى كتابة سبب رفض الدفعة.',
         ]);
 
         if ($payment->status !== 'pending') {
@@ -357,34 +375,36 @@ class PaymentController extends Controller
             'customer',
         ]);
 
-        $payment->update([
-            'status' => 'rejected',
-            'rejection_reason' =>
-                $validated['rejection_reason'],
-        ]);
+        DB::transaction(
+            function () use (
+                $payment,
+                $validated
+            ): void {
+                $payment->update([
+                    'status' => 'rejected',
+                    'paid_at' => null,
+                    'rejection_reason' =>
+                        $validated['rejection_reason'],
+                ]);
 
-        $payment->consultation->update([
-            'payment_status' => 'unpaid',
-            'status' => 'waiting_payment',
-        ]);
+                $payment->consultation->update([
+                    'payment_status' => 'unpaid',
+                    'status' => 'waiting_payment',
+                ]);
+            }
+        );
 
         $customer = $payment->customer
-            ?? $payment
-                ->consultation
-                ->customer;
+            ?? $payment->consultation->customer;
 
         if ($customer) {
             $customer->notify(
                 new SystemNotification(
                     title: 'تم رفض إيصال الدفع',
-                    message: 'تم رفض إيصال دفع الاستشارة رقم '
-                        . $payment
-                            ->consultation
-                            ->consultation_number
-                        . '. السبب: '
-                        . $validated[
-                            'rejection_reason'
-                        ],
+                    message: 'راجع المدير إيصال دفع الاستشارة رقم '
+                        . $payment->consultation->consultation_number
+                        . ' ورفضه. السبب: '
+                        . $validated['rejection_reason'],
                     url: route(
                         'payments.create',
                         $payment->consultation
@@ -399,81 +419,96 @@ class PaymentController extends Controller
             ->route('payments.index')
             ->with(
                 'success',
-                'تم رفض الدفعة وإبلاغ العميل.'
+                'تم رفض الدفعة وإبلاغ العميل بالسبب.'
             );
     }
 
     /**
-     * إنشاء فاتورة واحدة لكل دفعة.
+     * إنشاء فاتورة واحدة فقط لكل دفعة.
      */
     private function createInvoice(
-    Payment $payment
-): Invoice {
-    $payment->loadMissing([
-        'consultation.consultationType',
-        'consultation.customer',
-        'consultation.engineer',
-        'customer',
-    ]);
+        Payment $payment
+    ): Invoice {
+        $payment->loadMissing([
+            'consultation.consultationType',
+            'consultation.customer',
+            'consultation.engineer',
+            'customer',
+        ]);
 
-    $consultation = $payment->consultation;
+        $consultation = $payment->consultation;
 
-    return Invoice::firstOrCreate(
-        [
-            'payment_id' => $payment->id,
-        ],
-        [
-            'invoice_number' =>
-                'INV-'
-                . now()->format('Ymd')
-                . '-'
-                . str_pad(
-                    (string) $payment->id,
-                    6,
-                    '0',
-                    STR_PAD_LEFT
-                ),
+        return Invoice::firstOrCreate(
+            [
+                'payment_id' => $payment->id,
+            ],
+            [
+                'invoice_number' =>
+                    'INV-'
+                    . now()->format('Ymd')
+                    . '-'
+                    . str_pad(
+                        (string) $payment->id,
+                        6,
+                        '0',
+                        STR_PAD_LEFT
+                    ),
 
-            'consultation_id' =>
-                $consultation->id,
+                'consultation_id' =>
+                    $consultation->id,
 
-            'customer_id' =>
-                $payment->customer_id,
+                'customer_id' =>
+                    $payment->customer_id,
 
-            'consultation_number' =>
-                $consultation->consultation_number,
+                'consultation_number' =>
+                    $consultation->consultation_number,
 
-            'customer_name' =>
-                $consultation->customer?->name
-                ?? $payment->customer?->name
-                ?? 'عميل',
+                'customer_name' =>
+                    $consultation->customer?->name
+                    ?? $payment->customer?->name
+                    ?? 'عميل',
 
-            'service_name' =>
-                $consultation->consultationType?->name
-                ?? 'استشارة هندسية',
+                'service_name' =>
+                    $consultation->consultationType?->name
+                    ?? 'استشارة هندسية',
 
-            'engineer_name' =>
-                $consultation->engineer?->name,
+                'engineer_name' =>
+                    $consultation->engineer?->name,
 
-            'amount' =>
-                $payment->amount,
+                'amount' =>
+                    $payment->amount,
 
-            'total' =>
-                $payment->amount,
+                'total' =>
+                    $payment->amount,
 
-            'payment_method' =>
-                $payment->payment_method,
+                'payment_method' =>
+                    $payment->payment_method,
 
-            'currency' =>
-                'ILS',
+                'currency' =>
+                    'ILS',
 
-            'office_name' =>
-                'مكتب الوليد الهندسي',
+                'office_name' =>
+                    'مكتب الوليد الهندسي',
 
-            'issued_at' =>
-                $payment->paid_at
-                ?? now(),
-        ]
-    );
-}
+                'issued_at' =>
+                    $payment->paid_at
+                    ?? now(),
+            ]
+        );
+    }
+
+    /**
+     * العميل وحده يستطيع رفع دفعة لاستشارته.
+     */
+    private function authorizeCustomerConsultation(
+        Request $request,
+        Consultation $consultation
+    ): void {
+        abort_unless(
+            $request->user()->role === 'customer'
+            && (int) $consultation->customer_id
+                === (int) $request->user()->id,
+            403
+        );
+    }
 }

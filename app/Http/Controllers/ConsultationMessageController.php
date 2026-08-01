@@ -5,23 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Consultation;
 use App\Models\ConsultationMessage;
 use App\Notifications\SystemNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ConsultationMessageController extends Controller
 {
     public function index(
-        Request $request,
         Consultation $consultation
-    ) {
-        $this->authorizeConversation(
-            $request,
+    ): View {
+        $this->authorize(
+            'viewConversation',
             $consultation
-        );
-
-        abort_if(
-            $consultation->payment_status !== 'paid',
-            403,
-            'لا يمكن فتح المحادثة قبل تأكيد الدفع.'
         );
 
         $consultation->load([
@@ -40,16 +35,10 @@ class ConsultationMessageController extends Controller
     public function store(
         Request $request,
         Consultation $consultation
-    ) {
-        $this->authorizeConversation(
-            $request,
+    ): RedirectResponse {
+        $this->authorize(
+            'sendMessage',
             $consultation
-        );
-
-        abort_if(
-            $consultation->payment_status !== 'paid',
-            403,
-            'لا يمكن إرسال الرسائل قبل تأكيد الدفع.'
         );
 
         $validated = $request->validate([
@@ -64,7 +53,7 @@ class ConsultationMessageController extends Controller
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,webp,dwg,doc,docx,xls,xlsx,zip',
-                'max:102400',
+                'max:20480',
                 'required_without:message',
             ],
         ], [
@@ -75,7 +64,7 @@ class ConsultationMessageController extends Controller
                 'اكتب رسالة أو أرفق ملفًا.',
 
             'attachment.max' =>
-                'حجم الملف يجب ألا يتجاوز 100 ميجابايت.',
+                'حجم الملف يجب ألا يتجاوز 20 ميجابايت.',
 
             'attachment.mimes' =>
                 'نوع الملف المرفق غير مسموح.',
@@ -88,15 +77,22 @@ class ConsultationMessageController extends Controller
                 ->file('attachment')
                 ->store(
                     'consultation-messages',
-                    'public'
+                    'private'
                 );
         }
 
         ConsultationMessage::create([
-            'consultation_id' => $consultation->id,
-            'sender_id' => $request->user()->id,
-            'message' => $validated['message'] ?? null,
-            'attachment' => $attachmentPath,
+            'consultation_id' =>
+                $consultation->id,
+
+            'sender_id' =>
+                $request->user()->id,
+
+            'message' =>
+                $validated['message'] ?? null,
+
+            'attachment' =>
+                $attachmentPath,
         ]);
 
         $consultation->load([
@@ -132,42 +128,10 @@ class ConsultationMessageController extends Controller
         );
     }
 
-    private function authorizeConversation(
-        Request $request,
-        Consultation $consultation
-    ): void {
-        $user = $request->user();
-
-        $isCustomer =
-            (int) $consultation->customer_id
-            === (int) $user->id;
-
-        $isAssignedEngineer =
-            (int) $consultation->engineer_id
-            === (int) $user->id;
-
-        $isManagement = in_array(
-            $user->role,
-            [
-                'admin',
-                'employee',
-            ],
-            true
-        );
-
-        abort_unless(
-            $isCustomer
-            || $isAssignedEngineer
-            || $isManagement,
-            403,
-            'ليس لديك صلاحية لدخول هذه المحادثة.'
-        );
-    }
-
     private function getRecipient(
         Request $request,
         Consultation $consultation
-    ) {
+    ): ?\App\Models\User {
         $user = $request->user();
 
         if (
