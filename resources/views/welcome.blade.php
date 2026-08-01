@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>CreativeHome | استشارات هندسية احترافية</title>
+    <title>الوليد الهندسي | استشارات هندسية احترافية</title>
 
     <meta
         name="description"
@@ -147,7 +147,7 @@
                 </span>
 
                 <span class="text-xl font-extrabold text-[#b4c5ff]">
-                    CreativeHome
+                    الوليد الهندسي
                 </span>
             </a>
 
