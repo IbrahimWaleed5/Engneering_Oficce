@@ -1,5 +1,45 @@
 <x-app-layout>
 
+<style>
+:root{
+    --bg:#100a18;
+    --panel:#1c132a;
+    --panel2:#241735;
+    --border:#4c335e;
+    --muted:#8d799f;
+    --text:#fff8ff;
+    --accent1:#ff716f;
+    --accent2:#8b5cf6;
+}
+.ref-shell{min-height:100vh;background:#100a18;color:var(--text)}
+.ref-topbar{border:1px solid var(--border);background:#1c132a;border-radius:22px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
+.ref-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.ref-card{background:#1c132a;border:1px solid var(--border);border-radius:20px;box-shadow:0 14px 45px rgba(0,0,0,.2)}
+.ref-card-title{display:flex;align-items:center;gap:9px;font-weight:900;color:#fff}
+.ref-card-title:before{content:"";width:6px;height:18px;border-radius:999px;background:#ff716f}
+.ref-chat{overflow:hidden;background:#1c132a;border:1px solid var(--border);border-radius:20px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
+.ref-chat-header{padding:20px 24px;border-bottom:1px solid var(--border);background:#21152f}
+.ref-messages{height:470px;overflow-y:auto;padding:26px;background:#1c132a;scrollbar-width:thin;scrollbar-color:#6f5b7f transparent}
+.ref-date{width:max-content;margin:0 auto 22px;padding:8px 18px;border-radius:999px;background:#281b39;color:var(--muted);font-size:12px}
+.ref-message{display:flex;margin-bottom:15px}
+.ref-message.mine{justify-content:flex-start}
+.ref-message.theirs{justify-content:flex-end}
+.ref-bubble{max-width:72%;padding:13px 16px;border-radius:16px;font-size:14px;line-height:1.8;box-shadow:0 10px 24px rgba(0,0,0,.15)}
+.ref-bubble.mine{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;border-bottom-left-radius:5px}
+.ref-bubble.theirs{background:#120d1b;color:#fff;border:1px solid #2c203b;border-bottom-right-radius:5px}
+.ref-meta{margin-top:6px;font-size:10px;color:#826e93}
+.ref-compose{padding:16px 22px;border-top:1px solid var(--border);background:#1c132a}
+.ref-compose-box{display:flex;align-items:center;gap:10px;background:#241735;border:1px solid #39264b;border-radius:999px;padding:7px}
+.ref-input{flex:1;background:transparent;border:0;color:#fff;resize:none;min-height:44px;max-height:110px;padding:10px 14px}
+.ref-attach{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;color:#cbbcd7}
+.ref-send{width:46px;height:46px;border-radius:999px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;box-shadow:0 10px 26px rgba(139,92,246,.3)}
+.ref-mini-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ref-mini-row:last-child{border-bottom:0}
+@media(max-width:1100px){.ref-grid{grid-template-columns:1fr}.ref-sidebar{display:none}.ref-messages{height:62vh}}
+@media(max-width:640px){.ref-topbar,.ref-chat{border-radius:0;border-left:0;border-right:0}.ref-bubble{max-width:84%}}
+</style>
+
+
     @php
         $currentUser = auth()->user();
 
@@ -191,12 +231,12 @@
     </x-slot>
 
     <div
-        class="min-h-screen py-8 bg-gradient-to-br from-slate-950 via-[#07152d] to-slate-950"
+        class="py-6 ref-shell sm:py-8"
         dir="rtl"
     >
 
         <div
-            class="px-4 mx-auto max-w-[1500px] sm:px-6 lg:px-8"
+            class="px-4 mx-auto max-w-[1320px] sm:px-6 lg:px-8"
         >
 
             {{-- رسائل النجاح --}}
@@ -233,16 +273,22 @@
 
             @endif
 
-            <div
-                class="grid items-start grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]"
-            >
+            <div class="flex items-center justify-between px-5 py-4 mb-5 ref-topbar">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-lg w-7 h-7 bg-gradient-to-br from-pink-400 to-violet-500"></div>
+                    <h1 class="text-xl font-black text-white">منصة الرسائل</h1>
+                </div>
+                <div class="px-4 py-2 text-sm font-bold rounded-full bg-violet-500/10 text-violet-200">🌐 العربية</div>
+            </div>
+
+            <div class="ref-grid">
 
                 {{-- الشريط الجانبي --}}
-                <aside id="consultationDetailsPanel" class="hidden space-y-5 xl:block xl:order-2">
+                <aside id="consultationDetailsPanel" class="space-y-4 ref-sidebar">
 
                     {{-- تفاصيل الاستشارة --}}
                     <section
-                        class="p-5 border shadow-2xl rounded-3xl border-white/10 bg-slate-900/75 backdrop-blur-xl"
+                        class="p-5 ref-card"
                     >
 
                         <div
@@ -255,7 +301,7 @@
                                 📄
                             </div>
 
-                            <h3 class="text-lg font-black text-white">
+                            <h3 class="text-base ref-card-title">
                                 تفاصيل الاستشارة
                             </h3>
 
@@ -387,7 +433,7 @@
 
                     {{-- المشاركون --}}
                     <section
-                        class="p-5 border shadow-2xl rounded-3xl border-white/10 bg-slate-900/75 backdrop-blur-xl"
+                        class="p-5 ref-card"
                     >
 
                         <div
@@ -400,7 +446,7 @@
                                 👥
                             </div>
 
-                            <h3 class="text-lg font-black text-white">
+                            <h3 class="text-base ref-card-title">
                                 المشاركون
                             </h3>
 
@@ -599,7 +645,7 @@
                     @if ($consultation->engineer)
 
                         <section
-                            class="p-5 border shadow-2xl rounded-3xl border-white/10 bg-slate-900/75 backdrop-blur-xl"
+                            class="p-5 ref-card"
                         >
 
                             <div
@@ -612,7 +658,7 @@
                                     ⭐
                                 </div>
 
-                                <h3 class="text-lg font-black text-white">
+                                <h3 class="text-base ref-card-title">
                                     صفحة المهندس والتقييم
                                 </h3>
 
@@ -712,7 +758,7 @@
 
                     {{-- الملفات المشتركة --}}
                     <section
-                        class="p-5 border shadow-2xl rounded-3xl border-white/10 bg-slate-900/75 backdrop-blur-xl"
+                        class="p-5 ref-card"
                     >
 
                         <div
@@ -725,7 +771,7 @@
                                 📁
                             </div>
 
-                            <h3 class="text-lg font-black text-white">
+                            <h3 class="text-base ref-card-title">
                                 الملفات المشتركة
                             </h3>
 
@@ -812,11 +858,11 @@
 
                 {{-- المحادثة --}}
                 <main
-                    class="overflow-hidden border shadow-[0_28px_90px_rgba(2,6,23,.7)] rounded-[28px] border-white/10 bg-slate-950/85 backdrop-blur-2xl xl:order-1"
+                    class="ref-chat"
                 >
 
                     <div
-                        class="sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 border-b sm:px-5 border-white/10 bg-slate-950/90 backdrop-blur-2xl"
+                        class="flex items-center justify-between gap-4 ref-chat-header"
                     >
                         <div class="flex items-center min-w-0 gap-3">
                             @if ($otherUser && $otherUser->role === 'engineer')
@@ -912,29 +958,29 @@
 
                     <div
                         id="messagesContainer"
-                        class="h-[680px] p-4 overflow-y-auto scroll-smooth sm:p-6 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,.08),_transparent_34%)]"
+                        class="ref-messages"
                     >
 
                         {{-- التاريخ --}}
                         <div
-                            class="flex items-center gap-4 mb-8"
+                            class="mb-5"
                         >
 
-                            <div class="flex-1 h-px bg-white/10"></div>
+
 
                             <span
-                                class="px-4 py-2 text-xs font-bold border rounded-full text-slate-400 border-white/10 bg-slate-950/60"
+                                class="ref-date"
                             >
                                 {{ $consultation
                                     ->created_at
                                     ?->format('Y-m-d') }}
                             </span>
 
-                            <div class="flex-1 h-px bg-white/10"></div>
+
 
                         </div>
 
-                        <div id="messagesList" class="space-y-3">
+                        <div id="messagesList">
 
                             @forelse ($messages as $message)
 
@@ -974,9 +1020,7 @@
 
                                 <div
                                     data-message-id="{{ $message->id }}"
-                                    class="flex items-end gap-2 {{ $isMine
-                                        ? 'flex-row-reverse justify-start'
-                                        : 'justify-start' }}"
+                                    class="ref-message {{ $isMine ? 'mine' : 'theirs' }}"
                                 >
 
                                     {{-- صورة المرسل --}}
@@ -987,7 +1031,7 @@
                                                 'engineers.show',
                                                 $sender
                                             ) }}"
-                                            class="flex-none transition hover:scale-105"
+                                            class="hidden"
                                             title="فتح صفحة المهندس"
                                         >
 
@@ -1021,7 +1065,7 @@
 
                                     @else
 
-                                        <div class="flex-none">
+                                        <div class="hidden">
 
                                             @if ($sender?->profile_photo)
 
@@ -1057,18 +1101,15 @@
                                     @endif
 
                                     <div
-                                        class="w-auto max-w-[84%] sm:max-w-[58%]"
+                                        class=""
                                     >
 
                                         <div
-                                            class="px-4 py-2.5 shadow-lg rounded-[20px]
-                                            {{ $isMine
-                                                ? 'rounded-br-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white ring-1 ring-white/10'
-                                                : 'rounded-bl-md border border-white/10 bg-slate-800/85 text-slate-100 backdrop-blur-xl' }}"
+                                            class="ref-bubble {{ $isMine ? 'mine' : 'theirs' }}"
                                         >
 
                                             <div
-                                                class="flex items-center justify-between gap-4 mb-1.5"
+                                                class="hidden"
                                             >
 
                                                 @if (
@@ -1152,7 +1193,7 @@
                                                                 ]
                                                             ) }}"
                                                             alt="مرفق"
-                                                            class="object-cover w-auto max-w-[220px] sm:max-w-[280px] max-h-56"
+                                                            class="object-cover w-auto max-w-[230px] sm:max-w-[300px] max-h-52 rounded-xl"
                                                         >
 
                                                     </a>
@@ -1223,7 +1264,7 @@
                                             @if ($isMine)
 
                                                 <div
-                                                    class="mt-2 text-xs text-left text-cyan-200"
+                                                    class="text-left ref-meta"
                                                 >
                                                     ✓✓
                                                 </div>
@@ -1277,7 +1318,7 @@
 
                     {{-- إرسال رسالة --}}
                     <div
-                        class="sticky bottom-0 z-20 p-3 border-t sm:p-4 border-white/10 bg-slate-950/90 backdrop-blur-2xl"
+                        class="ref-compose"
                     >
 
                         <form
@@ -1305,7 +1346,7 @@
                             @csrf
 
                             <div
-                                class="relative flex items-end gap-2 p-2 border shadow-xl rounded-[24px] border-white/10 bg-slate-900/95"
+                                class="ref-compose-box"
                             >
 
                                 <textarea
@@ -1313,7 +1354,7 @@
                                     name="message"
                                     rows="1"
                                     placeholder="اكتب رسالتك هنا..."
-                                    class="flex-1 w-full px-3 py-3 text-sm text-white bg-transparent border-0 resize-none sm:text-base placeholder:text-slate-600 focus:ring-0 min-h-[48px] max-h-32"
+                                    class="ref-input"
                                 >{{ old('message') }}</textarea>
 
                                 <div
@@ -1324,7 +1365,7 @@
 
                                         <label
                                             for="attachment"
-                                            class="flex items-center justify-center text-xl transition cursor-pointer w-11 h-11 rounded-xl text-slate-300 bg-white/5 hover:bg-white/10 hover:text-white"
+                                            class="cursor-pointer ref-attach"
                                             title="إرفاق ملف"
                                         >
                                             📎
@@ -1350,7 +1391,7 @@
                                     <button
                                         id="sendButton"
                                         type="submit"
-                                        class="inline-flex items-center justify-center text-sm font-black text-white transition rounded-full shadow-lg w-11 h-11 bg-gradient-to-r from-violet-600 to-blue-600 hover:scale-105"
+                                        class="transition ref-send hover:scale-105"
                                     >
                                         إرسال
                                         <span>➤</span>
@@ -1399,7 +1440,7 @@
     >
         <div class="flex items-center justify-between mb-5">
             <div>
-                <h3 class="text-lg font-black text-white">تفاصيل الاستشارة</h3>
+                <h3 class="text-base ref-card-title">تفاصيل الاستشارة</h3>
                 <p class="mt-1 text-xs text-slate-500">
                     {{ $consultation->consultation_number }}
                 </p>
@@ -1559,11 +1600,7 @@
                 const wrapper = document.createElement('div');
                 wrapper.dataset.messageId = message.id;
                 wrapper.className =
-                    `flex items-end gap-3 ${
-                        mine
-                            ? 'flex-row-reverse justify-start'
-                            : 'justify-start'
-                    }`;
+                    `ref-message ${mine ? 'mine' : 'theirs'}`;
 
                 const initial = escapeHtml(
                     (message.sender_name || 'م').charAt(0)
@@ -1611,7 +1648,7 @@
                                         message.attachment_url
                                     )}"
                                     alt="مرفق"
-                                    class="object-cover w-auto max-w-[220px] sm:max-w-[280px] max-h-56"
+                                    class="object-cover w-auto max-w-[230px] sm:max-w-[300px] max-h-52 rounded-xl"
                                 >
                             </a>
                         `;
@@ -1660,16 +1697,12 @@
                 wrapper.innerHTML = `
                     ${avatar}
 
-                    <div class="w-auto max-w-[84%] sm:max-w-[58%]">
+                    <div class="">
                         <div
-                            class="px-4 py-2.5 shadow-lg rounded-[20px] ${
-                                mine
-                                    ? 'rounded-br-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white ring-1 ring-white/10'
-                                    : 'rounded-bl-md border border-white/10 bg-slate-800/85 text-slate-100 backdrop-blur-xl'
-                            }"
+                            class="ref-bubble ${mine ? 'mine' : 'theirs'}"
                         >
                             <div
-                                class="flex items-center justify-between gap-4 mb-1.5"
+                                class="hidden"
                             >
                                 <p class="text-sm font-black">
                                     ${
@@ -1705,7 +1738,7 @@
                             ${
                                 mine
                                     ? `<div
-                                        class="mt-2 text-xs text-left text-cyan-200"
+                                        class="text-left ref-meta"
                                     >✓</div>`
                                     : ''
                             }
