@@ -234,11 +234,11 @@
             @endif
 
             <div
-                class="grid items-start grid-cols-1 gap-6 lg:grid-cols-[310px_minmax(0,1fr)]"
+                class="grid items-start grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]"
             >
 
                 {{-- الشريط الجانبي --}}
-                <aside class="space-y-5">
+                <aside id="consultationDetailsPanel" class="hidden space-y-5 xl:block xl:order-2">
 
                     {{-- تفاصيل الاستشارة --}}
                     <section
@@ -812,12 +812,107 @@
 
                 {{-- المحادثة --}}
                 <main
-                    class="overflow-hidden border shadow-2xl rounded-3xl border-white/10 bg-slate-900/70 backdrop-blur-xl"
+                    class="overflow-hidden border shadow-[0_28px_90px_rgba(2,6,23,.7)] rounded-[28px] border-white/10 bg-slate-950/85 backdrop-blur-2xl xl:order-1"
                 >
 
                     <div
+                        class="sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 border-b sm:px-5 border-white/10 bg-slate-950/90 backdrop-blur-2xl"
+                    >
+                        <div class="flex items-center min-w-0 gap-3">
+                            @if ($otherUser && $otherUser->role === 'engineer')
+                                <a
+                                    href="{{ route('engineers.show', $otherUser) }}"
+                                    class="relative flex-none group"
+                                    title="فتح الملف الشخصي للمهندس"
+                                >
+                                    @if ($otherUser->profile_photo)
+                                        <img
+                                            src="{{ asset('storage/' . $otherUser->profile_photo) }}"
+                                            alt="{{ $otherUser->name }}"
+                                            class="object-cover transition border-2 rounded-full w-11 h-11 border-cyan-400/40 ring-2 ring-cyan-500/10 group-hover:scale-105 group-hover:ring-cyan-400/40"
+                                        >
+                                    @else
+                                        <div
+                                            class="flex items-center justify-center font-black text-white transition border-2 rounded-full w-11 h-11 border-cyan-400/40 bg-gradient-to-br from-cyan-500 to-violet-600 group-hover:scale-105"
+                                        >
+                                            {{ mb_substr($otherUser->name, 0, 1) }}
+                                        </div>
+                                    @endif
+
+                                    <span
+                                        class="absolute bottom-0 left-0 w-3 h-3 border-2 rounded-full presence-dot bg-slate-500 border-slate-950"
+                                    ></span>
+                                </a>
+                            @else
+                                <div class="relative flex-none">
+                                    @if ($otherUser?->profile_photo)
+                                        <img
+                                            src="{{ asset('storage/' . $otherUser->profile_photo) }}"
+                                            alt="{{ $otherUser?->name }}"
+                                            class="object-cover border-2 rounded-full w-11 h-11 border-violet-400/30"
+                                        >
+                                    @else
+                                        <div
+                                            class="flex items-center justify-center font-black text-white rounded-full w-11 h-11 bg-gradient-to-br from-violet-500 to-blue-600"
+                                        >
+                                            {{ mb_substr($otherUser?->name ?? 'م', 0, 1) }}
+                                        </div>
+                                    @endif
+
+                                    <span
+                                        class="absolute bottom-0 left-0 w-3 h-3 border-2 rounded-full presence-dot bg-slate-500 border-slate-950"
+                                    ></span>
+                                </div>
+                            @endif
+
+                            <div class="min-w-0">
+                                @if ($otherUser && $otherUser->role === 'engineer')
+                                    <a
+                                        href="{{ route('engineers.show', $otherUser) }}"
+                                        class="block font-black text-white truncate transition hover:text-cyan-300"
+                                    >
+                                        {{ $otherUser->name }}
+                                    </a>
+                                @else
+                                    <p class="font-black text-white truncate">
+                                        {{ $otherUser?->name ?? 'المستخدم' }}
+                                    </p>
+                                @endif
+
+                                <p class="mt-0.5 text-xs text-slate-500">
+                                    <span class="presence-status">غير متصل</span>
+                                    <span id="headerTypingStatus" class="hidden text-cyan-300">
+                                        · يكتب الآن...
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            @if ($otherUser && $otherUser->role === 'engineer')
+                                <a
+                                    href="{{ route('engineers.show', $otherUser) }}"
+                                    class="inline-flex items-center justify-center w-10 h-10 text-lg transition border rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-cyan-500/15 hover:text-cyan-300"
+                                    title="الملف الشخصي للمهندس"
+                                >
+                                    👤
+                                </a>
+                            @endif
+
+                            <button
+                                type="button"
+                                id="toggleConsultationDetails"
+                                class="inline-flex items-center justify-center w-10 h-10 text-lg transition border rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-violet-500/15 hover:text-violet-300"
+                                title="تفاصيل الاستشارة"
+                            >
+                                ⓘ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
                         id="messagesContainer"
-                        class="h-[700px] p-4 overflow-y-auto sm:p-7"
+                        class="h-[680px] p-4 overflow-y-auto scroll-smooth sm:p-6 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,.08),_transparent_34%)]"
                     >
 
                         {{-- التاريخ --}}
@@ -839,7 +934,7 @@
 
                         </div>
 
-                        <div id="messagesList" class="space-y-7">
+                        <div id="messagesList" class="space-y-3">
 
                             @forelse ($messages as $message)
 
@@ -879,7 +974,7 @@
 
                                 <div
                                     data-message-id="{{ $message->id }}"
-                                    class="flex items-end gap-3 {{ $isMine
+                                    class="flex items-end gap-2 {{ $isMine
                                         ? 'flex-row-reverse justify-start'
                                         : 'justify-start' }}"
                                 >
@@ -905,13 +1000,13 @@
                                                             ->profile_photo
                                                     ) }}"
                                                     alt="{{ $sender->name }}"
-                                                    class="object-cover border rounded-full w-11 h-11 border-cyan-500/30 ring-2 ring-cyan-500/20"
+                                                    class="object-cover w-8 h-8 border rounded-full border-cyan-500/30 ring-2 ring-cyan-500/15"
                                                 >
 
                                             @else
 
                                                 <div
-                                                    class="flex items-center justify-center font-black text-white border rounded-full w-11 h-11 border-cyan-500/30 bg-gradient-to-br from-cyan-600 to-emerald-600"
+                                                    class="flex items-center justify-center w-8 h-8 text-xs font-black text-white border rounded-full border-cyan-500/30 bg-gradient-to-br from-cyan-600 to-emerald-600"
                                                 >
                                                     {{ mb_substr(
                                                         $sender->name,
@@ -937,13 +1032,13 @@
                                                             ->profile_photo
                                                     ) }}"
                                                     alt="{{ $sender->name }}"
-                                                    class="object-cover border rounded-full w-11 h-11 border-white/10"
+                                                    class="object-cover w-8 h-8 border rounded-full border-white/10"
                                                 >
 
                                             @else
 
                                                 <div
-                                                    class="flex items-center justify-center w-11 h-11 font-black text-white border rounded-full border-white/10 {{ $isMine
+                                                    class="flex items-center justify-center w-8 h-8 text-xs font-black text-white border rounded-full border-white/10 {{ $isMine
                                                         ? 'bg-gradient-to-br from-blue-600 to-violet-600'
                                                         : 'bg-gradient-to-br from-cyan-600 to-emerald-600' }}"
                                                 >
@@ -962,18 +1057,18 @@
                                     @endif
 
                                     <div
-                                        class="w-full max-w-[80%] sm:max-w-[65%]"
+                                        class="w-auto max-w-[84%] sm:max-w-[58%]"
                                     >
 
                                         <div
-                                            class="p-4 shadow-xl sm:p-5 rounded-3xl
+                                            class="px-4 py-2.5 shadow-lg rounded-[20px]
                                             {{ $isMine
-                                                ? 'rounded-br-md bg-gradient-to-br from-blue-600 to-indigo-700 text-white'
-                                                : 'rounded-bl-md border border-white/5 bg-slate-800/95 text-slate-100' }}"
+                                                ? 'rounded-br-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white ring-1 ring-white/10'
+                                                : 'rounded-bl-md border border-white/10 bg-slate-800/85 text-slate-100 backdrop-blur-xl' }}"
                                         >
 
                                             <div
-                                                class="flex items-center justify-between gap-4 mb-3"
+                                                class="flex items-center justify-between gap-4 mb-1.5"
                                             >
 
                                                 @if (
@@ -1023,7 +1118,7 @@
                                             @if ($message->message)
 
                                                 <p
-                                                    class="text-sm leading-7 whitespace-pre-line sm:text-base"
+                                                    class="text-sm leading-6 whitespace-pre-line sm:text-[15px]"
                                                 >
                                                     {{ $message->message }}
                                                 </p>
@@ -1045,7 +1140,7 @@
                                                         ) }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="block mt-4 overflow-hidden border rounded-2xl border-white/10"
+                                                        class="inline-block mt-3 overflow-hidden border rounded-2xl border-white/10 bg-black/10"
                                                     >
 
                                                         <img
@@ -1057,7 +1152,7 @@
                                                                 ]
                                                             ) }}"
                                                             alt="مرفق"
-                                                            class="object-cover w-full max-h-80"
+                                                            class="object-cover w-auto max-w-[220px] sm:max-w-[280px] max-h-56"
                                                         >
 
                                                     </a>
@@ -1182,7 +1277,7 @@
 
                     {{-- إرسال رسالة --}}
                     <div
-                        class="p-4 border-t sm:p-6 border-white/10 bg-slate-950/40"
+                        class="sticky bottom-0 z-20 p-3 border-t sm:p-4 border-white/10 bg-slate-950/90 backdrop-blur-2xl"
                     >
 
                         <form
@@ -1210,19 +1305,19 @@
                             @csrf
 
                             <div
-                                class="relative p-3 border rounded-3xl border-white/10 bg-slate-900/80"
+                                class="relative flex items-end gap-2 p-2 border shadow-xl rounded-[24px] border-white/10 bg-slate-900/95"
                             >
 
                                 <textarea
                                     id="message"
                                     name="message"
-                                    rows="3"
+                                    rows="1"
                                     placeholder="اكتب رسالتك هنا..."
-                                    class="w-full px-4 py-3 text-sm text-white bg-transparent border-0 resize-none sm:text-base placeholder:text-slate-600 focus:ring-0"
+                                    class="flex-1 w-full px-3 py-3 text-sm text-white bg-transparent border-0 resize-none sm:text-base placeholder:text-slate-600 focus:ring-0 min-h-[48px] max-h-32"
                                 >{{ old('message') }}</textarea>
 
                                 <div
-                                    class="flex flex-col gap-3 pt-3 mt-2 border-t sm:flex-row sm:items-center sm:justify-between border-white/10"
+                                    class="flex items-center flex-none gap-2"
                                 >
 
                                     <div class="flex items-center gap-3">
@@ -1255,7 +1350,7 @@
                                     <button
                                         id="sendButton"
                                         type="submit"
-                                        class="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-black text-white transition shadow-lg rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 hover:-translate-y-0.5"
+                                        class="inline-flex items-center justify-center text-sm font-black text-white transition rounded-full shadow-lg w-11 h-11 bg-gradient-to-r from-violet-600 to-blue-600 hover:scale-105"
                                     >
                                         إرسال
                                         <span>➤</span>
@@ -1291,6 +1386,86 @@
 
     </div>
 
+
+    <div
+        id="consultationDetailsBackdrop"
+        class="fixed inset-0 z-40 hidden bg-slate-950/70 backdrop-blur-sm xl:hidden"
+    ></div>
+
+    <div
+        id="consultationDetailsDrawer"
+        class="fixed inset-y-0 right-0 z-50 hidden w-[92%] max-w-sm p-4 overflow-y-auto border-l shadow-2xl border-white/10 bg-slate-950 xl:hidden"
+        dir="rtl"
+    >
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h3 class="text-lg font-black text-white">تفاصيل الاستشارة</h3>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ $consultation->consultation_number }}
+                </p>
+            </div>
+
+            <button
+                type="button"
+                id="closeConsultationDetails"
+                class="inline-flex items-center justify-center w-10 h-10 text-xl border rounded-full border-white/10 bg-white/5 text-slate-300"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="p-4 border rounded-2xl border-white/10 bg-white/[0.04]">
+                <p class="text-xs text-slate-500">عنوان الاستشارة</p>
+                <p class="mt-2 font-bold text-white">{{ $consultation->title }}</p>
+            </div>
+
+            <div class="p-4 border rounded-2xl border-white/10 bg-white/[0.04]">
+                <p class="text-xs text-slate-500">نوع الاستشارة</p>
+                <p class="mt-2 font-bold text-white">
+                    {{ $consultation->consultationType?->name ?? 'غير محدد' }}
+                </p>
+            </div>
+
+            <div class="p-4 border rounded-2xl border-white/10 bg-white/[0.04]">
+                <p class="text-xs text-slate-500">الحالة</p>
+                <p class="mt-2 font-bold text-white">
+                    {{ $statusLabels[$consultation->status] ?? $consultation->status }}
+                </p>
+            </div>
+
+            @if ($consultation->engineer)
+                <a
+                    href="{{ route('engineers.show', $consultation->engineer) }}"
+                    class="flex items-center gap-3 p-4 transition border rounded-2xl border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-500/15"
+                >
+                    @if ($consultation->engineer->profile_photo)
+                        <img
+                            src="{{ asset('storage/' . $consultation->engineer->profile_photo) }}"
+                            alt="{{ $consultation->engineer->name }}"
+                            class="object-cover w-12 h-12 rounded-full ring-2 ring-cyan-500/30"
+                        >
+                    @else
+                        <div
+                            class="flex items-center justify-center w-12 h-12 font-black text-white rounded-full bg-gradient-to-br from-cyan-500 to-blue-600"
+                        >
+                            {{ mb_substr($consultation->engineer->name, 0, 1) }}
+                        </div>
+                    @endif
+
+                    <div>
+                        <p class="font-black text-white">
+                            {{ $consultation->engineer->name }}
+                        </p>
+                        <p class="mt-1 text-xs text-cyan-300">
+                            فتح الملف الشخصي للمهندس
+                        </p>
+                    </div>
+                </a>
+            @endif
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const consultationId = @json($consultation->id);
@@ -1309,9 +1484,35 @@
                 document.querySelectorAll('.presence-dot');
             const presenceStatuses =
                 document.querySelectorAll('.presence-status');
+            const headerTypingStatus =
+                document.getElementById('headerTypingStatus');
+            const toggleConsultationDetails =
+                document.getElementById('toggleConsultationDetails');
+            const consultationDetailsDrawer =
+                document.getElementById('consultationDetailsDrawer');
+            const consultationDetailsBackdrop =
+                document.getElementById('consultationDetailsBackdrop');
+            const closeConsultationDetails =
+                document.getElementById('closeConsultationDetails');
 
             let channel = null;
             let typingTimer = null;
+
+            const openDetails = () => {
+                consultationDetailsDrawer?.classList.remove('hidden');
+                consultationDetailsBackdrop?.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            };
+
+            const closeDetails = () => {
+                consultationDetailsDrawer?.classList.add('hidden');
+                consultationDetailsBackdrop?.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            toggleConsultationDetails?.addEventListener('click', openDetails);
+            closeConsultationDetails?.addEventListener('click', closeDetails);
+            consultationDetailsBackdrop?.addEventListener('click', closeDetails);
 
             const scrollToBottom = () => {
                 if (messagesContainer) {
@@ -1379,10 +1580,10 @@
                                     alt="${escapeHtml(
                                         message.sender_name
                                     )}"
-                                    class="object-cover border rounded-full w-11 h-11 border-white/10"
+                                    class="object-cover w-8 h-8 border rounded-full border-white/10"
                                 >`
                                 : `<div
-                                    class="flex items-center justify-center w-11 h-11 font-black text-white border rounded-full border-white/10 ${
+                                    class="flex items-center justify-center w-8 h-8 text-xs font-black text-white border rounded-full border-white/10 ${
                                         mine
                                             ? 'bg-gradient-to-br from-blue-600 to-violet-600'
                                             : 'bg-gradient-to-br from-cyan-600 to-emerald-600'
@@ -1403,14 +1604,14 @@
                                 )}"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="block mt-4 overflow-hidden border rounded-2xl border-white/10"
+                                class="inline-block mt-3 overflow-hidden border rounded-2xl border-white/10 bg-black/10"
                             >
                                 <img
                                     src="${escapeHtml(
                                         message.attachment_url
                                     )}"
                                     alt="مرفق"
-                                    class="object-cover w-full max-h-80"
+                                    class="object-cover w-auto max-w-[220px] sm:max-w-[280px] max-h-56"
                                 >
                             </a>
                         `;
@@ -1459,16 +1660,16 @@
                 wrapper.innerHTML = `
                     ${avatar}
 
-                    <div class="w-full max-w-[80%] sm:max-w-[65%]">
+                    <div class="w-auto max-w-[84%] sm:max-w-[58%]">
                         <div
-                            class="p-4 shadow-xl sm:p-5 rounded-3xl ${
+                            class="px-4 py-2.5 shadow-lg rounded-[20px] ${
                                 mine
-                                    ? 'rounded-br-md bg-gradient-to-br from-blue-600 to-indigo-700 text-white'
-                                    : 'rounded-bl-md border border-white/5 bg-slate-800/95 text-slate-100'
+                                    ? 'rounded-br-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white ring-1 ring-white/10'
+                                    : 'rounded-bl-md border border-white/10 bg-slate-800/85 text-slate-100 backdrop-blur-xl'
                             }"
                         >
                             <div
-                                class="flex items-center justify-between gap-4 mb-3"
+                                class="flex items-center justify-between gap-4 mb-1.5"
                             >
                                 <p class="text-sm font-black">
                                     ${
@@ -1494,7 +1695,7 @@
                             ${
                                 message.body
                                     ? `<p
-                                        class="text-sm leading-7 whitespace-pre-line sm:text-base"
+                                        class="text-sm leading-6 whitespace-pre-line sm:text-[15px]"
                                     >${escapeHtml(message.body)}</p>`
                                     : ''
                             }
@@ -1570,11 +1771,17 @@
                             typingIndicator?.classList.remove(
                                 'hidden'
                             );
+                            headerTypingStatus?.classList.remove(
+                                'hidden'
+                            );
 
                             clearTimeout(typingTimer);
 
                             typingTimer = setTimeout(() => {
                                 typingIndicator?.classList.add(
+                                    'hidden'
+                                );
+                                headerTypingStatus?.classList.add(
                                     'hidden'
                                 );
                             }, 1500);
