@@ -57,6 +57,32 @@
         .cp-scroll::-webkit-scrollbar { width: 6px; }
         .cp-scroll::-webkit-scrollbar-track { background: #0b1326; }
         .cp-scroll::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 10px; }
+
+        .cp-mobile-nav {
+            padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+        }
+
+        .cp-mobile-drawer,
+        .cp-info-panel {
+            transition: transform .28s ease, opacity .28s ease;
+        }
+
+        .cp-panel-backdrop {
+            transition: opacity .25s ease;
+        }
+
+        .cp-nav-label {
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .cp-mobile-nav,
+            .cp-mobile-menu-button {
+                display: none !important;
+            }
+        }
+
 @media (max-width: 1023px) {
             .cp-desktop-sidebar { display: none !important; }
             .cp-main { margin-right: 0 !important; }
@@ -90,11 +116,7 @@
                     <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/><path d="M8 9h8M8 13h5"/></svg>
                     <span>المحادثات</span>
                 </a>
-                <a href="#sharedFiles" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
-                    <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4H10l2 2h6.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
-                    <span>الملفات</span>
-                </a>
-                <a href="{{ route('profile.edit') }}" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
+<a href="{{ route('profile.edit') }}" class="flex items-center gap-4 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-[#2d3449]">
                     <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/></svg>
                     <span>الإعدادات</span>
                 </a>
@@ -111,6 +133,10 @@
         <main class="min-h-screen pb-20 cp-main lg:mr-64 lg:pb-0">
             {{-- الشريط العلوي --}}
             <header class="cp-topbar fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-[#0b1326]/80 px-6 shadow-sm backdrop-blur-md lg:right-64">
+                <button type="button" id="openMobileMenu" class="cp-mobile-menu-button flex h-10 w-10 items-center justify-center rounded-xl bg-[#171f33] text-[#c3c6d7] lg:hidden" aria-label="فتح القائمة">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                </button>
+
                 <div class="hidden items-center rounded-full border border-white/5 bg-[#2d3449]/50 px-4 py-2 md:flex">
                     <svg class="inline-block w-5 h-5 shrink-0 ml-2 text-[#c3c6d7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
                     <input class="w-64 border-none bg-transparent text-sm text-white placeholder:text-[#c3c6d7]/50 focus:ring-0" placeholder="بحث عن طلبات، عملاء..." type="text">
@@ -118,14 +144,14 @@
 
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
-                        <button class="relative flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
+                        <a href="{{ route('dashboard') }}" class="relative flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50" title="لوحة التحكم">
                             <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
                             <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ffb1c7]"></span>
-                        </button>
-                        <button class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
+                        </a>
+                        <a href="{{ route('dashboard') }}" title="لوحة التحكم" class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
                             <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/></svg>
-                        </button>
-                        <button id="toggleConsultationDetails" class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
+                        </a>
+                        <button data-open-info class="flex h-10 w-10 items-center justify-center rounded-full text-[#c3c6d7] transition hover:bg-[#2d3449]/50">
                             <svg class="inline-block w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7M12 17h.01"/></svg>
                         </button>
                     </div>
@@ -172,7 +198,7 @@
                         </div>
                         <div class="relative z-10 flex items-center gap-4 mt-8">
                             <a href="#messagesContainer" class="rounded-xl bg-white px-6 py-2.5 text-xs font-bold text-[#2563eb] transition hover:shadow-lg">فتح المحادثة</a>
-                            <button id="toggleConsultationDetailsHero" class="rounded-xl border border-white/30 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-white/10">عرض التفاصيل</button>
+                            <button data-open-info class="rounded-xl border border-white/30 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-white/10">عرض التفاصيل</button>
                         </div>
                     </div>
 
@@ -334,84 +360,145 @@
                     </div>
                 </section>
 
-                {{-- الملفات والتفاصيل --}}
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <section id="sharedFiles" class="p-6 cp-glass rounded-3xl">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center gap-3">
-                                <svg class="inline-block w-5 h-5 shrink-0 text-[#d2bbff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4H10l2 2h6.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/><circle cx="11" cy="12" r="2"/><path d="M7.5 17a3.5 3.5 0 0 1 7 0"/></svg>
-                                <h3 class="text-xl font-semibold">الملفات المشتركة</h3>
-                            </div>
-                        </div>
-
-                        <div class="space-y-4">
-                            @forelse ($messages->whereNotNull('attachment')->take(5) as $fileMessage)
-                                @php $fileExtension = strtolower(pathinfo($fileMessage->attachment, PATHINFO_EXTENSION)); @endphp
-                                <a href="{{ route('consultations.messages.attachment', [$consultation, $fileMessage]) }}" target="_blank" rel="noopener noreferrer" class="group flex items-center justify-between rounded-2xl border border-transparent p-3 transition hover:border-white/10 hover:bg-[#2d3449]/30">
-                                    <div class="flex items-center min-w-0 gap-4">
-                                        <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-[#8343f4]/20 text-xs font-bold text-[#d2bbff]">{{ strtoupper($fileExtension ?: 'FILE') }}</div>
-                                        <div class="min-w-0">
-                                            <p class="truncate font-bold text-[#dae2fd]">{{ basename($fileMessage->attachment) }}</p>
-                                            <p class="text-xs text-[#c3c6d7]">{{ $fileMessage->created_at?->format('Y-m-d H:i') }}</p>
-                                        </div>
-                                    </div>
-                                    <svg class="inline-block w-5 h-5 shrink-0 text-[#c3c6d7] opacity-0 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
-                                </a>
-                            @empty
-                                <p class="py-8 text-center text-sm text-[#c3c6d7]">لا توجد ملفات مشتركة</p>
-                            @endforelse
-                        </div>
-                    </section>
-
-                    <section class="p-6 cp-glass rounded-3xl">
-                        <div class="flex items-center gap-3 mb-6">
-                            <svg class="inline-block w-5 h-5 shrink-0 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/></svg>
-                            <h3 class="text-xl font-semibold">تفاصيل الاستشارة</h3>
-                        </div>
-
-                        <div class="space-y-5">
-                            <div class="flex items-center justify-between pb-4 border-b border-white/5">
-                                <span class="text-[#c3c6d7]">رقم الطلب</span>
-                                <span class="text-xs font-bold text-[#dae2fd]">{{ $consultation->consultation_number }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pb-4 border-b border-white/5">
-                                <span class="text-[#c3c6d7]">نوع الخدمة</span>
-                                <span class="rounded-full bg-[#8343f4]/20 px-3 py-1 text-xs font-bold text-[#d2bbff]">{{ $consultation->consultationType?->name ?? 'غير محدد' }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pb-4 border-b border-white/5">
-                                <span class="text-[#c3c6d7]">تاريخ الطلب</span>
-                                <span class="text-xs font-bold text-[#dae2fd]">{{ $consultation->created_at?->format('Y-m-d') }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pb-4 border-b border-white/5">
-                                <span class="text-[#c3c6d7]">الحالة</span>
-                                <span class="text-xs font-bold text-[#dae2fd]">{{ $statusLabels[$consultation->status] ?? $consultation->status }}</span>
-                            </div>
-                            <div class="rounded-2xl bg-[#2d3449]/20 p-4">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <svg class="inline-block w-4 h-4 shrink-0 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18h6M10 22h4M8.5 15.5A7 7 0 1 1 15.5 15.5c-.9.7-1.5 1.4-1.5 2.5h-4c0-1.1-.6-1.8-1.5-2.5Z"/></svg>
-                                    <span class="text-xs font-bold text-[#b4c5ff]">وصف الاستشارة</span>
-                                </div>
-                                <p class="text-xs leading-relaxed text-[#c3c6d7]">{{ $consultation->description }}</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+                {{-- تم نقل الملفات والتفاصيل إلى لوحة المعلومات الجانبية --}}
             </div>
         </main>
 
-        {{-- Drawer التفاصيل للجوال --}}
-        <div id="consultationDetailsBackdrop" class="fixed inset-0 z-40 hidden bg-[#060e20]/70 backdrop-blur-sm lg:hidden"></div>
-        <div id="consultationDetailsDrawer" class="fixed inset-y-0 right-0 z-50 hidden w-[92%] max-w-sm overflow-y-auto border-l border-white/10 bg-[#0b1326] p-5 shadow-2xl lg:hidden">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold">تفاصيل الاستشارة</h3>
-                <button id="closeConsultationDetails" type="button" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-[#c3c6d7]">×</button>
+
+        {{-- خلفية اللوحات --}}
+        <div id="cpPanelBackdrop" class="cp-panel-backdrop fixed inset-0 z-[70] hidden bg-[#060e20]/75 opacity-0 backdrop-blur-sm"></div>
+
+        {{-- قائمة الجوال --}}
+        <aside id="mobileMenuDrawer" class="cp-mobile-drawer fixed inset-y-0 right-0 z-[80] w-[86%] max-w-xs translate-x-full overflow-y-auto border-l border-white/10 bg-[#131b2e] p-5 shadow-2xl lg:hidden">
+            <div class="flex items-center justify-between mb-7">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 cp-neon rounded-xl">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9.5 4.5A3.5 3.5 0 0 0 6 8v1a3 3 0 0 0-2 2.83V13a3 3 0 0 0 2 2.83V17a3.5 3.5 0 0 0 3.5 3.5V4.5Z"/><path d="M14.5 4.5A3.5 3.5 0 0 1 18 8v1a3 3 0 0 1 2 2.83V13a3 3 0 0 1-2 2.83V17a3.5 3.5 0 0 1-3.5 3.5V4.5Z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-[#dae2fd]">نظام الاستشارات</p>
+                        <p class="text-[10px] text-[#c3c6d7]">محادثة الاستشارة</p>
+                    </div>
+                </div>
+                <button type="button" data-close-panels class="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-xl text-[#c3c6d7]">×</button>
             </div>
-            <div class="space-y-4">
-                <div class="rounded-2xl border border-white/10 bg-white/[.04] p-4"><p class="text-xs text-[#c3c6d7]">رقم الطلب</p><p class="mt-2 font-bold">{{ $consultation->consultation_number }}</p></div>
-                <div class="rounded-2xl border border-white/10 bg-white/[.04] p-4"><p class="text-xs text-[#c3c6d7]">العنوان</p><p class="mt-2 font-bold">{{ $consultation->title }}</p></div>
-                <div class="rounded-2xl border border-white/10 bg-white/[.04] p-4"><p class="text-xs text-[#c3c6d7]">الحالة</p><p class="mt-2 font-bold">{{ $statusLabels[$consultation->status] ?? $consultation->status }}</p></div>
+
+            <nav class="space-y-2">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-[#2d3449]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                    <span>لوحة التحكم</span>
+                </a>
+                <a href="{{ route('consultations.mine') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-[#2d3449]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                    <span>استشاراتي</span>
+                </a>
+                <a href="#messagesContainer" data-close-panels class="flex items-center gap-3 rounded-xl bg-[#b4c5ff]/10 px-4 py-3 text-[#b4c5ff]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/></svg>
+                    <span>المحادثة</span>
+                </a>
+                <button type="button" data-open-info class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-[#2d3449]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
+                    <span>ملفات وتفاصيل الاستشارة</span>
+                </button>
+                <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-[#2d3449]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                    <span>الملف الشخصي</span>
+                </a>
+            </nav>
+        </aside>
+
+        {{-- لوحة معلومات الاستشارة --}}
+        <aside id="consultationInfoPanel" class="cp-info-panel fixed inset-y-0 left-0 z-[80] w-full max-w-lg -translate-x-full overflow-y-auto border-r border-white/10 bg-[#0b1326] shadow-2xl">
+            <div class="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#0b1326]/95 px-5 py-4 backdrop-blur-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-[#dae2fd]">معلومات الاستشارة</h3>
+                    <p class="mt-1 text-xs text-[#c3c6d7]">{{ $consultation->consultation_number }}</p>
+                </div>
+                <button type="button" data-close-panels class="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-xl text-[#c3c6d7]">×</button>
             </div>
-        </div>
+
+            <div class="p-5 space-y-5">
+                <section class="p-5 cp-glass rounded-3xl">
+                    <div class="flex items-center gap-3 mb-5">
+                        <svg class="h-5 w-5 text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 19V5M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/></svg>
+                        <h4 class="font-bold text-[#dae2fd]">تفاصيل الاستشارة</h4>
+                    </div>
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-center justify-between pb-3 border-b border-white/5"><span class="text-[#c3c6d7]">رقم الطلب</span><span class="max-w-[58%] break-all text-left font-bold text-[#dae2fd]">{{ $consultation->consultation_number }}</span></div>
+                        <div class="flex items-center justify-between pb-3 border-b border-white/5"><span class="text-[#c3c6d7]">العنوان</span><span class="max-w-[58%] text-left font-bold text-[#dae2fd]">{{ $consultation->title }}</span></div>
+                        <div class="flex items-center justify-between pb-3 border-b border-white/5"><span class="text-[#c3c6d7]">نوع الخدمة</span><span class="rounded-full bg-[#8343f4]/20 px-3 py-1 text-xs font-bold text-[#d2bbff]">{{ $consultation->consultationType?->name ?? 'غير محدد' }}</span></div>
+                        <div class="flex items-center justify-between pb-3 border-b border-white/5"><span class="text-[#c3c6d7]">الحالة</span><span class="font-bold text-[#dae2fd]">{{ $statusLabels[$consultation->status] ?? $consultation->status }}</span></div>
+                        <div class="flex items-center justify-between"><span class="text-[#c3c6d7]">تاريخ الطلب</span><span class="font-bold text-[#dae2fd]">{{ $consultation->created_at?->format('Y-m-d') }}</span></div>
+                    </div>
+                    <div class="mt-5 rounded-2xl bg-[#2d3449]/25 p-4">
+                        <p class="mb-2 text-xs font-bold text-[#b4c5ff]">وصف الاستشارة</p>
+                        <p class="text-xs leading-7 text-[#c3c6d7]">{{ $consultation->description }}</p>
+                    </div>
+                </section>
+
+                <section class="p-5 cp-glass rounded-3xl">
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-5 w-5 text-[#d2bbff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4H10l2 2h6.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
+                            <h4 class="font-bold text-[#dae2fd]">الملفات المشتركة</h4>
+                        </div>
+                        <span class="rounded-full bg-white/5 px-3 py-1 text-xs text-[#c3c6d7]">{{ $messages->whereNotNull('attachment')->count() }}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        @forelse ($messages->whereNotNull('attachment') as $fileMessage)
+                            @php
+                                $fileExtension = strtolower(pathinfo($fileMessage->attachment, PATHINFO_EXTENSION));
+                                $isVoiceFile = ($fileMessage->message_type ?? null) === 'voice';
+                            @endphp
+                            <a href="{{ route('consultations.messages.attachment', [$consultation, $fileMessage]) }}" target="_blank" rel="noopener noreferrer" class="group flex items-center justify-between rounded-2xl border border-white/5 bg-white/[.025] p-3 transition hover:border-[#b4c5ff]/30 hover:bg-[#2d3449]/35">
+                                <div class="flex items-center min-w-0 gap-3">
+                                    <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl {{ $isVoiceFile ? 'bg-[#be0062]/20 text-[#ffb1c7]' : 'bg-[#8343f4]/20 text-[#d2bbff]' }}">
+                                        @if ($isVoiceFile)
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+                                        @else
+                                            <span class="text-[10px] font-bold">{{ strtoupper($fileExtension ?: 'FILE') }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-bold text-[#dae2fd]">{{ $isVoiceFile ? 'رسالة صوتية' : basename($fileMessage->attachment) }}</p>
+                                        <p class="mt-1 text-[10px] text-[#c3c6d7]">{{ $fileMessage->created_at?->format('Y-m-d H:i') }}</p>
+                                    </div>
+                                </div>
+                                <svg class="h-5 w-5 flex-none text-[#c3c6d7] opacity-60 transition group-hover:text-[#b4c5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+                            </a>
+                        @empty
+                            <div class="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-[#c3c6d7]">لا توجد ملفات مشتركة حتى الآن</div>
+                        @endforelse
+                    </div>
+                </section>
+
+                <a href="{{ route('dashboard') }}" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#b4c5ff] px-5 py-3 font-bold text-[#00174b] transition hover:brightness-110">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                    العودة إلى لوحة التحكم
+                </a>
+            </div>
+        </aside>
+
+        {{-- شريط تنقل ثابت للجوال --}}
+        <nav class="cp-mobile-nav fixed inset-x-0 bottom-0 z-[60] grid grid-cols-4 border-t border-white/10 bg-[#171f33]/95 px-2 pt-2 shadow-[0_-12px_35px_rgba(0,0,0,.35)] backdrop-blur-xl lg:hidden">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[#c3c6d7]">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span class="cp-nav-label">الرئيسية</span>
+            </a>
+            <a href="{{ route('consultations.mine') }}" class="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[#c3c6d7]">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                <span class="cp-nav-label">استشاراتي</span>
+            </a>
+            <a href="#messagesContainer" class="flex flex-col items-center gap-1 rounded-xl bg-[#b4c5ff]/10 px-2 py-2 text-[#b4c5ff]">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/></svg>
+                <span class="cp-nav-label">المحادثة</span>
+            </a>
+            <button type="button" data-open-info class="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[#c3c6d7]">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
+                <span class="cp-nav-label">التفاصيل</span>
+            </button>
+        </nav>
     </div>
 
     <script>
@@ -434,35 +521,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelectorAll('.presence-status');
             const headerTypingStatus =
                 document.getElementById('headerTypingStatus');
-            const toggleConsultationDetails =
-                document.getElementById('toggleConsultationDetails');
-            const consultationDetailsDrawer =
-                document.getElementById('consultationDetailsDrawer');
-            const consultationDetailsBackdrop =
-                document.getElementById('consultationDetailsBackdrop');
-            const closeConsultationDetails =
-                document.getElementById('closeConsultationDetails');
+            const panelBackdrop =
+                document.getElementById('cpPanelBackdrop');
+            const mobileMenuDrawer =
+                document.getElementById('mobileMenuDrawer');
+            const consultationInfoPanel =
+                document.getElementById('consultationInfoPanel');
+            const openMobileMenu =
+                document.getElementById('openMobileMenu');
 
             let channel = null;
             let typingTimer = null;
 
-            const openDetails = () => {
-                consultationDetailsDrawer?.classList.remove('hidden');
-                consultationDetailsBackdrop?.classList.remove('hidden');
+            const showBackdrop = () => {
+                panelBackdrop?.classList.remove('hidden');
+
+                requestAnimationFrame(() => {
+                    panelBackdrop?.classList.remove('opacity-0');
+                });
+
                 document.body.classList.add('overflow-hidden');
             };
 
-            const closeDetails = () => {
-                consultationDetailsDrawer?.classList.add('hidden');
-                consultationDetailsBackdrop?.classList.add('hidden');
+            const closePanels = () => {
+                mobileMenuDrawer?.classList.add('translate-x-full');
+                consultationInfoPanel?.classList.add('-translate-x-full');
+                panelBackdrop?.classList.add('opacity-0');
                 document.body.classList.remove('overflow-hidden');
+
+                window.setTimeout(() => {
+                    panelBackdrop?.classList.add('hidden');
+                }, 250);
             };
 
-            toggleConsultationDetails?.addEventListener('click', openDetails);
-            closeConsultationDetails?.addEventListener('click', closeDetails);
-            consultationDetailsBackdrop?.addEventListener('click', closeDetails);
+            const openMenuPanel = () => {
+                closePanels();
+                showBackdrop();
+                mobileMenuDrawer?.classList.remove('translate-x-full');
+            };
 
-            const scrollToBottom = () => {
+            const openInfoPanel = () => {
+                closePanels();
+                showBackdrop();
+                consultationInfoPanel?.classList.remove('-translate-x-full');
+            };
+
+            openMobileMenu?.addEventListener('click', openMenuPanel);
+
+            document
+                .querySelectorAll('[data-open-info]')
+                .forEach((button) => {
+                    button.addEventListener('click', openInfoPanel);
+                });
+
+            document
+                .querySelectorAll('[data-close-panels]')
+                .forEach((button) => {
+                    button.addEventListener('click', closePanels);
+                });
+
+            panelBackdrop?.addEventListener('click', closePanels);
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closePanels();
+                }
+            });
+
+const scrollToBottom = () => {
                 if (messagesContainer) {
                     messagesContainer.scrollTop =
                         messagesContainer.scrollHeight;
