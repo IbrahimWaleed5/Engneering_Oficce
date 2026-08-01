@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
         gd \
         mbstring \
         dom \
+        pcntl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -58,13 +59,18 @@ RUN composer dump-autoload \
 RUN npm install
 RUN npm run build
 
-# إنشاء مجلدات Laravel وmPDF
+# إنشاء مجلدات Laravel وmPDF والتخزين الخاص
 RUN mkdir -p \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
     storage/app/public \
+    storage/app/private \
+    storage/app/private/payment-receipts \
+    storage/app/private/consultation-messages \
+    storage/app/private/consultations/customer-files \
+    storage/app/private/consultations/engineer-files \
     storage/app/mpdf-temp \
     bootstrap/cache
 
