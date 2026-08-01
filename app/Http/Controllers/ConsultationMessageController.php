@@ -9,6 +9,7 @@ use App\Notifications\SystemNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -84,6 +85,15 @@ class ConsultationMessageController extends Controller
                 );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | حفظ الرسالة
+        |--------------------------------------------------------------------------
+        |
+        | إذا فشل حفظ الرسالة، يتم حذف المرفق الذي رُفع قبل الحفظ.
+        |
+        */
+
         try {
             $message = ConsultationMessage::create([
                 'consultation_id' =>
@@ -100,10 +110,6 @@ class ConsultationMessageController extends Controller
             ]);
 
             $message->load('sender');
-
-            broadcast(
-                new ConsultationMessageSent($message)
-            )->toOthers();
         } catch (\Throwable $exception) {
             if ($attachmentPath) {
                 Storage::disk('private')
@@ -111,6 +117,35 @@ class ConsultationMessageController extends Controller
             }
 
             throw $exception;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | البث الفوري
+        |--------------------------------------------------------------------------
+        |
+        | فشل Reverb لا يجب أن يمنع حفظ الرسالة أو إرجاع نجاح للمستخدم.
+        |
+        */
+
+        try {
+            broadcast(
+                new ConsultationMessageSent($message)
+            )->toOthers();
+        } catch (\Throwable $exception) {
+            Log::error(
+                'Realtime message broadcast failed',
+                [
+                    'consultation_id' =>
+                        $consultation->id,
+
+                    'message_id' =>
+                        $message->id,
+
+                    'error' =>
+                        $exception->getMessage(),
+                ]
+            );
         }
 
         $consultation->load([
@@ -124,20 +159,39 @@ class ConsultationMessageController extends Controller
         );
 
         if ($recipient) {
-            $recipient->notify(
-                new SystemNotification(
-                    'رسالة جديدة في الاستشارة',
-                    'وصلتك رسالة جديدة في الاستشارة رقم '
-                        . $consultation->consultation_number
-                        . ' من '
-                        . $request->user()->name
-                        . '.',
-                    route(
-                        'consultations.messages.index',
-                        $consultation
+            try {
+                $recipient->notify(
+                    new SystemNotification(
+                        'رسالة جديدة في الاستشارة',
+                        'وصلتك رسالة جديدة في الاستشارة رقم '
+                            . $consultation->consultation_number
+                            . ' من '
+                            . $request->user()->name
+                            . '.',
+                        route(
+                            'consultations.messages.index',
+                            $consultation
+                        )
                     )
-                )
-            );
+                );
+            } catch (\Throwable $exception) {
+                Log::error(
+                    'Consultation message notification failed',
+                    [
+                        'consultation_id' =>
+                            $consultation->id,
+
+                        'message_id' =>
+                            $message->id,
+
+                        'recipient_id' =>
+                            $recipient->id,
+
+                        'error' =>
+                            $exception->getMessage(),
+                    ]
+                );
+            }
         }
 
         if ($request->expectsJson()) {
