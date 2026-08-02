@@ -1,863 +1,844 @@
 <x-app-layout>
+    @php
+        $currentUser = auth()->user();
 
-    <div
-        x-data="{
-            search: '',
-            statusFilter: 'all',
-            paymentFilter: 'all'
-        }"
-        class="relative py-12"
-        dir="rtl"
-    >
+        $totalConsultations = $consultations->total();
 
-        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        $unpaidCount = $consultations
+            ->getCollection()
+            ->where('payment_status', 'unpaid')
+            ->count();
 
-            <x-page-header
-                title="إدارة الاستشارات"
-                description="متابعة جميع الطلبات، الدفع، المهندسين وحالة التنفيذ"
-                icon="🗂️"
-            >
-                <x-slot name="actions">
+        $inProgressCount = $consultations
+            ->getCollection()
+            ->where('status', 'in_progress')
+            ->count();
+
+        $completedCount = $consultations
+            ->getCollection()
+            ->where('status', 'completed')
+            ->count();
+
+        $cancelledCount = $consultations
+            ->getCollection()
+            ->where('status', 'cancelled')
+            ->count();
+
+        $totalAmount = $consultations
+            ->getCollection()
+            ->sum('final_price');
+    @endphp
+
+    <style>
+        .consultations-page {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #dae2fd;
+            background: #0b1326;
+            font-family: 'Be Vietnam Pro', 'Almarai', sans-serif;
+        }
+
+        .consultations-glass {
+            background: rgba(23, 31, 51, .4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .consultations-glass-hover {
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+
+        .consultations-glass-hover:hover {
+            transform: scale(1.02);
+            border-color: rgba(180, 197, 255, .25);
+            box-shadow: 0 0 20px rgba(37, 99, 235, .15);
+        }
+
+        .consultations-table-row {
+            transition: background-color .2s ease;
+        }
+
+        .consultations-table-row:hover {
+            background: rgba(45, 52, 73, .4);
+        }
+
+        .consultations-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .consultations-scroll::-webkit-scrollbar-track {
+            background: #0b1326;
+        }
+
+        .consultations-scroll::-webkit-scrollbar-thumb {
+            background: #2d3449;
+            border-radius: 4px;
+        }
+
+        .consultations-scroll::-webkit-scrollbar-thumb:hover {
+            background: #434655;
+        }
+
+        @media (max-width: 1023px) {
+            .consultations-sidebar {
+                display: none !important;
+            }
+
+            .consultations-main {
+                margin-right: 0 !important;
+            }
+
+            .consultations-topbar {
+                right: 0 !important;
+            }
+        }
+    </style>
+
+    <div class="consultations-page" dir="rtl">
+        {{-- القائمة الجانبية --}}
+        <aside class="consultations-sidebar fixed right-0 top-0 z-50 flex h-screen w-64 flex-col border-l border-[#434655]/10 bg-[#131b2e]/90 p-4 shadow-xl backdrop-blur-xl">
+            <div class="px-4 mb-10">
+                <h1 class="text-2xl font-black tracking-tight text-[#b4c5ff]">
+                    CreativeHome
+                </h1>
+
+                <p class="text-sm text-[#c3c6d7] opacity-60">
+                    Engineering Office
+                </p>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                    </svg>
+
+                    <span>لوحة التحكم</span>
+                </a>
+
+                <a
+                    href="{{ route('consultations.index') }}"
+                    class="flex items-center gap-3 rounded-xl bg-[#2563eb]/20 px-4 py-3 font-bold text-[#b4c5ff] shadow-[0_0_15px_rgba(37,99,235,.1)]"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <rect x="5" y="3" width="14" height="18" rx="2"/>
+                        <path d="M8 8h8M8 12h8M8 16h5"/>
+                    </svg>
+
+                    <span>الاستشارات</span>
+                </a>
+
+                @if (Route::has('users.index'))
+                    <a
+                        href="{{ route('users.index') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <circle cx="9" cy="8" r="3"/>
+                            <circle cx="17" cy="9" r="2.5"/>
+                            <path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 7 0"/>
+                        </svg>
+
+                        <span>المستخدمون</span>
+                    </a>
+                @endif
+
+                @if (Route::has('payments.index'))
+                    <a
+                        href="{{ route('payments.index') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <rect x="3" y="5" width="18" height="14" rx="2"/>
+                            <path d="M3 10h18M7 15h4"/>
+                        </svg>
+
+                        <span>الدفعات</span>
+                    </a>
+                @endif
+
+                @if (Route::has('conversations.index'))
+                    <a
+                        href="{{ route('conversations.index') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+                        </svg>
+
+                        <span>المحادثات</span>
+                    </a>
+                @endif
+
+                <a
+                    href="{{ route('profile.edit') }}"
+                    class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/>
+                    </svg>
+
+                    <span>الإعدادات</span>
+                </a>
+            </nav>
+
+            <div class="pt-6 mt-auto space-y-2 border-t border-[#434655]/10">
+                <a
+                    href="{{ route('profile.edit') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-[#c3c6d7] transition hover:text-white"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7M12 17h.01"/>
+                    </svg>
+
+                    <span>الدعم</span>
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="flex items-center w-full gap-3 px-4 py-3 text-[#c3c6d7] transition hover:text-red-300"
+                    >
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>
+                        </svg>
+
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        {{-- الشريط العلوي --}}
+        <header class="consultations-topbar fixed top-0 left-0 right-64 z-40 flex h-16 items-center justify-between border-b border-[#434655]/10 bg-[#060e20]/60 px-6 backdrop-blur-md">
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl font-black text-[#dae2fd]">
+                    سجل الاستشارات
+                </h2>
+
+                <div class="h-6 w-px bg-[#434655]/30"></div>
+
+                <div class="relative hidden md:block">
+                    <svg class="absolute w-5 h-5 -translate-y-1/2 left-3 top-1/2 text-[#8d90a0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="m20 20-3.5-3.5"/>
+                    </svg>
+
+                    <input
+                        id="consultationsLiveSearch"
+                        type="search"
+                        value="{{ request('search') }}"
+                        placeholder="بحث عن استشارة..."
+                        class="w-64 rounded-full border-0 bg-[#131b2e] py-2 pr-4 pl-10 text-sm text-white placeholder:text-[#8d90a0] focus:ring-1 focus:ring-[#b4c5ff]"
+                    >
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a
+                    href="{{ Route::has('notifications.index') ? route('notifications.index') : route('dashboard') }}"
+                    class="flex items-center justify-center p-2 transition rounded-full hover:bg-white/5"
+                    title="الإشعارات"
+                >
+                    <svg class="w-5 h-5 text-[#dae2fd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M10 21h4"/>
+                    </svg>
+                </a>
+
+                @if (Route::has('conversations.index'))
+                    <a
+                        href="{{ route('conversations.index') }}"
+                        class="flex items-center justify-center p-2 transition rounded-full hover:bg-white/5"
+                        title="المحادثات"
+                    >
+                        <svg class="w-5 h-5 text-[#dae2fd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+                        </svg>
+                    </a>
+                @endif
+
+                <div class="flex items-center gap-3 pr-4 border-r border-[#434655]/20">
+                    <div class="text-left">
+                        <p class="text-xs font-bold leading-tight text-[#dae2fd]">
+                            {{ $currentUser->name }}
+                        </p>
+
+                        <p class="text-[11px] text-[#c3c6d7] opacity-60">
+                            {{ $currentUser->role === 'admin' ? 'مشرف النظام' : 'مستخدم النظام' }}
+                        </p>
+                    </div>
+
+                    <a
+                        href="{{ route('profile.edit') }}"
+                        class="flex items-center justify-center w-10 h-10 overflow-hidden border rounded-xl border-[#b4c5ff]/20"
+                    >
+                        @if ($currentUser->profile_photo)
+                            <img
+                                src="{{ asset('storage/' . $currentUser->profile_photo) }}"
+                                alt="{{ $currentUser->name }}"
+                                class="object-cover w-full h-full"
+                            >
+                        @else
+                            <span class="flex items-center justify-center w-full h-full font-bold text-white bg-gradient-to-br from-blue-600 to-purple-600">
+                                {{ mb_substr($currentUser->name, 0, 1) }}
+                            </span>
+                        @endif
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="min-h-screen px-6 pt-24 pb-12 consultations-main lg:mr-64">
+            <div class="mx-auto max-w-[1700px] space-y-8">
+                {{-- الرسائل --}}
+                @if (session('success'))
+                    <div class="p-4 text-green-200 border rounded-2xl border-green-500/20 bg-green-500/10">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="p-4 text-red-200 border rounded-2xl border-red-500/20 bg-red-500/10">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
+                {{-- رأس الصفحة --}}
+                <section class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+                    <div>
+                        <h1 class="text-3xl font-black text-[#dae2fd]">
+                            إدارة الاستشارات
+                        </h1>
+
+                        <p class="mt-2 text-sm text-[#c3c6d7]">
+                            متابعة جميع الطلبات، الدفع، المهندسين وحالة التنفيذ.
+                        </p>
+                    </div>
 
                     <a
                         href="{{ route('consultations.create') }}"
-                        class="primary-button"
+                        class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white shadow-lg shadow-blue-500/20 transition hover:brightness-110 active:scale-95"
                     >
-                        <span>➕</span>
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+
                         استشارة جديدة
                     </a>
+                </section>
 
-                </x-slot>
-            </x-page-header>
-
-            <x-alerts />
-
-            {{-- الإحصائيات --}}
-
-            <div class="grid gap-5 mb-8 sm:grid-cols-2 xl:grid-cols-4">
-
-                <div class="p-6 glass-card rounded-3xl">
-
-                    <div class="flex items-center justify-between">
-
+                {{-- الإحصائيات --}}
+                <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                    <article class="flex items-center justify-between p-5 consultations-glass consultations-glass-hover rounded-2xl">
                         <div>
-
-                            <p class="text-sm text-slate-400">
+                            <p class="mb-1 text-xs font-bold uppercase text-[#8d90a0]">
                                 جميع الاستشارات
                             </p>
 
-                            <p class="mt-3 text-3xl font-black text-white">
-                                {{ $consultations->count() }}
-                            </p>
-
+                            <h3 class="text-3xl font-black text-[#dae2fd]">
+                                {{ $totalConsultations }}
+                            </h3>
                         </div>
 
-                        <div
-                            class="flex items-center justify-center text-2xl w-14 h-14 rounded-2xl bg-blue-500/10"
-                        >
-                            📋
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#b4c5ff]/10 text-[#b4c5ff]">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                <rect x="5" y="3" width="14" height="18" rx="2"/>
+                                <path d="M8 8h8M8 12h8M8 16h5"/>
+                            </svg>
                         </div>
+                    </article>
 
-                    </div>
-
-                </div>
-
-                <div class="p-6 glass-card rounded-3xl">
-
-                    <div class="flex items-center justify-between">
-
+                    <article class="flex items-center justify-between p-5 consultations-glass consultations-glass-hover rounded-2xl">
                         <div>
-
-                            <p class="text-sm text-slate-400">
+                            <p class="mb-1 text-xs font-bold uppercase text-[#8d90a0]">
                                 بانتظار الدفع
                             </p>
 
-                            <p class="mt-3 text-3xl font-black text-orange-300">
-                                {{ $consultations->where('payment_status', 'unpaid')->count() }}
-                            </p>
-
+                            <h3 class="text-3xl font-black text-[#d2bbff]">
+                                {{ $unpaidCount }}
+                            </h3>
                         </div>
 
-                        <div
-                            class="flex items-center justify-center text-2xl w-14 h-14 rounded-2xl bg-orange-500/10"
-                        >
-                            💳
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#d2bbff]/10 text-[#d2bbff]">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                <rect x="3" y="5" width="18" height="14" rx="2"/>
+                                <path d="M3 10h18M7 15h4"/>
+                            </svg>
                         </div>
+                    </article>
 
-                    </div>
-
-                </div>
-
-                <div class="p-6 glass-card rounded-3xl">
-
-                    <div class="flex items-center justify-between">
-
+                    <article class="consultations-glass consultations-glass-hover flex items-center justify-between rounded-2xl border border-[#b4c5ff]/20 bg-[#b4c5ff]/5 p-5 shadow-[0_0_10px_rgba(180,197,255,.1)]">
                         <div>
-
-                            <p class="text-sm text-slate-400">
+                            <p class="mb-1 text-xs font-bold uppercase text-[#b4c5ff]">
                                 قيد التنفيذ
                             </p>
 
-                            <p class="mt-3 text-3xl font-black text-cyan-300">
-                                {{ $consultations->where('status', 'in_progress')->count() }}
-                            </p>
-
+                            <h3 class="text-3xl font-black text-[#b4c5ff]">
+                                {{ $inProgressCount }}
+                            </h3>
                         </div>
 
-                        <div
-                            class="flex items-center justify-center text-2xl w-14 h-14 rounded-2xl bg-cyan-500/10"
-                        >
-                            ⚙️
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#b4c5ff]/20 text-[#b4c5ff]">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/>
+                            </svg>
                         </div>
+                    </article>
 
-                    </div>
-
-                </div>
-
-                <div class="p-6 glass-card rounded-3xl">
-
-                    <div class="flex items-center justify-between">
-
+                    <article class="flex items-center justify-between p-5 consultations-glass consultations-glass-hover rounded-2xl">
                         <div>
-
-                            <p class="text-sm text-slate-400">
+                            <p class="mb-1 text-xs font-bold uppercase text-[#8d90a0]">
                                 مكتملة
                             </p>
 
-                            <p class="mt-3 text-3xl font-black text-green-300">
-                                {{ $consultations->where('status', 'completed')->count() }}
-                            </p>
-
+                            <h3 class="text-3xl font-black text-green-300">
+                                {{ $completedCount }}
+                            </h3>
                         </div>
 
-                        <div
-                            class="flex items-center justify-center text-2xl w-14 h-14 rounded-2xl bg-green-500/10"
-                        >
-                            ✅
+                        <div class="flex items-center justify-center w-12 h-12 text-green-300 rounded-xl bg-green-500/10">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="m8 12 2.5 2.5L16 9"/>
+                            </svg>
                         </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-            <section
-    class="p-6 mb-8 glass-panel-strong rounded-[2rem]"
-    dir="rtl"
->
-
-    <div class="mb-6">
-
-        <h3 class="text-xl font-black text-white">
-            البحث والفلترة
-        </h3>
-
-        <p class="mt-1 text-sm text-slate-400">
-            ابحث عن الاستشارات حسب العميل أو الرقم أو الحالة أو المهندس
-        </p>
-
-    </div>
-
-    <form
-        method="GET"
-        action="{{ route('consultations.index') }}"
-        class="grid gap-5 md:grid-cols-2 xl:grid-cols-4"
-    >
-
-        {{-- البحث --}}
-        <div class="md:col-span-2">
-
-            <label
-                for="search"
-                class="block mb-2 text-sm font-bold text-slate-300"
-            >
-                اسم العميل أو رقم الاستشارة
-            </label>
-
-            <input
-                id="search"
-                name="search"
-                type="text"
-                value="{{ request('search') }}"
-                placeholder="مثال: CONS-123 أو اسم العميل"
-                class="form-control"
-            >
-
-        </div>
-
-        {{-- الحالة --}}
-        <div>
-
-            <label
-                for="status"
-                class="block mb-2 text-sm font-bold text-slate-300"
-            >
-                حالة الاستشارة
-            </label>
-
-            <select
-                id="status"
-                name="status"
-                class="form-control"
-            >
-
-                <option value="">
-                    جميع الحالات
-                </option>
-
-                <option
-                    value="waiting_payment"
-                    @selected(
-                        request('status') === 'waiting_payment'
-                    )
-                >
-                    بانتظار الدفع
-                </option>
-
-                <option
-                    value="pending"
-                    @selected(
-                        request('status') === 'pending'
-                    )
-                >
-                    قيد الانتظار
-                </option>
-
-                <option
-                    value="in_progress"
-                    @selected(
-                        request('status') === 'in_progress'
-                    )
-                >
-                    قيد التنفيذ
-                </option>
-
-                <option
-                    value="completed"
-                    @selected(
-                        request('status') === 'completed'
-                    )
-                >
-                    مكتملة
-                </option>
-
-                <option
-                    value="cancelled"
-                    @selected(
-                        request('status') === 'cancelled'
-                    )
-                >
-                    ملغاة
-                </option>
-
-            </select>
-
-        </div>
-
-        {{-- المهندس --}}
-        <div>
-
-            <label
-                for="engineer_id"
-                class="block mb-2 text-sm font-bold text-slate-300"
-            >
-                المهندس
-            </label>
-
-            <select
-                id="engineer_id"
-                name="engineer_id"
-                class="form-control"
-            >
-
-                <option value="">
-                    جميع المهندسين
-                </option>
-
-                @foreach ($engineers as $engineer)
-
-                    <option
-                        value="{{ $engineer->id }}"
-                        @selected(
-                            (string) request('engineer_id')
-                            === (string) $engineer->id
-                        )
-                    >
-                        {{ $engineer->name }}
-                    </option>
-
-                @endforeach
-
-            </select>
-
-        </div>
-
-        {{-- من تاريخ --}}
-        <div>
-
-            <label
-                for="date_from"
-                class="block mb-2 text-sm font-bold text-slate-300"
-            >
-                من تاريخ
-            </label>
-
-            <input
-                id="date_from"
-                name="date_from"
-                type="date"
-                value="{{ request('date_from') }}"
-                class="form-control"
-            >
-
-        </div>
-
-        {{-- إلى تاريخ --}}
-        <div>
-
-            <label
-                for="date_to"
-                class="block mb-2 text-sm font-bold text-slate-300"
-            >
-                إلى تاريخ
-            </label>
-
-            <input
-                id="date_to"
-                name="date_to"
-                type="date"
-                value="{{ request('date_to') }}"
-                class="form-control"
-            >
-
-        </div>
-
-        {{-- الأزرار --}}
-        <div
-            class="flex flex-wrap items-end gap-3 md:col-span-2"
-        >
-
-            <button
-                type="submit"
-                class="primary-button"
-            >
-                تطبيق الفلاتر
-            </button>
-
-            <a
-                href="{{ route('consultations.index') }}"
-                class="px-5 py-3 font-bold transition border rounded-2xl border-slate-600 text-slate-300 hover:bg-slate-800"
-            >
-                مسح الفلاتر
-            </a>
-
-        </div>
-
-    </form>
-
-</section>
-<div
-    class="flex flex-wrap items-center justify-between gap-4 p-6 border-b border-white/10"
->
-
-    <div>
-
-        <h3 class="text-xl font-black text-white">
-            نتائج الاستشارات
-        </h3>
-
-        <p class="mt-1 text-sm text-slate-400">
-            تم العثور على
-            <span class="font-black text-cyan-300">
-                {{ $consultations->total() }}
-            </span>
-            استشارة
-        </p>
-
-    </div>
-
-</div>
-
-            {{-- البحث والفلاتر --}}
-
-
-            {{-- سطح المكتب --}}
-
-            <div class="hidden overflow-x-auto lg:block">
-
-                <table class="table-glass">
-
-                    <thead>
-
-                        <tr>
-                            <th>رقم الاستشارة</th>
-                            <th>العميل</th>
-                            <th>عنوان الطلب</th>
-                            <th>المهندس</th>
-                            <th>السعر</th>
-                            <th>الدفع</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-                        @if ($consultations->hasPages())
-
-    <div class="p-6 border-t border-white/10">
-        {{ $consultations->links() }}
-    </div>
-
-@endif
-                        @forelse ($consultations as $consultation)
-
-                           @php
-    $searchText = strtolower(
-        ($consultation->consultation_number ?? '') . ' ' .
-        ($consultation->title ?? '') . ' ' .
-        ($consultation->customer?->name ?? '') . ' ' .
-        ($consultation->engineer?->name ?? '')
-    );
-
-    $canOpenChat =
-        (int) auth()->id()
-            === (int) $consultation->customer_id
-        || (int) auth()->id()
-            === (int) $consultation->engineer_id
-        || in_array(
-            auth()->user()->role,
-            ['admin', 'employee'],
-            true
-        );
-@endphp
-
-                            <tr
-                                x-show="
-                                    (
-                                        search === ''
-                                        || @js($searchText).includes(
-                                            search.toLowerCase()
-                                        )
-                                    )
-                                    &&
-                                    (
-                                        statusFilter === 'all'
-                                        || statusFilter === @js($consultation->status)
-                                    )
-                                    &&
-                                    (
-                                        paymentFilter === 'all'
-                                        || paymentFilter === @js($consultation->payment_status)
-                                    )
-                                "
-                                x-transition
-                            >
-
-                                <td>
-
-                                    <span
-                                        class="px-3 py-2 text-xs font-bold rounded-xl bg-white/5 text-slate-300"
-                                    >
-                                        {{ $consultation->consultation_number }}
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <div class="flex items-center gap-3">
-
-                                        <div
-                                            class="flex items-center justify-center flex-none w-10 h-10 font-bold rounded-full bg-gradient-to-br from-blue-600 to-cyan-500"
-                                        >
-                                            {{ mb_substr(
-                                                $consultation->customer?->name ?? 'ع',
-                                                0,
-                                                1
-                                            ) }}
-                                        </div>
-
-                                        <div>
-
-                                            <p class="font-bold text-white">
-                                                {{ $consultation->customer?->name ?? 'غير معروف' }}
-                                            </p>
-
-                                            <p class="mt-1 text-xs text-slate-500">
-                                                عميل
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                </td>
-
-                                <td>
-
-                                    <p class="max-w-xs font-bold text-white truncate">
-                                        {{ $consultation->title }}
-                                    </p>
-
-                                    <p class="mt-1 text-xs text-slate-500">
-                                        {{ $consultation->consultationType?->name ?? 'غير محدد' }}
-                                    </p>
-
-                                </td>
-
-                                <td>
-
-                                    @if ($consultation->engineer)
-
-                                        <span class="font-bold text-cyan-200">
-                                            {{ $consultation->engineer->name }}
-                                        </span>
-
-                                    @else
-
-                                        <span class="text-sm text-slate-500">
-                                            غير معيّن
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-                                <td class="font-black text-cyan-300">
-
-                                    {{ number_format(
-                                        $consultation->final_price,
-                                        2
-                                    ) }}
-                                    ₪
-
-                                </td>
-
-                                <td>
-
-                                    @if ($consultation->payment_status === 'paid')
-
-                                        <span
-                                            class="text-green-200 status-badge bg-green-500/10"
-                                        >
-                                            مدفوع
-                                        </span>
-
-                                    @elseif ($consultation->payment_status === 'pending')
-
-                                        <span
-                                            class="text-yellow-200 status-badge bg-yellow-500/10"
-                                        >
-                                            قيد الفحص
-                                        </span>
-
-                                    @else
-
-                                        <span
-                                            class="text-red-200 status-badge bg-red-500/10"
-                                        >
-                                            غير مدفوع
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-                                <td>
-
-                                    @if ($consultation->status === 'waiting_payment')
-
-                                        <span
-                                            class="text-orange-200 status-badge bg-orange-500/10"
-                                        >
-                                            بانتظار الدفع
-                                        </span>
-
-                                    @elseif ($consultation->status === 'pending')
-
-                                        <span
-                                            class="text-yellow-200 status-badge bg-yellow-500/10"
-                                        >
-                                            قيد المراجعة
-                                        </span>
-
-                                    @elseif ($consultation->status === 'in_progress')
-
-                                        <span
-                                            class="text-blue-200 status-badge bg-blue-500/10"
-                                        >
-                                            قيد التنفيذ
-                                        </span>
-
-                                    @elseif ($consultation->status === 'completed')
-
-                                        <span
-                                            class="text-green-200 status-badge bg-green-500/10"
-                                        >
-                                            مكتملة
-                                        </span>
-
-                                    @elseif ($consultation->status === 'cancelled')
-
-                                        <span
-                                            class="text-red-200 status-badge bg-red-500/10"
-                                        >
-                                            ملغاة
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-                                <td>
-
-                                    <div class="flex items-center gap-2">
-
-                                        @if (!$consultation->engineer)
-
-                                            <a
-                                                href="{{ route(
-                                                    'consultations.assign.form',
-                                                    $consultation
-                                                ) }}"
-                                                class="px-3 py-2 text-xs font-bold text-blue-200 transition rounded-xl bg-blue-500/10 hover:bg-blue-500/20"
-                                            >
-                                                تعيين مهندس
-                                            </a>
-
-                                        @else
-
-                                            <a
-                                                href="{{ route(
-                                                    'consultations.assign.form',
-                                                    $consultation
-                                                ) }}"
-                                                class="px-3 py-2 text-xs font-bold text-purple-200 transition rounded-xl bg-purple-500/10 hover:bg-purple-500/20"
-                                            >
-                                                تغيير المهندس
-                                            </a>
-
-                                        @endif
-
-                                        @if ($consultation->customer_file)
-
-                                            <a
-                                                href="{{ asset(
-                                                    'storage/' .
-                                                    $consultation->customer_file
-                                                ) }}"
-                                                target="_blank"
-                                                class="px-3 py-2 text-xs font-bold text-cyan-200 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20"
-                                            >
-                                                ملف العميل
-                                            </a>
-
-                                        @endif
-@if (
-    $canOpenChat
-    && $consultation->payment_status === 'paid'
-    && $consultation->engineer_id
-)
-
-    <a
-        href="{{ route(
-            'consultations.messages.index',
-            $consultation
-        ) }}"
-        class="px-3 py-2 text-xs font-bold text-white transition rounded-xl bg-cyan-600 hover:bg-cyan-500"
-    >
-        💬 المحادثة
-    </a>
-
-@endif
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        @empty
-
-                            <tr>
-
-                                <td
-                                    colspan="8"
-                                    class="py-12 text-center text-slate-400"
-                                >
-                                    لا توجد استشارات حتى الآن.
-                                </td>
-
-                            </tr>
-
-                        @endforelse
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-            {{-- الموبايل --}}
-
-            <div class="grid gap-5 lg:hidden">
-
-                @foreach ($consultations as $consultation)
-
-                   @php
-    $mobileSearchText = strtolower(
-        ($consultation->consultation_number ?? '') . ' ' .
-        ($consultation->title ?? '') . ' ' .
-        ($consultation->customer?->name ?? '')
-    );
-
-    $canOpenChat =
-        (int) auth()->id()
-            === (int) $consultation->customer_id
-        || (int) auth()->id()
-            === (int) $consultation->engineer_id
-        || in_array(
-            auth()->user()->role,
-            ['admin', 'employee'],
-            true
-        );
-@endphp
-
-                    <article
-                        x-show="
-                            (
-                                search === ''
-                                || @js($mobileSearchText).includes(
-                                    search.toLowerCase()
-                                )
-                            )
-                            &&
-                            (
-                                statusFilter === 'all'
-                                || statusFilter === @js($consultation->status)
-                            )
-                            &&
-                            (
-                                paymentFilter === 'all'
-                                || paymentFilter === @js($consultation->payment_status)
-                            )
-                        "
-                        x-transition
-                        class="p-6 glass-card rounded-3xl"
-                    >
-
-                        <div class="flex items-start justify-between gap-4">
-
-                            <div>
-
-                                <p class="text-xs text-slate-500">
-                                    {{ $consultation->consultation_number }}
-                                </p>
-
-                                <h2 class="mt-2 text-lg font-black text-white">
-                                    {{ $consultation->title }}
-                                </h2>
-
-                                <p class="mt-2 text-sm text-slate-400">
-                                    العميل:
-                                    {{ $consultation->customer?->name ?? 'غير معروف' }}
-                                </p>
-
-                            </div>
-
-                            <p class="font-black text-cyan-300">
-                                {{ number_format(
-                                    $consultation->final_price,
-                                    2
-                                ) }}
-                                ₪
-                            </p>
-
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3 mt-5">
-
-                            <div class="p-3 rounded-xl bg-white/5">
-
-                                <p class="text-xs text-slate-500">
-                                    المهندس
-                                </p>
-
-                                <p class="mt-2 text-sm font-bold">
-                                    {{ $consultation->engineer?->name ?? 'غير معيّن' }}
-                                </p>
-
-                            </div>
-
-                            <div class="p-3 rounded-xl bg-white/5">
-
-                                <p class="text-xs text-slate-500">
-                                    الدفع
-                                </p>
-
-                                <p class="mt-2 text-sm font-bold">
-                                    {{ $consultation->payment_status }}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <div class="grid gap-3 mt-5 sm:grid-cols-2">
-
-                            <a
-                                href="{{ route(
-                                    'consultations.assign.form',
-                                    $consultation
-                                ) }}"
-                                class="primary-button"
-                            >
-                                {{ $consultation->engineer
-                                    ? 'تغيير المهندس'
-                                    : 'تعيين مهندس' }}
-                            </a>
-
-                            @if ($consultation->customer_file)
-
-                                <a
-                                    href="{{ asset(
-                                        'storage/' .
-                                        $consultation->customer_file
-                                    ) }}"
-                                    target="_blank"
-                                    class="secondary-button"
-                                >
-                                    ملف العميل
-                                </a>
-
-                            @endif
-@if (
-    $canOpenChat
-    && $consultation->payment_status === 'paid'
-    && $consultation->engineer_id
-)
-
-    <a
-        href="{{ route(
-            'consultations.messages.index',
-            $consultation
-        ) }}"
-        class="flex items-center justify-center gap-2 primary-button"
-    >
-        💬 المحادثة
-    </a>
-
-@endif
-                        </div>
-
                     </article>
 
-                @endforeach
+                    <article class="consultations-glass consultations-glass-hover relative flex items-center justify-between overflow-hidden rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 p-5">
+                        <div class="relative z-10">
+                            <p class="mb-1 text-xs font-bold uppercase text-[#eeefff]">
+                                إجمالي قيمة الصفحة
+                            </p>
 
+                            <h3 class="text-2xl font-black text-[#eeefff]">
+                                {{ number_format($totalAmount, 2) }}
+                                <span class="text-sm font-normal">₪</span>
+                            </h3>
+                        </div>
+
+                        <div class="relative z-10 flex items-center justify-center w-12 h-12 text-white rounded-xl bg-[#2563eb]/30">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                <path d="M4 7h16v11H4zM7 7V4h10v3"/>
+                                <circle cx="12" cy="12.5" r="2"/>
+                            </svg>
+                        </div>
+                    </article>
+                </section>
+
+                {{-- البحث والفلاتر --}}
+                <section id="consultationFilterPanel" class="hidden p-6 consultations-glass rounded-3xl">
+                    <form
+                        method="GET"
+                        action="{{ route('consultations.index') }}"
+                        class="grid gap-5 md:grid-cols-2 xl:grid-cols-4"
+                    >
+                        <div class="md:col-span-2">
+                            <label for="search" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                اسم العميل أو رقم الاستشارة
+                            </label>
+
+                            <input
+                                id="search"
+                                name="search"
+                                type="text"
+                                value="{{ request('search') }}"
+                                placeholder="مثال: CONS-123 أو اسم العميل"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white placeholder:text-[#8d90a0] focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="status" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                حالة الاستشارة
+                            </label>
+
+                            <select
+                                id="status"
+                                name="status"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                                <option value="">جميع الحالات</option>
+                                <option value="waiting_payment" @selected(request('status') === 'waiting_payment')>بانتظار الدفع</option>
+                                <option value="pending" @selected(request('status') === 'pending')>قيد الانتظار</option>
+                                <option value="in_progress" @selected(request('status') === 'in_progress')>قيد التنفيذ</option>
+                                <option value="completed" @selected(request('status') === 'completed')>مكتملة</option>
+                                <option value="cancelled" @selected(request('status') === 'cancelled')>ملغاة</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="engineer_id" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                المهندس
+                            </label>
+
+                            <select
+                                id="engineer_id"
+                                name="engineer_id"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                                <option value="">جميع المهندسين</option>
+
+                                @foreach ($engineers as $engineer)
+                                    <option
+                                        value="{{ $engineer->id }}"
+                                        @selected((string) request('engineer_id') === (string) $engineer->id)
+                                    >
+                                        {{ $engineer->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="date_from" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                من تاريخ
+                            </label>
+
+                            <input
+                                id="date_from"
+                                name="date_from"
+                                type="date"
+                                value="{{ request('date_from') }}"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="date_to" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                إلى تاريخ
+                            </label>
+
+                            <input
+                                id="date_to"
+                                name="date_to"
+                                type="date"
+                                value="{{ request('date_to') }}"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                        </div>
+
+                        <div class="flex flex-wrap items-end gap-3 md:col-span-2">
+                            <button
+                                type="submit"
+                                class="rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white transition hover:brightness-110"
+                            >
+                                تطبيق الفلاتر
+                            </button>
+
+                            <a
+                                href="{{ route('consultations.index') }}"
+                                class="rounded-xl border border-[#434655] px-5 py-3 font-bold text-[#c3c6d7] transition hover:bg-[#2d3449]"
+                            >
+                                مسح الفلاتر
+                            </a>
+                        </div>
+                    </form>
+                </section>
+
+                {{-- الجدول --}}
+                <section class="relative overflow-hidden shadow-2xl consultations-glass rounded-3xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 p-6 border-b border-[#434655]/10">
+                        <div>
+                            <h4 class="text-2xl font-bold text-[#dae2fd]">
+                                سجل الاستشارات
+                            </h4>
+
+                            <p class="mt-1 text-sm text-[#c3c6d7]">
+                                جميع طلبات الاستشارة وحالاتها الحالية
+                            </p>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button
+                                id="toggleConsultationFilters"
+                                type="button"
+                                class="flex items-center gap-2 rounded-xl border border-[#434655]/20 bg-[#222a3d] px-4 py-2 text-[#dae2fd] transition hover:bg-[#31394d]"
+                            >
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                    <path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/>
+                                </svg>
+
+                                <span class="text-xs font-bold">تصفية</span>
+                            </button>
+
+                            <a
+                                href="{{ route('consultations.create') }}"
+                                class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2 text-white shadow-lg transition hover:brightness-110 active:scale-95"
+                            >
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+
+                                <span class="text-xs font-bold">إضافة استشارة</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto consultations-scroll">
+                        <table class="w-full text-right">
+                            <thead>
+                                <tr class="bg-[#131b2e]/50">
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">رقم الاستشارة</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">العميل</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">عنوان الطلب</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">المهندس</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">السعر</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">الدفع</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">الحالة</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">الإجراءات</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-[#434655]/10">
+                                @forelse ($consultations as $consultation)
+                                    @php
+                                        $canOpenChat =
+                                            (int) auth()->id() === (int) $consultation->customer_id
+                                            || (int) auth()->id() === (int) $consultation->engineer_id
+                                            || in_array(
+                                                auth()->user()->role,
+                                                ['admin', 'employee'],
+                                                true
+                                            );
+
+                                        $searchText = strtolower(
+                                            ($consultation->consultation_number ?? '') . ' ' .
+                                            ($consultation->title ?? '') . ' ' .
+                                            ($consultation->customer?->name ?? '') . ' ' .
+                                            ($consultation->customer?->email ?? '') . ' ' .
+                                            ($consultation->engineer?->name ?? '')
+                                        );
+                                    @endphp
+
+                                    <tr
+                                        data-consultation-row
+                                        data-search="{{ $searchText }}"
+                                        class="consultations-table-row"
+                                    >
+                                        <td class="px-6 py-5">
+                                            <span class="rounded-lg bg-[#b4c5ff]/10 px-3 py-1 text-xs font-bold text-[#b4c5ff]">
+                                                {{ $consultation->consultation_number }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-[#b4c5ff] to-[#d2bbff] text-[10px] font-bold text-[#002a78]">
+                                                    {{ mb_substr($consultation->customer?->name ?? 'ع', 0, 1) }}
+                                                </div>
+
+                                                <div>
+                                                    <p class="text-xs font-bold text-[#dae2fd]">
+                                                        {{ $consultation->customer?->name ?? 'غير معروف' }}
+                                                    </p>
+
+                                                    <p class="text-[10px] text-[#8d90a0]">
+                                                        {{ $consultation->customer?->email ?? '—' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <p class="max-w-[240px] truncate text-sm font-bold text-[#dae2fd]">
+                                                {{ $consultation->title }}
+                                            </p>
+
+                                            <p class="mt-1 text-[10px] text-[#8d90a0]">
+                                                {{ $consultation->consultationType?->name ?? 'غير محدد' }}
+                                            </p>
+                                        </td>
+
+                                        <td class="px-6 py-5 text-sm text-[#c3c6d7]">
+                                            {{ $consultation->engineer?->name ?? 'غير معيّن' }}
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <span class="text-sm font-bold text-[#dae2fd]">
+                                                {{ number_format($consultation->final_price, 2) }}
+                                            </span>
+
+                                            <span class="mr-1 text-[11px] text-[#8d90a0]">₪</span>
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            @if ($consultation->payment_status === 'paid')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-[11px] font-bold text-green-400">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                                    مدفوع
+                                                </span>
+                                            @elseif ($consultation->payment_status === 'pending')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-300">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                                    قيد الفحص
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-bold text-red-300">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                                    غير مدفوع
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            @if ($consultation->status === 'waiting_payment')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-[11px] font-bold text-orange-300">
+                                                    بانتظار الدفع
+                                                </span>
+                                            @elseif ($consultation->status === 'pending')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-500/10 px-3 py-1 text-[11px] font-bold text-yellow-300">
+                                                    قيد المراجعة
+                                                </span>
+                                            @elseif ($consultation->status === 'in_progress')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-[11px] font-bold text-blue-300">
+                                                    قيد التنفيذ
+                                                </span>
+                                            @elseif ($consultation->status === 'completed')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1 text-[11px] font-bold text-green-300">
+                                                    مكتملة
+                                                </span>
+                                            @elseif ($consultation->status === 'cancelled')
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-[11px] font-bold text-red-300">
+                                                    ملغاة
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <div class="flex flex-wrap gap-2">
+                                                <a
+                                                    href="{{ route('consultations.assign.form', $consultation) }}"
+                                                    class="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2d3449] text-[#b4c5ff] transition hover:bg-[#2563eb] hover:text-white"
+                                                    title="{{ $consultation->engineer ? 'تغيير المهندس' : 'تعيين مهندس' }}"
+                                                >
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                        <circle cx="9" cy="8" r="3"/>
+                                                        <path d="M3 20a6 6 0 0 1 12 0M18 8v6M15 11h6"/>
+                                                    </svg>
+                                                </a>
+
+                                                @if ($consultation->customer_file)
+                                                    <a
+                                                        href="{{ asset('storage/' . $consultation->customer_file) }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="flex items-center justify-center transition rounded-lg w-9 h-9 text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20"
+                                                        title="ملف العميل"
+                                                    >
+                                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                            <path d="M6 2h9l5 5v15H6z"/>
+                                                            <path d="M14 2v6h6M9 13h6M9 17h6"/>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+
+                                                @if (
+                                                    $canOpenChat
+                                                    && $consultation->payment_status === 'paid'
+                                                    && $consultation->engineer_id
+                                                )
+                                                    <a
+                                                        href="{{ route('consultations.messages.index', $consultation) }}"
+                                                        class="flex items-center justify-center text-green-300 transition rounded-lg w-9 h-9 bg-green-500/10 hover:bg-green-500/20"
+                                                        title="المحادثة"
+                                                    >
+                                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-16 text-center text-[#c3c6d7]">
+                                            لا توجد استشارات حتى الآن.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if ($consultations->hasPages())
+                        <div class="p-6 border-t border-[#434655]/10">
+                            {{ $consultations->withQueryString()->links() }}
+                        </div>
+                    @endif
+                </section>
             </div>
-
-        </div>
-
+        </main>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const liveSearch =
+                document.getElementById(
+                    'consultationsLiveSearch'
+                );
+
+            const rows =
+                Array.from(
+                    document.querySelectorAll(
+                        '[data-consultation-row]'
+                    )
+                );
+
+            liveSearch?.addEventListener(
+                'input',
+                function () {
+                    const query =
+                        liveSearch.value
+                            .trim()
+                            .toLowerCase();
+
+                    rows.forEach((row) => {
+                        const searchText =
+                            (
+                                row.dataset.search || ''
+                            ).toLowerCase();
+
+                        row.classList.toggle(
+                            'hidden',
+                            query !== ''
+                            && !searchText.includes(query)
+                        );
+                    });
+                }
+            );
+
+            const filterButton =
+                document.getElementById(
+                    'toggleConsultationFilters'
+                );
+
+            const filterPanel =
+                document.getElementById(
+                    'consultationFilterPanel'
+                );
+
+            filterButton?.addEventListener(
+                'click',
+                function () {
+                    filterPanel?.classList.toggle(
+                        'hidden'
+                    );
+                }
+            );
+        });
+    </script>
 </x-app-layout>
