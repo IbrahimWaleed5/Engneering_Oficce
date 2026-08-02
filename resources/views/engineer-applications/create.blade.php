@@ -72,10 +72,151 @@
 
             .subscription-main {
                 margin-right: 0 !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                padding-top: 5.5rem !important;
             }
 
             .subscription-topbar {
                 right: 0 !important;
+                height: 4rem !important;
+                padding-left: .75rem !important;
+                padding-right: .75rem !important;
+            }
+
+            .subscription-topbar h1 {
+                font-size: 1rem !important;
+                line-height: 1.25rem !important;
+            }
+
+            .subscription-topbar p {
+                font-size: .62rem !important;
+                letter-spacing: .08em !important;
+            }
+
+            .subscription-hero {
+                min-height: 10rem !important;
+                padding: 1.25rem !important;
+                border-radius: 1rem !important;
+            }
+
+            .subscription-hero h1 {
+                font-size: 1.65rem !important;
+                line-height: 2.1rem !important;
+            }
+
+            .subscription-hero p {
+                font-size: .9rem !important;
+                line-height: 1.7rem !important;
+                max-width: 100% !important;
+            }
+
+            .subscription-glass {
+                border-radius: 1rem !important;
+            }
+
+            .subscription-page form .grid-cols-12 {
+                display: block !important;
+            }
+
+            .subscription-page form aside,
+            .subscription-page form .lg\:col-span-8 {
+                width: 100% !important;
+            }
+
+            .subscription-page form aside {
+                margin-bottom: 1.25rem !important;
+            }
+
+            .subscription-page .subscription-control {
+                font-size: 16px !important;
+            }
+
+            .subscription-page label[for="certificate_file"],
+            .subscription-page label[for="cv_file"],
+            .subscription-page label[for="payment_receipt"] {
+                padding: 1.25rem !important;
+            }
+
+            .subscription-page .sm\:flex-row {
+                flex-direction: column !important;
+            }
+
+            .subscription-page .sm\:flex-row > * {
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .subscription-main {
+                padding-left: .75rem !important;
+                padding-right: .75rem !important;
+            }
+
+            .subscription-topbar {
+                gap: .5rem !important;
+            }
+
+            .subscription-topbar > div:first-child {
+                max-width: 58% !important;
+            }
+
+            .subscription-topbar > div:last-child {
+                gap: .25rem !important;
+            }
+
+            .subscription-topbar a[title="الإشعارات"],
+            .subscription-topbar a[title="الإعدادات"] {
+                width: 2.25rem !important;
+                height: 2.25rem !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+            }
+
+            .subscription-topbar a[title="الإشعارات"] svg,
+            .subscription-topbar a[title="الإعدادات"] svg {
+                width: 1.15rem !important;
+                height: 1.15rem !important;
+            }
+
+            .subscription-topbar a.h-10,
+            .subscription-topbar button.h-10,
+            .subscription-topbar button.h-11 {
+                width: 2.35rem !important;
+                height: 2.35rem !important;
+                min-width: 2.35rem !important;
+            }
+
+            .subscription-hero {
+                margin-bottom: 1rem !important;
+            }
+
+            .subscription-page .text-5xl {
+                font-size: 2.25rem !important;
+            }
+
+            .subscription-page .text-3xl {
+                font-size: 1.7rem !important;
+            }
+
+            .subscription-page .text-2xl {
+                font-size: 1.3rem !important;
+            }
+
+            .subscription-page .p-5,
+            .subscription-page .lg\:p-6 {
+                padding: 1rem !important;
+            }
+
+            .subscription-page .gap-6 {
+                gap: 1rem !important;
+            }
+
+            .subscription-page button,
+            .subscription-page a {
+                touch-action: manipulation;
             }
         }
     </style>
@@ -105,9 +246,15 @@
                     </svg>
                 </button>
 
-                <h1 class="text-xl font-black text-[#b4c5ff]">
-                    مكتب الوليد الهندسي
-                </h1>
+                <div class="min-w-0 leading-tight">
+                    <h1 class="text-base font-black text-white truncate sm:text-xl">
+                        مكتب الوليد الهندسي
+                    </h1>
+
+                    <p class="mt-0.5 truncate text-[10px] font-bold text-[#b4c5ff] sm:text-[11px]">
+                        منصة الاستشارات الهندسية
+                    </p>
+                </div>
             </div>
 
             <div class="flex items-center gap-3">
@@ -328,7 +475,7 @@
 
                     <div class="absolute w-64 h-64 rounded-full -left-20 -top-20 bg-white/10 blur-3xl"></div>
 
-                    <div class="absolute -translate-y-1/2 left-10 top-1/2 opacity-20">
+                    <div class="absolute hidden -translate-y-1/2 left-4 top-1/2 opacity-20 sm:block lg:left-10">
                         <svg class="text-white h-28 w-28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
                             <rect x="5" y="3" width="14" height="18" rx="2"/>
                             <path d="M9 7h6M8 11h8M8 15h8"/>
