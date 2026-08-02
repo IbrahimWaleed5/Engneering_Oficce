@@ -2,6 +2,31 @@
     @php
         $currentUser = auth()->user();
         $supportEmployee = $setting?->supportEmployee;
+
+        $dashboardUrl = route('dashboard');
+
+        $projectsUrl = Route::has('consultations.index')
+            ? route('consultations.index')
+            : $dashboardUrl;
+
+        $teamUrl = Route::has('users.index')
+            ? route('users.index')
+            : $dashboardUrl;
+
+        $financeUrl = Route::has('payments.index')
+            ? route('payments.index')
+            : (Route::has('invoices.index')
+                ? route('invoices.index')
+                : $dashboardUrl);
+
+        $adminUrl = auth()->user()->role === 'admin'
+            && Route::has('admin.support.index')
+                ? route('admin.support.index')
+                : route('support.index');
+
+        $notificationsUrl = Route::has('notifications.index')
+            ? route('notifications.index')
+            : $dashboardUrl;
     @endphp
 
     <style>
@@ -17,7 +42,7 @@
                     rgba(11, 19, 38, .98)
                 ),
                 radial-gradient(
-                    circle at 50% 30%,
+                    circle at 50% 25%,
                     rgba(37, 99, 235, .08),
                     transparent 45%
                 );
@@ -150,19 +175,28 @@
             .support-create-actions > * {
                 width: 100% !important;
             }
+
+            .support-create-actions > div {
+                width: 100% !important;
+            }
+
+            .support-create-actions > div > * {
+                flex: 1;
+            }
         }
     </style>
 
     <div
         x-data="{
             mobileMenuOpen: false,
+            profileMenuOpen: false,
             fileName: '',
             dragActive: false
         }"
         class="support-create-page"
         dir="rtl"
     >
-        {{-- الشريط العلوي --}}
+        {{-- الشريط العلوي المخصص --}}
         <header
             class="support-create-topbar fixed left-0 right-64 top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-[#0b1326]/80 px-6 backdrop-blur-md"
         >
@@ -185,7 +219,7 @@
 
             <div class="flex items-center gap-4">
                 <a
-                    href="{{ Route::has('notifications.index') ? route('notifications.index') : route('dashboard') }}"
+                    href="{{ $notificationsUrl }}"
                     class="relative text-[#c3c6d7] transition hover:text-[#b4c5ff]"
                     title="الإشعارات"
                 >
@@ -208,55 +242,108 @@
                     </svg>
                 </a>
 
-                <a
-                    href="{{ route('profile.edit') }}"
-                    class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#b4c5ff]/20 bg-blue-500/10 font-bold text-white"
-                    title="الصفحة الشخصية"
-                >
-                    @if ($currentUser->profile_photo)
-                        <img
-                            src="{{ asset('storage/' . $currentUser->profile_photo) }}"
-                            alt="{{ $currentUser->name }}"
-                            class="object-cover w-full h-full"
+                <div class="relative">
+                    <button
+                        type="button"
+                        @click="profileMenuOpen = ! profileMenuOpen"
+                        class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#b4c5ff]/20 bg-blue-500/10 font-bold text-white"
+                        title="الحساب"
+                    >
+                        @if ($currentUser->profile_photo)
+                            <img
+                                src="{{ asset('storage/' . $currentUser->profile_photo) }}"
+                                alt="{{ $currentUser->name }}"
+                                class="object-cover w-full h-full"
+                            >
+                        @else
+                            {{ mb_substr($currentUser->name, 0, 1) }}
+                        @endif
+                    </button>
+
+                    <div
+                        x-cloak
+                        x-show="profileMenuOpen"
+                        x-transition
+                        @click.outside="profileMenuOpen = false"
+                        class="absolute left-0 mt-3 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#131b2e] shadow-2xl"
+                    >
+                        <a
+                            href="{{ route('profile.edit') }}"
+                            class="block px-4 py-3 text-sm text-white transition hover:bg-white/5"
                         >
-                    @else
-                        {{ mb_substr($currentUser->name, 0, 1) }}
-                    @endif
-                </a>
+                            الصفحة الشخصية
+                        </a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="block w-full px-4 py-3 text-sm text-right text-red-300 transition hover:bg-red-500/10"
+                            >
+                                تسجيل الخروج
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </header>
 
-        {{-- القائمة الجانبية --}}
+        {{-- القائمة الجانبية المخصصة --}}
         <aside
             class="support-create-sidebar fixed right-0 top-0 z-50 flex h-screen w-64 flex-col border-l border-white/10 bg-[#0b1326]/90 px-4 py-6 backdrop-blur-xl"
         >
             <div class="flex flex-col items-center mb-8">
-                <div class="flex items-center justify-center w-20 h-20 mb-4 text-2xl font-black text-blue-300 border rounded-2xl border-blue-400/20 bg-blue-500/10">
+                <img
+                    src="{{ asset('images/Mainlogo.png') }}"
+                    alt="شعار المكتب"
+                    class="object-contain w-20 h-20 mb-4"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+
+                <div
+                    style="display:none"
+                    class="items-center justify-center w-20 h-20 mb-4 text-2xl font-black text-blue-300 border rounded-2xl border-blue-400/20 bg-blue-500/10"
+                >
                     و
                 </div>
-
-                <h1 class="text-2xl font-bold text-[#b4c5ff]">
-                    مكتب الوليد
-                </h1>
-
-                <p class="mt-1 text-sm text-[#c3c6d7]">
-                    الدعم الفني
-                </p>
             </div>
 
             <nav class="flex-1 space-y-2">
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ $projectsUrl }}"
                     class="flex items-center gap-3 rounded-lg px-4 py-3 text-[#c3c6d7] transition hover:bg-blue-500/10 hover:text-[#b4c5ff]"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        <path d="M4 20h16M6 20V8l6-4 6 4v12M9 12h6M9 16h6"/>
                     </svg>
 
-                    لوحة التحكم
+                    المشاريع
+                </a>
+
+                <a
+                    href="{{ $teamUrl }}"
+                    class="flex items-center gap-3 rounded-lg px-4 py-3 text-[#c3c6d7] transition hover:bg-blue-500/10 hover:text-[#b4c5ff]"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <circle cx="9" cy="8" r="3"/>
+                        <circle cx="17" cy="9" r="2.5"/>
+                        <path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 7 0"/>
+                    </svg>
+
+                    الفريق
+                </a>
+
+                <a
+                    href="{{ $financeUrl }}"
+                    class="flex items-center gap-3 rounded-lg px-4 py-3 text-[#c3c6d7] transition hover:bg-blue-500/10 hover:text-[#b4c5ff]"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <path d="M3 9h18M7 14h4"/>
+                    </svg>
+
+                    المالية
                 </a>
 
                 <a
@@ -271,19 +358,30 @@
                 </a>
 
                 <a
-                    href="{{ route('profile.edit') }}"
+                    href="{{ $adminUrl }}"
                     class="flex items-center gap-3 rounded-lg px-4 py-3 text-[#c3c6d7] transition hover:bg-blue-500/10 hover:text-[#b4c5ff]"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
                         <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20.5h-3v-.09a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06-2.12-2.12.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H2.5v-3h.45A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.06-.06 2.12-2.12.06.06A1.8 1.8 0 0 0 8.34 5.26 1.8 1.8 0 0 0 9.44 3.6V3.5h3v.1a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06 2.12 2.12-.06.06A1.8 1.8 0 0 0 19.4 9c.26.67.9 1.1 1.65 1.1h.45v3h-.45A1.8 1.8 0 0 0 19.4 15Z"/>
+                        <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36"/>
                     </svg>
 
-                    الإعدادات
+                    الإدارة
                 </a>
             </nav>
 
-            <form method="POST" action="{{ route('logout') }}">
+            <a
+                href="{{ route('support.create') }}"
+                class="mt-auto flex items-center justify-center gap-2 rounded-xl bg-[#2563eb] px-4 py-3 font-bold text-white transition hover:opacity-90"
+            >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+
+                تذكرة جديدة
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}" class="mt-3">
                 @csrf
 
                 <button
@@ -325,10 +423,19 @@
             </div>
 
             <nav class="mt-8 space-y-3">
-                <a href="{{ route('dashboard') }}" class="block px-4 py-3 rounded-xl bg-white/5">لوحة التحكم</a>
+                <a href="{{ $projectsUrl }}" class="block px-4 py-3 rounded-xl bg-white/5">المشاريع</a>
+                <a href="{{ $teamUrl }}" class="block px-4 py-3 rounded-xl bg-white/5">الفريق</a>
+                <a href="{{ $financeUrl }}" class="block px-4 py-3 rounded-xl bg-white/5">المالية</a>
                 <a href="{{ route('support.index') }}" class="block px-4 py-3 text-blue-300 rounded-xl bg-blue-500/20">التذاكر</a>
-                <a href="{{ route('profile.edit') }}" class="block px-4 py-3 rounded-xl bg-white/5">الإعدادات</a>
+                <a href="{{ $adminUrl }}" class="block px-4 py-3 rounded-xl bg-white/5">الإدارة</a>
             </nav>
+
+            <a
+                href="{{ route('support.create') }}"
+                class="px-4 py-3 mt-auto font-bold text-center text-white bg-blue-600 rounded-xl"
+            >
+                تذكرة جديدة
+            </a>
         </aside>
 
         <main class="min-h-screen px-6 pt-24 pb-12 support-create-main lg:mr-64">
@@ -389,7 +496,7 @@
                                     value="{{ old('subject') }}"
                                     required
                                     maxlength="255"
-                                    placeholder="مثال: تأخير في تسليم المخططات"
+                                    placeholder="مثال: تأخير في تسليم المخططات الإنشائية"
                                     class="support-create-control"
                                 >
 
@@ -411,8 +518,8 @@
                                 >
                                     <option value="low" @selected(old('priority') === 'low')>منخفضة</option>
                                     <option value="medium" @selected(old('priority', 'medium') === 'medium')>متوسطة</option>
-                                    <option value="high" @selected(old('priority') === 'high')>مرتفعة</option>
-                                    <option value="urgent" @selected(old('priority') === 'urgent')>عاجلة</option>
+                                    <option value="high" @selected(old('priority') === 'high')>عالية (عاجل)</option>
+                                    <option value="urgent" @selected(old('priority') === 'urgent')>حرج (توقف العمل)</option>
                                 </select>
 
                                 @error('priority')
@@ -467,11 +574,11 @@
                                 </div>
 
                                 <p class="font-bold text-[#c3c6d7]">
-                                    اسحب وأفلت الملف هنا أو اضغط للاختيار
+                                    اسحب وأفلت المخططات أو الصور هنا
                                 </p>
 
                                 <p class="mt-2 text-xs text-[#8d90a0]">
-                                    PDF, JPG, JPEG, PNG, DOC, DOCX, ZIP — حتى 10MB
+                                    الحد الأقصى 10MB — PDF, JPG, JPEG, PNG, DOC, DOCX, ZIP
                                 </p>
 
                                 <span
@@ -549,16 +656,38 @@
                             </h4>
 
                             <p class="mt-1 text-sm text-[#c3c6d7]">
-                                عرض ومتابعة طلباتك السابقة.
+                                عرض ومتابعة الطلبات السابقة.
+                            </p>
+                        </div>
+                    </a>
+
+                    <a
+                        href="{{ route('support.index') }}"
+                        class="flex items-start gap-4 p-5 transition support-create-glass rounded-xl hover:border-pink-400/30"
+                    >
+                        <div class="p-3 text-pink-300 rounded-lg bg-pink-500/10">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M4 12a8 8 0 0 1 16 0v5a3 3 0 0 1-3 3h-2v-7h5"/>
+                                <path d="M4 12v5a3 3 0 0 0 3 3h2v-7H4"/>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-white">
+                                الدعم المباشر
+                            </h4>
+
+                            <p class="mt-1 text-sm text-[#c3c6d7]">
+                                تابع تذاكرك وتواصل مع موظف الدعم.
                             </p>
                         </div>
                     </a>
 
                     <a
                         href="{{ route('profile.edit') }}"
-                        class="flex items-start gap-4 p-5 transition support-create-glass rounded-xl hover:border-pink-400/30"
+                        class="flex items-start gap-4 p-5 transition support-create-glass rounded-xl hover:border-purple-400/30"
                     >
-                        <div class="p-3 text-pink-300 rounded-lg bg-pink-500/10">
+                        <div class="p-3 text-purple-300 rounded-lg bg-purple-500/10">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <circle cx="12" cy="12" r="3"/>
                                 <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06-2.12 2.12-.06-.06a1.8 1.8 0 0 0-1.98-.36"/>
@@ -567,35 +696,11 @@
 
                         <div>
                             <h4 class="font-bold text-white">
-                                إعدادات الحساب
+                                دليل المستخدم
                             </h4>
 
                             <p class="mt-1 text-sm text-[#c3c6d7]">
-                                تحديث بياناتك الشخصية.
-                            </p>
-                        </div>
-                    </a>
-
-                    <a
-                        href="{{ route('dashboard') }}"
-                        class="flex items-start gap-4 p-5 transition support-create-glass rounded-xl hover:border-purple-400/30"
-                    >
-                        <div class="p-3 text-purple-300 rounded-lg bg-purple-500/10">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                            </svg>
-                        </div>
-
-                        <div>
-                            <h4 class="font-bold text-white">
-                                لوحة التحكم
-                            </h4>
-
-                            <p class="mt-1 text-sm text-[#c3c6d7]">
-                                الرجوع إلى الصفحة الرئيسية.
+                                إعدادات الحساب والملف الشخصي.
                             </p>
                         </div>
                     </a>
