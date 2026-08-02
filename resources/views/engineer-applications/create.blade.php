@@ -52,6 +52,19 @@
             display: none !important;
         }
 
+        /*
+         * إخفاء الـ Navbar الأصلي القادم من x-app-layout في هذه الصفحة فقط.
+         * تبقى القائمة والشريط المخصصان للصفحة ظاهرين.
+         */
+        body > div.min-h-screen > nav,
+        body > div.min-h-screen > header,
+        body > div > nav.bg-white,
+        body > div > nav.dark\:bg-gray-800,
+        body > div > header.bg-white,
+        body > div > header.dark\:bg-gray-800 {
+            display: none !important;
+        }
+
         @media (max-width: 1023px) {
             .subscription-sidebar {
                 display: none !important;
@@ -93,7 +106,7 @@
                 </button>
 
                 <h1 class="text-xl font-black text-[#b4c5ff]">
-                    CreativeHome Engineering
+                    مكتب الوليد الهندسي
                 </h1>
             </div>
 
@@ -140,7 +153,7 @@
         <aside class="subscription-sidebar fixed right-0 top-0 z-50 flex h-screen w-64 flex-col border-l border-white/5 bg-[#131b2e] px-4 pb-6 pt-20 shadow-xl">
             <div class="px-4 mb-10">
                 <h2 class="text-2xl font-bold text-[#b4c5ff]">
-                    CreativeHome
+                    مكتب الوليد الهندسي
                 </h2>
 
                 <p class="text-xs font-bold text-[#c3c6d7]/70">
@@ -249,7 +262,7 @@
             class="fixed right-0 top-0 z-[100] flex h-screen w-72 flex-col bg-[#131b2e] p-5 lg:hidden"
         >
             <div class="flex items-center justify-between">
-                <h2 class="font-black text-white">CreativeHome</h2>
+                <h2 class="font-black text-white">مكتب الوليد الهندسي</h2>
 
                 <button
                     type="button"
