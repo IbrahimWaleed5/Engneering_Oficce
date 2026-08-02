@@ -439,7 +439,10 @@
                 </section>
 
                 {{-- البحث والفلاتر --}}
-                <section id="consultationFilterPanel" class="hidden p-6 consultations-glass rounded-3xl">
+                <section
+                    id="consultationFilterPanel"
+                    class="{{ request()->hasAny(['search', 'status', 'engineer_id', 'date_from', 'date_to']) ? '' : 'hidden' }} p-6 consultations-glass rounded-3xl"
+                >
                     <form
                         method="GET"
                         action="{{ route('consultations.index') }}"
@@ -565,6 +568,8 @@
                             <button
                                 id="toggleConsultationFilters"
                                 type="button"
+                                aria-controls="consultationFilterPanel"
+                                aria-expanded="{{ request()->hasAny(['search', 'status', 'engineer_id', 'date_from', 'date_to']) ? 'true' : 'false' }}"
                                 class="flex items-center gap-2 rounded-xl border border-[#434655]/20 bg-[#222a3d] px-4 py-2 text-[#dae2fd] transition hover:bg-[#31394d]"
                             >
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -798,26 +803,50 @@
                     )
                 );
 
+            const formSearch =
+                document.getElementById('search');
+
+            const applyLiveSearch = () => {
+                const query =
+                    (liveSearch?.value || '')
+                        .trim()
+                        .toLowerCase();
+
+                rows.forEach((row) => {
+                    const searchText =
+                        (
+                            row.dataset.search || ''
+                        ).toLowerCase();
+
+                    row.classList.toggle(
+                        'hidden',
+                        query !== ''
+                        && !searchText.includes(query)
+                    );
+                });
+            };
+
             liveSearch?.addEventListener(
                 'input',
                 function () {
-                    const query =
-                        liveSearch.value
-                            .trim()
-                            .toLowerCase();
+                    if (formSearch) {
+                        formSearch.value =
+                            liveSearch.value;
+                    }
 
-                    rows.forEach((row) => {
-                        const searchText =
-                            (
-                                row.dataset.search || ''
-                            ).toLowerCase();
+                    applyLiveSearch();
+                }
+            );
 
-                        row.classList.toggle(
-                            'hidden',
-                            query !== ''
-                            && !searchText.includes(query)
-                        );
-                    });
+            formSearch?.addEventListener(
+                'input',
+                function () {
+                    if (liveSearch) {
+                        liveSearch.value =
+                            formSearch.value;
+                    }
+
+                    applyLiveSearch();
                 }
             );
 
@@ -837,8 +866,41 @@
                     filterPanel?.classList.toggle(
                         'hidden'
                     );
+
+                    const isOpen =
+                        !filterPanel
+                            ?.classList
+                            .contains('hidden');
+
+                    filterButton.setAttribute(
+                        'aria-expanded',
+                        isOpen ? 'true' : 'false'
+                    );
                 }
             );
+            document
+                .querySelectorAll('form')
+                .forEach((form) => {
+                    form.addEventListener(
+                        'submit',
+                        function () {
+                            const submitButton =
+                                form.querySelector(
+                                    'button[type="submit"]'
+                                );
+
+                            if (!submitButton) {
+                                return;
+                            }
+
+                            submitButton.disabled = true;
+                            submitButton.classList.add(
+                                'opacity-60',
+                                'cursor-not-allowed'
+                            );
+                        }
+                    );
+                });
         });
     </script>
 </x-app-layout>
