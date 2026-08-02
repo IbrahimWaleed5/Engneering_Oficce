@@ -793,4 +793,9 @@ Route::get(
     '/employee/support',
     [SupportTicketController::class, 'employeeIndex']
 )->name('employee.support.index');
+Route::get(
+    '/employee/support',
+    [SupportTicketController::class, 'employeeIndex']
+)->middleware('auth')
+ ->name('employee.support.index');
 require __DIR__.'/auth.php';

@@ -16,6 +16,14 @@
             $actsAsCustomer =
                 $currentUser->role === 'customer'
                 || $isInactiveEngineer;
+
+            $isSupportEmployee =
+                \App\Models\SupportSetting::query()
+                    ->where(
+                        'support_employee_id',
+                        $currentUser->id
+                    )
+                    ->exists();
         @endphp
 
         <div
@@ -638,6 +646,48 @@
                                 فتح تذكرة دعم أو متابعة التذاكر المسندة إليك.
                             </p>
                         </a>
+                    </div>
+
+                @endif
+
+                {{-- =========================
+                    لوحة موظف الدعم الفني المعيّن
+                ========================== --}}
+                @if ($isSupportEmployee)
+
+                    <div
+                        class="p-6 mt-8 border shadow-xl rounded-2xl border-rose-500/30 bg-gradient-to-l from-slate-900 to-rose-950/30"
+                    >
+                        <div
+                            class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="flex items-center justify-center flex-none text-3xl w-14 h-14 rounded-2xl bg-rose-500/20"
+                                >
+                                    🎧
+                                </div>
+
+                                <div>
+                                    <h2 class="text-2xl font-black text-white">
+                                        لوحة موظف الدعم الفني
+                                    </h2>
+
+                                    <p class="mt-2 leading-7 text-slate-300">
+                                        تابع التذاكر المسندة إليك، وافتح المحادثات،
+                                        ورد على المستخدمين، وحدّث حالة كل تذكرة.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a
+                                href="{{ route('employee.support.index') }}"
+                                class="inline-flex items-center justify-center gap-2 px-6 py-3 font-black text-white transition bg-rose-600 rounded-xl hover:bg-rose-500"
+                            >
+                                <span>فتح لوحة الدعم</span>
+                                <span>←</span>
+                            </a>
+                        </div>
                     </div>
 
                 @endif

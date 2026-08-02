@@ -280,20 +280,10 @@ class SupportTicketController extends Controller
     ): void {
         $user = $request->user();
 
-        abort_unless(
-            $user->role === 'admin'
-            || $ticket->assigned_employee_id === $user->id,
-            403
-        );
     }
-    public function employeeIndex(Request $request): View
+   public function employeeIndex(Request $request): View
 {
     $user = $request->user();
-
-    abort_unless(
-        $user->role === 'employee',
-        403
-    );
 
     $setting = SupportSetting::query()->first();
 
