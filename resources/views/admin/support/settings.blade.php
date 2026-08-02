@@ -68,6 +68,22 @@
             display: none !important;
         }
 
+        /*
+         * إخفاء الـ Navbar/Header الأصلي القادم من x-app-layout
+         * في هذه الصفحة فقط، مع إبقاء الشريط والقائمة المخصصين للصفحة.
+         */
+        body > div.min-h-screen > nav,
+        body > div.min-h-screen > header,
+        body > div > nav.bg-white,
+        body > div > nav.dark\:bg-gray-800,
+        body > div > header.bg-white,
+        body > div > header.dark\:bg-gray-800,
+        body nav[data-layout-navigation],
+        body header[data-layout-header] {
+            display: none !important;
+        }
+
+
         @media (max-width: 1023px) {
             .support-settings-sidebar {
                 display: none !important;
