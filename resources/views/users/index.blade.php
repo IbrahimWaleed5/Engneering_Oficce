@@ -160,7 +160,7 @@
                 </a>
 
                 <a
-                    href="{{ Route::has('consultations.index') ? route('consultations.index') : '#' }}"
+                    href="{{ Route::has('consultations.index') ? route('consultations.index') : route('dashboard') }}"
                     class="flex items-center gap-4 px-4 py-3 text-[#c3c6d7] transition rounded-xl hover:bg-white/5 hover:text-[#b4c5ff]"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -172,7 +172,7 @@
                 </a>
 
                 <a
-                    href="{{ Route::has('payments.index') ? route('payments.index') : '#' }}"
+                    href="{{ Route::has('payments.index') ? route('payments.index') : route('dashboard') }}"
                     class="flex items-center gap-4 px-4 py-3 text-[#c3c6d7] transition rounded-xl hover:bg-white/5 hover:text-[#b4c5ff]"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -248,8 +248,8 @@
 
                 <div class="flex items-center gap-6 mr-auto">
                     <div class="flex items-center gap-2">
-                        <button
-                            type="button"
+                        <a
+                            href="{{ Route::has('notifications.index') ? route('notifications.index') : route('dashboard') }}"
                             class="flex items-center justify-center w-10 h-10 rounded-full text-[#c3c6d7] hover:bg-white/5"
                             title="الإشعارات"
                         >
@@ -257,10 +257,10 @@
                                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
                                 <path d="M10 21h4"/>
                             </svg>
-                        </button>
+                        </a>
 
-                        <button
-                            type="button"
+                        <a
+                            href="{{ route('dashboard') }}"
                             class="flex items-center justify-center w-10 h-10 rounded-full text-[#c3c6d7] hover:bg-white/5"
                             title="التطبيقات"
                         >
@@ -270,7 +270,7 @@
                                 <rect x="4" y="15" width="5" height="5" rx="1"/>
                                 <rect x="15" y="15" width="5" height="5" rx="1"/>
                             </svg>
-                        </button>
+                        </a>
                     </div>
 
                     <div class="w-px h-8 bg-[#434655]/20"></div>
@@ -311,9 +311,9 @@
                     </div>
                 @endif
 
-                @if ($errors->has('delete'))
+                @if ($errors->any())
                     <div class="p-4 text-red-200 border rounded-2xl border-red-500/20 bg-red-500/10">
-                        {{ $errors->first('delete') }}
+                        {{ $errors->first() }}
                     </div>
                 @endif
 
@@ -640,6 +640,7 @@
                                                     <form
                                                         method="POST"
                                                         action="{{ route('admin.conversations.start', $user) }}"
+                                                        data-submit-once
                                                     >
                                                         @csrf
 
@@ -671,6 +672,7 @@
                                                         method="POST"
                                                         action="{{ route('users.destroy', $user) }}"
                                                         onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')"
+                                                        data-submit-once
                                                     >
                                                         @csrf
                                                         @method('DELETE')
@@ -734,4 +736,30 @@
             </footer>
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document
+                .querySelectorAll('[data-submit-once]')
+                .forEach((form) => {
+                    form.addEventListener('submit', function () {
+                        const button =
+                            form.querySelector(
+                                'button[type="submit"]'
+                            );
+
+                        if (!button) {
+                            return;
+                        }
+
+                        button.disabled = true;
+                        button.classList.add(
+                            'opacity-50',
+                            'cursor-not-allowed'
+                        );
+                    });
+                });
+        });
+    </script>
+
 </x-app-layout>
