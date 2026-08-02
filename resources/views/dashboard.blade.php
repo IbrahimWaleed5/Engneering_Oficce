@@ -698,4 +698,17 @@
 
     @endauth
 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document
+                .querySelectorAll('a, button')
+                .forEach(function (element) {
+                    if (element.textContent.trim() === 'أعمالي') {
+                        element.remove();
+                    }
+                });
+        });
+    </script>
+
 </x-app-layout>
