@@ -288,6 +288,8 @@
                     <button
                         id="toggleEngineerFilters"
                         type="button"
+                        aria-controls="engineerFilterPanel"
+                        aria-expanded="false"
                         class="flex items-center justify-center w-12 h-12 border rounded-xl border-white/10 bg-[#222a3d] text-[#dae2fd] transition hover:bg-[#31394d]"
                         title="التصفية"
                     >
@@ -915,6 +917,17 @@
                 function () {
                     filterPanel?.classList.toggle(
                         'hidden'
+                    );
+
+                    const isOpen =
+                        filterPanel
+                        && !filterPanel.classList.contains(
+                            'hidden'
+                        );
+
+                    toggleFilters.setAttribute(
+                        'aria-expanded',
+                        isOpen ? 'true' : 'false'
                     );
                 }
             );
