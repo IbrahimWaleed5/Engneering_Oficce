@@ -44,13 +44,12 @@ class AdminSupportController extends Controller
         $setting = SupportSetting::current();
 
         $employees = User::query()
-            ->where('role', 'employee')
-            ->where('status', 'active')
             ->orderBy('name')
             ->get([
                 'id',
                 'name',
                 'email',
+                'role',
                 'status',
             ]);
 
@@ -76,8 +75,6 @@ class AdminSupportController extends Controller
             ->whereKey(
                 $validated['support_employee_id']
             )
-            ->where('role', 'employee')
-            ->where('status', 'active')
             ->firstOrFail();
 
         $setting = SupportSetting::current();
@@ -95,13 +92,20 @@ class AdminSupportController extends Controller
             && $oldEmployeeId !== $employee->id
         ) {
             SupportTicket::query()
-                ->where('assigned_employee_id', $oldEmployeeId)
+                ->where(
+                    'assigned_employee_id',
+                    $oldEmployeeId
+                )
                 ->whereIn(
                     'status',
-                    ['open', 'in_progress']
+                    [
+                        'open',
+                        'in_progress',
+                    ]
                 )
                 ->update([
-                    'assigned_employee_id' => $employee->id,
+                    'assigned_employee_id' =>
+                        $employee->id,
                 ]);
         }
 
