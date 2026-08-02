@@ -156,12 +156,27 @@
                         <path d="m20 20-3.5-3.5"/>
                     </svg>
 
-                    <input
-                        id="support-search-desktop"
-                        type="search"
-                        placeholder="بحث في التذاكر..."
-                        class="w-72 rounded-full border border-white/10 bg-[#060e20] py-2.5 pr-11 pl-4 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    <form
+                        method="GET"
+                        action="{{ route('employee.support.index') }}"
+                        class="relative"
                     >
+                        <input
+                            type="search"
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="بحث في التذاكر..."
+                            class="w-72 rounded-full border border-white/10 bg-[#060e20] py-2.5 pr-11 pl-4 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        >
+
+                        @if (request()->filled('status'))
+                            <input type="hidden" name="status" value="{{ request('status') }}">
+                        @endif
+
+                        @if (request()->filled('priority'))
+                            <input type="hidden" name="priority" value="{{ request('priority') }}">
+                        @endif
+                    </form>
                 </div>
             </div>
 
@@ -311,13 +326,10 @@
 
         {{-- قائمة الجوال --}}
         <div
-                        x-show="mobileMenuOpen"
-            x-transition.opacity
             id="support-mobile-backdrop" class="fixed inset-0 z-[90] hidden bg-black/70 lg:hidden"
         ></div>
 
         <aside
-                        x-show="mobileMenuOpen"
                         id="support-mobile-menu" class="fixed right-0 top-0 z-[100] hidden h-screen w-72 flex-col bg-[#0b1326] p-5 lg:hidden"
         >
             <div class="flex items-center justify-between">
@@ -405,59 +417,67 @@
                 </section>
 
                 {{-- البحث والفلاتر --}}
-                <section class="p-5 support-glass rounded-2xl sm:hidden">
-                    <input
-                        id="support-search-mobile"
-                        type="search"
-                        placeholder="ابحث باسم العميل أو رقم التذكرة..."
-                        class="w-full rounded-xl border border-white/10 bg-[#060e20] px-4 py-3 text-white placeholder:text-slate-500"
-                    >
-                </section>
-
                 <section class="space-y-4">
                     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                        <h2 class="text-2xl font-black text-white">أحدث التذاكر</h2>
+                        <h2 class="text-2xl font-black text-white">
+                            أحدث التذاكر
+                        </h2>
 
-                        <div class="flex flex-wrap gap-3">
+                        <form
+                            method="GET"
+                            action="{{ route('employee.support.index') }}"
+                            class="flex flex-wrap gap-3"
+                        >
+                            <input
+                                type="search"
+                                name="search"
+                                value="{{ request('search') }}"
+                                placeholder="بحث بالرقم أو العميل..."
+                                class="rounded-xl border border-white/10 bg-[#222a3d] px-4 py-3 text-sm text-white placeholder:text-slate-500"
+                            >
+
                             <select
-                                id="support-status-filter"
+                                name="status"
                                 class="rounded-xl border border-white/10 bg-[#222a3d] px-4 py-3 text-sm text-white"
                             >
-                                <option value="all">كل الحالات</option>
-                                <option value="open">مفتوحة</option>
-                                <option value="in_progress">قيد المعالجة</option>
-                                <option value="resolved">محلولة</option>
-                                <option value="closed">مغلقة</option>
+                                <option value="">كل الحالات</option>
+                                <option value="open" @selected(request('status') === 'open')>مفتوحة</option>
+                                <option value="in_progress" @selected(request('status') === 'in_progress')>قيد المعالجة</option>
+                                <option value="resolved" @selected(request('status') === 'resolved')>محلولة</option>
+                                <option value="closed" @selected(request('status') === 'closed')>مغلقة</option>
                             </select>
 
                             <select
-                                id="support-priority-filter"
+                                name="priority"
                                 class="rounded-xl border border-white/10 bg-[#222a3d] px-4 py-3 text-sm text-white"
                             >
-                                <option value="all">كل الأولويات</option>
-                                <option value="urgent">عاجلة جدًا</option>
-                                <option value="high">مرتفعة</option>
-                                <option value="medium">متوسطة</option>
-                                <option value="low">منخفضة</option>
+                                <option value="">كل الأولويات</option>
+                                <option value="urgent" @selected(request('priority') === 'urgent')>عاجلة جدًا</option>
+                                <option value="high" @selected(request('priority') === 'high')>مرتفعة</option>
+                                <option value="medium" @selected(request('priority') === 'medium')>متوسطة</option>
+                                <option value="low" @selected(request('priority') === 'low')>منخفضة</option>
                             </select>
 
                             <button
-                                type="button"
-                                id="support-filters-reset"
-                                class="rounded-xl border border-white/10 bg-[#222a3d] px-4 py-3 text-sm font-bold text-slate-300 hover:bg-[#31394d]"
+                                type="submit"
+                                class="px-5 py-3 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-500"
+                            >
+                                تطبيق
+                            </button>
+
+                            <a
+                                href="{{ route('employee.support.index') }}"
+                                class="rounded-xl border border-white/10 bg-[#222a3d] px-5 py-3 text-sm font-bold text-slate-300 hover:bg-[#31394d]"
                             >
                                 مسح
-                            </button>
-                        </div>
+                            </a>
+                        </form>
                     </div>
 
                     <div class="space-y-4">
                         @forelse ($tickets as $ticket)
                             <article
-                                                                                                data-status="{{ $ticket->status }}"
-                                data-priority="{{ $ticket->priority }}"
-                                data-search="{{ $ticket->ticket_number }} {{ $ticket->subject }} {{ $ticket->user?->name }} {{ $ticket->user?->email }}"
-                                class="p-6 support-ticket-card support-ticket-filter-item support-glass rounded-2xl"
+                                class="p-6 support-ticket-card support-glass rounded-2xl"
                             >
                                 <div class="flex flex-col gap-6 md:flex-row md:items-center">
                                     <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-[#2d3449]/60 text-center text-xs font-black text-blue-300">
@@ -550,245 +570,4 @@
             ⌂
         </a>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const desktopSearch =
-                document.getElementById('support-search-desktop');
-
-            const mobileSearch =
-                document.getElementById('support-search-mobile');
-
-            const statusFilter =
-                document.getElementById('support-status-filter');
-
-            const priorityFilter =
-                document.getElementById('support-priority-filter');
-
-            const resetButton =
-                document.getElementById('support-filters-reset');
-
-            const ticketCards =
-                Array.from(
-                    document.querySelectorAll(
-                        '.support-ticket-filter-item'
-                    )
-                );
-
-            function currentSearchValue() {
-                const desktopValue =
-                    desktopSearch?.value?.trim() ?? '';
-
-                const mobileValue =
-                    mobileSearch?.value?.trim() ?? '';
-
-                return (
-                    desktopValue || mobileValue
-                ).toLowerCase();
-            }
-
-            function filterTickets() {
-                const query = currentSearchValue();
-
-                const selectedStatus =
-                    statusFilter?.value ?? 'all';
-
-                const selectedPriority =
-                    priorityFilter?.value ?? 'all';
-
-                ticketCards.forEach(function (card) {
-                    const cardText =
-                        (card.dataset.search ?? '')
-                            .toLowerCase();
-
-                    const cardStatus =
-                        card.dataset.status ?? '';
-
-                    const cardPriority =
-                        card.dataset.priority ?? '';
-
-                    const matchesQuery =
-                        ! query
-                        || cardText.includes(query);
-
-                    const matchesStatus =
-                        selectedStatus === 'all'
-                        || cardStatus === selectedStatus;
-
-                    const matchesPriority =
-                        selectedPriority === 'all'
-                        || cardPriority === selectedPriority;
-
-                    card.hidden =
-                        ! (
-                            matchesQuery
-                            && matchesStatus
-                            && matchesPriority
-                        );
-                });
-            }
-
-            function syncSearch(source, target) {
-                if (target) {
-                    target.value = source.value;
-                }
-
-                filterTickets();
-            }
-
-            desktopSearch?.addEventListener(
-                'input',
-                function () {
-                    syncSearch(
-                        desktopSearch,
-                        mobileSearch
-                    );
-                }
-            );
-
-            mobileSearch?.addEventListener(
-                'input',
-                function () {
-                    syncSearch(
-                        mobileSearch,
-                        desktopSearch
-                    );
-                }
-            );
-
-            statusFilter?.addEventListener(
-                'change',
-                filterTickets
-            );
-
-            priorityFilter?.addEventListener(
-                'change',
-                filterTickets
-            );
-
-            resetButton?.addEventListener(
-                'click',
-                function () {
-                    if (desktopSearch) {
-                        desktopSearch.value = '';
-                    }
-
-                    if (mobileSearch) {
-                        mobileSearch.value = '';
-                    }
-
-                    if (statusFilter) {
-                        statusFilter.value = 'all';
-                    }
-
-                    if (priorityFilter) {
-                        priorityFilter.value = 'all';
-                    }
-
-                    filterTickets();
-                }
-            );
-
-            const profileButton =
-                document.getElementById(
-                    'support-profile-menu-button'
-                );
-
-            const profileMenu =
-                document.getElementById(
-                    'support-profile-menu'
-                );
-
-            profileButton?.addEventListener(
-                'click',
-                function (event) {
-                    event.stopPropagation();
-                    profileMenu?.classList.toggle('hidden');
-                }
-            );
-
-            document.addEventListener(
-                'click',
-                function (event) {
-                    if (
-                        profileMenu
-                        && profileButton
-                        && ! profileMenu.contains(event.target)
-                        && ! profileButton.contains(event.target)
-                    ) {
-                        profileMenu.classList.add('hidden');
-                    }
-                }
-            );
-
-            const mobileOpenButton =
-                document.getElementById(
-                    'support-mobile-menu-open'
-                );
-
-            const mobileCloseButton =
-                document.getElementById(
-                    'support-mobile-menu-close'
-                );
-
-            const mobileMenu =
-                document.getElementById(
-                    'support-mobile-menu'
-                );
-
-            const mobileBackdrop =
-                document.getElementById(
-                    'support-mobile-backdrop'
-                );
-
-            function openMobileMenu() {
-                mobileMenu?.classList.remove('hidden');
-                mobileMenu?.classList.add('flex');
-                mobileBackdrop?.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
-            }
-
-            function closeMobileMenu() {
-                mobileMenu?.classList.add('hidden');
-                mobileMenu?.classList.remove('flex');
-                mobileBackdrop?.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            }
-
-            mobileOpenButton?.addEventListener(
-                'click',
-                openMobileMenu
-            );
-
-            mobileCloseButton?.addEventListener(
-                'click',
-                closeMobileMenu
-            );
-
-            mobileBackdrop?.addEventListener(
-                'click',
-                closeMobileMenu
-            );
-
-            mobileMenu
-                ?.querySelectorAll('a')
-                .forEach(function (link) {
-                    link.addEventListener(
-                        'click',
-                        closeMobileMenu
-                    );
-                });
-
-            document.addEventListener(
-                'keydown',
-                function (event) {
-                    if (event.key === 'Escape') {
-                        closeMobileMenu();
-                        profileMenu?.classList.add('hidden');
-                    }
-                }
-            );
-        });
-    </script>
-
 </x-app-layout>

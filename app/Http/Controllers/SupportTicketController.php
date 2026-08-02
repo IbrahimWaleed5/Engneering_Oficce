@@ -14,32 +14,29 @@ use Illuminate\View\View;
 class SupportTicketController extends Controller
 {
     public function index(Request $request): View
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    $setting = SupportSetting::query()
-        ->with('supportEmployee:id,name,email,role,status')
-        ->first();
+        $setting = SupportSetting::query()
+            ->with('supportEmployee:id,name,email,role,status')
+            ->first();
 
-    $tickets = SupportTicket::query()
-        ->visibleTo($user)
-        ->with([
-            'user:id,name,email',
-            'assignedEmployee:id,name,email',
-            'latestMessage.sender:id,name',
-        ])
-        ->latest('last_message_at')
-        ->latest()
-        ->paginate(12);
+        $tickets = SupportTicket::query()
+            ->visibleTo($user)
+            ->with([
+                'user:id,name,email',
+                'assignedEmployee:id,name,email',
+                'latestMessage.sender:id,name',
+            ])
+            ->latest('last_message_at')
+            ->latest()
+            ->paginate(12);
 
-    return view(
-        'support.index',
-        compact(
-            'tickets',
-            'setting'
-        )
-    );
-}
+        return view(
+            'support.index',
+            compact('tickets', 'setting')
+        );
+    }
 
     public function create(): View|RedirectResponse
     {
@@ -62,9 +59,8 @@ class SupportTicketController extends Controller
         );
     }
 
-    public function store(
-        Request $request
-    ): RedirectResponse {
+    public function store(Request $request): RedirectResponse
+    {
         $validated = $request->validate([
             'subject' => [
                 'required',
@@ -113,9 +109,7 @@ class SupportTicketController extends Controller
                         'SUP-' .
                         now()->format('YmdHis') .
                         '-' .
-                        Str::upper(
-                            Str::random(4)
-                        ),
+                        Str::upper(Str::random(4)),
                     'user_id' => $request->user()->id,
                     'assigned_employee_id' =>
                         $setting->support_employee_id,
@@ -134,6 +128,7 @@ class SupportTicketController extends Controller
 
                 if ($request->hasFile('attachment')) {
                     $file = $request->file('attachment');
+
                     $path = $file->store(
                         'support-attachments',
                         'local'
@@ -235,6 +230,7 @@ class SupportTicketController extends Controller
 
         if ($validated['status'] === 'resolved') {
             $updates['resolved_at'] = now();
+            $updates['closed_at'] = null;
         }
 
         if ($validated['status'] === 'closed') {
@@ -260,6 +256,124 @@ class SupportTicketController extends Controller
         );
     }
 
+    public function employeeIndex(Request $request): View
+    {
+        $user = $request->user();
+
+        $setting = SupportSetting::query()->first();
+
+        abort_unless(
+            $setting
+            && (int) $setting->support_employee_id === (int) $user->id,
+            403
+        );
+
+        $baseQuery = SupportTicket::query()
+            ->where('assigned_employee_id', $user->id);
+
+        $allTicketsCount = (clone $baseQuery)->count();
+
+        $openTicketsCount = (clone $baseQuery)
+            ->whereIn('status', ['open', 'in_progress'])
+            ->count();
+
+        $resolvedTicketsCount = (clone $baseQuery)
+            ->whereIn('status', ['resolved', 'closed'])
+            ->count();
+
+        $urgentTicketsCount = (clone $baseQuery)
+            ->where('priority', 'urgent')
+            ->count();
+
+        $ticketsQuery = (clone $baseQuery)
+            ->with([
+                'user:id,name,email',
+                'assignedEmployee:id,name,email',
+                'latestMessage.sender:id,name',
+            ]);
+
+        if ($request->filled('search')) {
+            $search = trim(
+                (string) $request->input('search')
+            );
+
+            $ticketsQuery->where(
+                function ($query) use ($search) {
+                    $query
+                        ->where(
+                            'ticket_number',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'subject',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhereHas(
+                            'user',
+                            function ($userQuery) use ($search) {
+                                $userQuery
+                                    ->where(
+                                        'name',
+                                        'like',
+                                        "%{$search}%"
+                                    )
+                                    ->orWhere(
+                                        'email',
+                                        'like',
+                                        "%{$search}%"
+                                    );
+                            }
+                        );
+                }
+            );
+        }
+
+        if ($request->filled('status')) {
+            $request->validate([
+                'status' => [
+                    'in:open,in_progress,resolved,closed',
+                ],
+            ]);
+
+            $ticketsQuery->where(
+                'status',
+                $request->input('status')
+            );
+        }
+
+        if ($request->filled('priority')) {
+            $request->validate([
+                'priority' => [
+                    'in:low,medium,high,urgent',
+                ],
+            ]);
+
+            $ticketsQuery->where(
+                'priority',
+                $request->input('priority')
+            );
+        }
+
+        $tickets = $ticketsQuery
+            ->latest('last_message_at')
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return view(
+            'employee.support.index',
+            compact(
+                'tickets',
+                'allTicketsCount',
+                'openTicketsCount',
+                'resolvedTicketsCount',
+                'urgentTicketsCount'
+            )
+        );
+    }
+
     private function authorizeAccess(
         Request $request,
         SupportTicket $ticket
@@ -268,8 +382,8 @@ class SupportTicketController extends Controller
 
         abort_unless(
             $user->role === 'admin'
-            || $ticket->user_id === $user->id
-            || $ticket->assigned_employee_id === $user->id,
+            || (int) $ticket->user_id === (int) $user->id
+            || (int) $ticket->assigned_employee_id === (int) $user->id,
             403
         );
     }
@@ -280,33 +394,10 @@ class SupportTicketController extends Controller
     ): void {
         $user = $request->user();
 
+        abort_unless(
+            $user->role === 'admin'
+            || (int) $ticket->assigned_employee_id === (int) $user->id,
+            403
+        );
     }
-   public function employeeIndex(Request $request): View
-{
-    $user = $request->user();
-
-    $setting = SupportSetting::query()->first();
-
-    abort_unless(
-        $setting
-        && $setting->support_employee_id === $user->id,
-        403
-    );
-
-    $tickets = SupportTicket::query()
-        ->where('assigned_employee_id', $user->id)
-        ->with([
-            'user:id,name,email',
-            'assignedEmployee:id,name,email',
-            'latestMessage.sender:id,name',
-        ])
-        ->latest('last_message_at')
-        ->latest()
-        ->paginate(12);
-
-    return view(
-        'employee.support.index',
-        compact('tickets')
-    );
-}
 }
