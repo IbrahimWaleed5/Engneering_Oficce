@@ -69,10 +69,7 @@
                     @method('PUT')
 
                     <div>
-                        <label
-                            for="specialty_id"
-                            class="block mb-3 text-sm font-bold text-slate-200"
-                        >
+                        <label for="specialty_id" class="block mb-3 text-sm font-bold text-slate-200">
                             التخصص الهندسي
                         </label>
 
@@ -82,9 +79,7 @@
                             required
                             class="w-full px-5 py-4 text-white border rounded-2xl border-white/10 bg-slate-900/70 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-500/20"
                         >
-                            <option value="">
-                                اختر التخصص
-                            </option>
+                            <option value="">اختر التخصص</option>
 
                             @foreach ($specialties as $specialty)
                                 <option
@@ -103,12 +98,8 @@
                     </div>
 
                     @if ($employeeProfile?->specialty)
-                        <div
-                            class="p-5 border rounded-2xl border-cyan-500/20 bg-cyan-500/5"
-                        >
-                            <p class="text-sm text-slate-400">
-                                تخصصك الحالي
-                            </p>
+                        <div class="p-5 border rounded-2xl border-cyan-500/20 bg-cyan-500/5">
+                            <p class="text-sm text-slate-400">تخصصك الحالي</p>
 
                             <p class="mt-2 text-lg font-black text-cyan-300">
                                 {{ $employeeProfile->specialty->name }}
@@ -117,10 +108,7 @@
                     @endif
 
                     <div>
-                        <label
-                            for="bio"
-                            class="block mb-3 text-sm font-bold text-slate-200"
-                        >
+                        <label for="bio" class="block mb-3 text-sm font-bold text-slate-200">
                             نبذة عن المهندس
                         </label>
 
@@ -153,5 +141,43 @@
 
         </div>
     </div>
+
+    <script>
+        (function () {
+            function removeStandaloneMyWorksButton() {
+                document
+                    .querySelectorAll('a, button, [role="button"]')
+                    .forEach(function (element) {
+                        const label = element.textContent
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
+                        const insideMainNavigation =
+                            element.closest('#main-navigation');
+
+                        if (
+                            label === 'أعمالي'
+                            && ! insideMainNavigation
+                        ) {
+                            element.remove();
+                        }
+                    });
+            }
+
+            removeStandaloneMyWorksButton();
+
+            if (document.readyState === 'loading') {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    removeStandaloneMyWorksButton
+                );
+            }
+
+            window.addEventListener(
+                'load',
+                removeStandaloneMyWorksButton
+            );
+        })();
+    </script>
 
 </x-app-layout>

@@ -74,10 +74,7 @@
                     @method('PUT')
 
                     <div>
-                        <label
-                            for="current_password"
-                            class="block mb-2 text-sm font-bold text-slate-200"
-                        >
+                        <label for="current_password" class="block mb-2 text-sm font-bold text-slate-200">
                             كلمة المرور الحالية
                         </label>
 
@@ -101,10 +98,7 @@
                     </div>
 
                     <div>
-                        <label
-                            for="password"
-                            class="block mb-2 text-sm font-bold text-slate-200"
-                        >
+                        <label for="password" class="block mb-2 text-sm font-bold text-slate-200">
                             كلمة المرور الجديدة
                         </label>
 
@@ -128,10 +122,7 @@
                     </div>
 
                     <div>
-                        <label
-                            for="password_confirmation"
-                            class="block mb-2 text-sm font-bold text-slate-200"
-                        >
+                        <label for="password_confirmation" class="block mb-2 text-sm font-bold text-slate-200">
                             تأكيد كلمة المرور
                         </label>
 
@@ -154,9 +145,7 @@
                         </div>
                     </div>
 
-                    <div
-                        class="p-4 text-sm leading-7 border rounded-2xl border-cyan-500/20 bg-cyan-500/5 text-slate-300"
-                    >
+                    <div class="p-4 text-sm leading-7 border rounded-2xl border-cyan-500/20 bg-cyan-500/5 text-slate-300">
                         يفضل أن تحتوي كلمة المرور على 8 أحرف على الأقل،
                         مع أرقام ورموز وأحرف كبيرة وصغيرة.
                     </div>
@@ -176,5 +165,43 @@
 
         </div>
     </div>
+
+    <script>
+        (function () {
+            function removeStandaloneMyWorksButton() {
+                document
+                    .querySelectorAll('a, button, [role="button"]')
+                    .forEach(function (element) {
+                        const label = element.textContent
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
+                        const insideMainNavigation =
+                            element.closest('#main-navigation');
+
+                        if (
+                            label === 'أعمالي'
+                            && ! insideMainNavigation
+                        ) {
+                            element.remove();
+                        }
+                    });
+            }
+
+            removeStandaloneMyWorksButton();
+
+            if (document.readyState === 'loading') {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    removeStandaloneMyWorksButton
+                );
+            }
+
+            window.addEventListener(
+                'load',
+                removeStandaloneMyWorksButton
+            );
+        })();
+    </script>
 
 </x-app-layout>

@@ -132,4 +132,56 @@
         </div>
     </div>
 
+    <script>
+        (function () {
+            function removeStandaloneMyWorksButton() {
+                document
+                    .querySelectorAll('a, button, [role="button"]')
+                    .forEach(function (element) {
+                        const label = element.textContent
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
+                        const insideMainNavigation =
+                            element.closest('#main-navigation');
+
+                        if (
+                            label === 'أعمالي'
+                            && ! insideMainNavigation
+                        ) {
+                            element.remove();
+                        }
+                    });
+            }
+
+            removeStandaloneMyWorksButton();
+
+            if (document.readyState === 'loading') {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    removeStandaloneMyWorksButton
+                );
+            }
+
+            window.addEventListener(
+                'load',
+                removeStandaloneMyWorksButton
+            );
+
+            const observer = new MutationObserver(
+                removeStandaloneMyWorksButton
+            );
+
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
+            window.setTimeout(function () {
+                removeStandaloneMyWorksButton();
+                observer.disconnect();
+            }, 5000);
+        })();
+    </script>
+
 </x-app-layout>
