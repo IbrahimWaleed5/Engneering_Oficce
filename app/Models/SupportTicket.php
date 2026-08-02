@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SupportTicket extends Model
 {
@@ -46,13 +47,17 @@ class SupportTicket extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(
-            SupportMessage::class
+            SupportMessage::class,
+            'support_ticket_id'
         );
     }
 
-    public function latestMessage(): HasMany
+    public function latestMessage(): HasOne
     {
-        return $this->messages()->latestOfMany();
+        return $this->hasOne(
+            SupportMessage::class,
+            'support_ticket_id'
+        )->latestOfMany();
     }
 
     public function scopeVisibleTo(
@@ -63,21 +68,26 @@ class SupportTicket extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($user) {
-            $builder
-                ->where('user_id', $user->id)
-                ->orWhere(
-                    'assigned_employee_id',
-                    $user->id
-                );
-        });
+        return $query->where(
+            function (Builder $builder) use ($user) {
+                $builder
+                    ->where('user_id', $user->id)
+                    ->orWhere(
+                        'assigned_employee_id',
+                        $user->id
+                    );
+            }
+        );
     }
 
     public function isOpen(): bool
     {
         return in_array(
             $this->status,
-            ['open', 'in_progress'],
+            [
+                'open',
+                'in_progress',
+            ],
             true
         );
     }
