@@ -14,22 +14,32 @@ use Illuminate\View\View;
 class SupportTicketController extends Controller
 {
     public function index(Request $request): View
-    {
-        $user = $request->user();
+{
+    $user = $request->user();
 
-        $tickets = SupportTicket::query()
-            ->visibleTo($user)
-            ->with([
-                'user:id,name,email',
-                'assignedEmployee:id,name,email',
-                'latestMessage.sender:id,name',
-            ])
-            ->latest('last_message_at')
-            ->latest()
-            ->paginate(12);
+    $setting = SupportSetting::query()
+        ->with('supportEmployee:id,name,email,role,status')
+        ->first();
 
-        return view('support.index', compact('tickets'));
-    }
+    $tickets = SupportTicket::query()
+        ->visibleTo($user)
+        ->with([
+            'user:id,name,email',
+            'assignedEmployee:id,name,email',
+            'latestMessage.sender:id,name',
+        ])
+        ->latest('last_message_at')
+        ->latest()
+        ->paginate(12);
+
+    return view(
+        'support.index',
+        compact(
+            'tickets',
+            'setting'
+        )
+    );
+}
 
     public function create(): View|RedirectResponse
     {
