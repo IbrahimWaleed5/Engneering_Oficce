@@ -284,6 +284,27 @@
 
                         </a>
 
+
+                        {{-- الدعم الفني --}}
+                        <a
+                            href="{{ route('support.index') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-rose-500"
+                        >
+                            <div
+                                class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-rose-600/20"
+                            >
+                                🎧
+                            </div>
+
+                            <h2 class="mb-2 text-xl font-bold text-white">
+                                الدعم الفني
+                            </h2>
+
+                            <p class="text-sm leading-7 text-slate-400">
+                                افتح تذكرة دعم وتابع الرد مع موظف الدعم الفني.
+                            </p>
+                        </a>
+
                     </div>
 
                 {{-- =========================
@@ -403,6 +424,27 @@
                                 تابع الاستشارات التي طلبتها من مهندسين آخرين.
                             </p>
 
+                        </a>
+
+
+                        {{-- الدعم الفني --}}
+                        <a
+                            href="{{ route('support.index') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-rose-500"
+                        >
+                            <div
+                                class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-rose-600/20"
+                            >
+                                🎧
+                            </div>
+
+                            <h2 class="text-xl font-bold text-white">
+                                الدعم الفني
+                            </h2>
+
+                            <p class="mt-2 text-sm leading-7 text-slate-400">
+                                تواصل مع موظف الدعم وتابع جميع تذاكرك.
+                            </p>
                         </a>
 
                     </div>
@@ -536,6 +578,25 @@
 
                         </a>
 
+
+                        {{-- إدارة الدعم الفني --}}
+                        <a
+                            href="{{ route('admin.support.index') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-rose-500"
+                        >
+                            <div class="mb-3 text-3xl">
+                                🎧
+                            </div>
+
+                            <h2 class="font-bold text-white">
+                                إدارة الدعم الفني
+                            </h2>
+
+                            <p class="mt-2 text-sm leading-6 text-slate-400">
+                                متابعة التذاكر وتعيين موظف الدعم الفني.
+                            </p>
+                        </a>
+
                     </div>
 
                 {{-- =========================
@@ -543,25 +604,40 @@
                 ========================== --}}
                 @else
 
-                    <div
-                        class="p-6 border rounded-2xl bg-slate-900 border-slate-800"
-                    >
-
-                        <h2 class="text-xl font-bold text-white">
-                            حساب موظف
-                        </h2>
-
-                        <p class="mt-2 text-slate-400">
-                            يمكنك متابعة الاستشارات والطلبات حسب صلاحياتك.
-                        </p>
-
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <a
                             href="{{ route('consultations.index') }}"
-                            class="inline-flex items-center px-5 py-3 mt-5 font-bold text-white transition bg-blue-600 rounded-lg hover:bg-blue-500"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-blue-500"
                         >
-                            عرض الاستشارات
+                            <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-blue-600/20">
+                                📄
+                            </div>
+
+                            <h2 class="text-xl font-bold text-white">
+                                الاستشارات
+                            </h2>
+
+                            <p class="mt-2 text-slate-400">
+                                متابعة الاستشارات والطلبات حسب صلاحياتك.
+                            </p>
                         </a>
 
+                        <a
+                            href="{{ route('support.index') }}"
+                            class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-rose-500"
+                        >
+                            <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-rose-600/20">
+                                🎧
+                            </div>
+
+                            <h2 class="text-xl font-bold text-white">
+                                الدعم الفني
+                            </h2>
+
+                            <p class="mt-2 text-slate-400">
+                                فتح تذكرة دعم أو متابعة التذاكر المسندة إليك.
+                            </p>
+                        </a>
                     </div>
 
                 @endif
