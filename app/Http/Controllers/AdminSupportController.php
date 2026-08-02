@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\SupportSetting;
+use App\Models\SupportTicket;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class AdminSupportController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $this->authorizeAdmin($request);
+
+        $tickets = SupportTicket::query()
+            ->with([
+                'user:id,name,email',
+                'assignedEmployee:id,name,email',
+                'latestMessage.sender:id,name',
+            ])
+            ->when(
+                $request->filled('status'),
+                fn ($query) => $query->where(
+                    'status',
+                    $request->string('status')
+                )
+            )
+            ->latest('last_message_at')
+            ->paginate(15);
+
+        return view(
+            'admin.support.index',
+            compact('tickets')
+        );
+    }
+
+    public function settings(Request $request): View
+    {
+        $this->authorizeAdmin($request);
+
+        $setting = SupportSetting::current();
+
+        $employees = User::query()
+            ->where('role', 'employee')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'email',
+                'status',
+            ]);
+
+        return view(
+            'admin.support.settings',
+            compact('setting', 'employees')
+        );
+    }
+
+    public function updateSettings(
+        Request $request
+    ): RedirectResponse {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validate([
+            'support_employee_id' => [
+                'required',
+                'exists:users,id',
+            ],
+        ]);
+
+        $employee = User::query()
+            ->whereKey(
+                $validated['support_employee_id']
+            )
+            ->where('role', 'employee')
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $setting = SupportSetting::current();
+
+        $oldEmployeeId =
+            $setting->support_employee_id;
+
+        $setting->update([
+            'support_employee_id' => $employee->id,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        if (
+            $oldEmployeeId
+            && $oldEmployeeId !== $employee->id
+        ) {
+            SupportTicket::query()
+                ->where('assigned_employee_id', $oldEmployeeId)
+                ->whereIn(
+                    'status',
+                    ['open', 'in_progress']
+                )
+                ->update([
+                    'assigned_employee_id' => $employee->id,
+                ]);
+        }
+
+        return back()->with(
+            'success',
+            'تم تعيين موظف الدعم الفني بنجاح.'
+        );
+    }
+
+    private function authorizeAdmin(
+        Request $request
+    ): void {
+        abort_unless(
+            $request->user()->role === 'admin',
+            403
+        );
+    }
+}

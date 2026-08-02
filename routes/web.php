@@ -23,6 +23,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureActiveEngineerMembership;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SecureFileController;
+use App\Http\Controllers\AdminSupportController;
+use App\Http\Controllers\SupportMessageController;
+use App\Http\Controllers\SupportTicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -731,5 +734,63 @@ Route::middleware([
         ->scopeBindings()
         ->name('conversations.messages.download');
 });
+Route::middleware('auth')->group(function () {
+    Route::get(
+        '/support',
+        [SupportTicketController::class, 'index']
+    )->name('support.index');
 
+    Route::get(
+        '/support/create',
+        [SupportTicketController::class, 'create']
+    )->name('support.create');
+
+    Route::post(
+        '/support',
+        [SupportTicketController::class, 'store']
+    )->name('support.store');
+
+    Route::get(
+        '/support/{supportTicket}',
+        [SupportTicketController::class, 'show']
+    )->name('support.show');
+
+    Route::post(
+        '/support/{supportTicket}/messages',
+        [SupportMessageController::class, 'store']
+    )->name('support.messages.store');
+
+    Route::get(
+        '/support-messages/{supportMessage}/attachment',
+        [SupportMessageController::class, 'attachment']
+    )->name('support.messages.attachment');
+
+    Route::patch(
+        '/support/{supportTicket}/status',
+        [SupportTicketController::class, 'updateStatus']
+    )->name('support.status.update');
+
+    Route::prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get(
+                '/support',
+                [AdminSupportController::class, 'index']
+            )->name('support.index');
+
+            Route::get(
+                '/support/settings',
+                [AdminSupportController::class, 'settings']
+            )->name('support.settings');
+
+            Route::patch(
+                '/support/settings',
+                [AdminSupportController::class, 'updateSettings']
+            )->name('support.settings.update');
+        });
+});
+Route::get(
+    '/employee/support',
+    [SupportTicketController::class, 'employeeIndex']
+)->name('employee.support.index');
 require __DIR__.'/auth.php';
