@@ -109,13 +109,6 @@
     </style>
 
     <div
-        x-data="{
-            search: '',
-            selectedStatus: 'all',
-            rejectOpen: false,
-            rejectUrl: '',
-            rejectTitle: ''
-        }"
         class="works-review-page"
         dir="rtl"
     >
@@ -276,7 +269,7 @@
                         </svg>
 
                         <input
-                            x-model="search"
+                            id="worksSearchInput"
                             type="text"
                             placeholder="البحث عن عمل هندسي..."
                             class="w-64 rounded-lg border-0 bg-[#2d3449] py-2 pr-10 pl-4 text-sm text-white focus:ring-2 focus:ring-[#b4c5ff]/50"
@@ -285,8 +278,8 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <button
-                        type="button"
+                    <a
+                        href="{{ Route::has('notifications.index') ? route('notifications.index') : route('dashboard') }}"
                         class="relative p-2 transition rounded-full hover:bg-[#2d3449]"
                         title="الإشعارات"
                     >
@@ -296,10 +289,10 @@
                         </svg>
 
                         <span class="absolute w-2 h-2 rounded-full top-2 right-2 bg-[#ffb1c7]"></span>
-                    </button>
+                    </a>
 
-                    <button
-                        type="button"
+                    <a
+                        href="{{ route('dashboard') }}"
                         class="p-2 transition rounded-full hover:bg-[#2d3449]"
                         title="مساعدة"
                     >
@@ -307,7 +300,7 @@
                             <circle cx="12" cy="12" r="9"/>
                             <path d="M9.7 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1.2.8-1.2 1.7M12 17h.01"/>
                         </svg>
-                    </button>
+                    </a>
 
                     <div class="h-8 w-px bg-[#434655]/20 mx-2"></div>
 
@@ -423,7 +416,7 @@
 
                         <div class="flex flex-wrap gap-3">
                             <select
-                                x-model="selectedStatus"
+                                id="worksStatusFilter"
                                 class="rounded-lg border-0 bg-[#2d3449] px-4 py-2 text-sm font-bold text-[#dae2fd] focus:ring-1 focus:ring-[#b4c5ff]"
                             >
                                 <option value="all">كل الحالات</option>
@@ -472,18 +465,9 @@
                                     @endphp
 
                                     <tr
-                                        x-show="
-                                            (
-                                                selectedStatus === 'all'
-                                                || selectedStatus === @js($work->status)
-                                            )
-                                            &&
-                                            (
-                                                search === ''
-                                                || @js($searchText).includes(search.toLowerCase())
-                                            )
-                                        "
-                                        x-transition
+                                        data-work-row
+                                        data-status="{{ $work->status }}"
+                                        data-search="{{ $searchText }}"
                                         class="transition hover:bg-[#2563eb]/5"
                                     >
                                         <td class="px-8 py-4">
@@ -613,14 +597,9 @@
                                                 @if ($work->status !== 'rejected')
                                                     <button
                                                         type="button"
-                                                        @click="
-                                                            rejectOpen = true;
-                                                            rejectUrl = @js(route(
-                                                                'admin.engineer-works.reject',
-                                                                $work
-                                                            ));
-                                                            rejectTitle = @js($work->title);
-                                                        "
+                                                        data-open-reject
+                                                        data-reject-url="{{ route('admin.engineer-works.reject', $work) }}"
+                                                        data-reject-title="{{ $work->title }}"
                                                         class="flex items-center justify-center text-red-300 transition rounded-lg w-9 h-9 bg-red-500/10 hover:bg-red-500/20"
                                                         title="رفض"
                                                     >
@@ -759,15 +738,11 @@
 
         {{-- نافذة الرفض --}}
         <div
-            x-cloak
-            x-show="rejectOpen"
-            x-transition.opacity
-            @keydown.escape.window="rejectOpen = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#060e20]/90 p-5 backdrop-blur-xl"
+            id="rejectModal"
+            class="fixed inset-0 z-[100] hidden items-center justify-center bg-[#060e20]/90 p-5 backdrop-blur-xl"
         >
             <div
-                @click.outside="rejectOpen = false"
-                x-transition.scale
+                id="rejectModalPanel"
                 class="works-glass w-full max-w-xl rounded-[2rem] p-7 shadow-2xl"
             >
                 <div class="flex items-start justify-between gap-4">
@@ -786,15 +761,15 @@
                         <p class="mt-2 text-sm text-[#c3c6d7]">
                             العمل:
                             <span
+                                id="rejectModalTitle"
                                 class="font-bold text-white"
-                                x-text="rejectTitle"
                             ></span>
                         </p>
                     </div>
 
                     <button
                         type="button"
-                        @click="rejectOpen = false"
+                        data-close-reject
                         class="flex items-center justify-center text-white transition border rounded-full w-11 h-11 border-white/10 bg-white/5 hover:bg-white/10"
                     >
                         ✕
@@ -802,8 +777,9 @@
                 </div>
 
                 <form
+                    id="rejectForm"
                     method="POST"
-                    :action="rejectUrl"
+                    action=""
                     class="mt-7"
                 >
                     @csrf
@@ -824,7 +800,7 @@
                     <div class="grid gap-3 mt-6 sm:grid-cols-2">
                         <button
                             type="button"
-                            @click="rejectOpen = false"
+                            data-close-reject
                             class="px-5 py-3 font-black text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
                         >
                             إلغاء
@@ -841,4 +817,101 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('worksSearchInput');
+            const statusFilter = document.getElementById('worksStatusFilter');
+            const rows = Array.from(document.querySelectorAll('[data-work-row]'));
+
+            const applyFilters = () => {
+                const query = (searchInput?.value || '').trim().toLowerCase();
+                const status = statusFilter?.value || 'all';
+
+                rows.forEach((row) => {
+                    const rowStatus = row.dataset.status || '';
+                    const rowSearch = (row.dataset.search || '').toLowerCase();
+
+                    const matchesStatus =
+                        status === 'all' || rowStatus === status;
+
+                    const matchesSearch =
+                        query === '' || rowSearch.includes(query);
+
+                    row.classList.toggle(
+                        'hidden',
+                        !(matchesStatus && matchesSearch)
+                    );
+                });
+            };
+
+            searchInput?.addEventListener('input', applyFilters);
+            statusFilter?.addEventListener('change', applyFilters);
+
+            const modal = document.getElementById('rejectModal');
+            const modalPanel = document.getElementById('rejectModalPanel');
+            const rejectForm = document.getElementById('rejectForm');
+            const rejectTitle = document.getElementById('rejectModalTitle');
+
+            const openRejectModal = (button) => {
+                if (!modal || !rejectForm || !rejectTitle) {
+                    return;
+                }
+
+                rejectForm.action = button.dataset.rejectUrl || '';
+                rejectTitle.textContent =
+                    button.dataset.rejectTitle || '';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeRejectModal = () => {
+                if (!modal) {
+                    return;
+                }
+
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                document.body.style.overflow = '';
+            };
+
+            document
+                .querySelectorAll('[data-open-reject]')
+                .forEach((button) => {
+                    button.addEventListener('click', function () {
+                        openRejectModal(button);
+                    });
+                });
+
+            document
+                .querySelectorAll('[data-close-reject]')
+                .forEach((button) => {
+                    button.addEventListener(
+                        'click',
+                        closeRejectModal
+                    );
+                });
+
+            modal?.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    closeRejectModal();
+                }
+            });
+
+            modalPanel?.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeRejectModal();
+                }
+            });
+        });
+    </script>
+
 </x-app-layout>
