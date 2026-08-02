@@ -65,6 +65,26 @@
             background: rgba(0, 242, 255, .3);
         }
 
+
+        /*
+         * إخفاء الـ Navbar/Header الرئيسي القادم من x-app-layout
+         * في صفحة الإشعارات فقط.
+         */
+        body > div.min-h-screen > nav,
+        body > div.min-h-screen > header,
+        body > div > nav.bg-white,
+        body > div > nav.dark\:bg-gray-800,
+        body > div > header.bg-white,
+        body > div > header.dark\:bg-gray-800,
+        body nav[data-layout-navigation],
+        body header[data-layout-header] {
+            display: none !important;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
         @media (max-width: 1023px) {
             .notifications-sidebar {
                 display: none !important;
