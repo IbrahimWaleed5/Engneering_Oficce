@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SupportSetting;
 use App\Models\SupportTicket;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,6 +16,10 @@ class AdminSupportController extends Controller
     {
         $this->authorizeAdmin($request);
 
+        $search = trim(
+            (string) $request->input('q', '')
+        );
+
         $tickets = SupportTicket::query()
             ->with([
                 'user:id,name,email',
@@ -23,13 +28,67 @@ class AdminSupportController extends Controller
             ])
             ->when(
                 $request->filled('status'),
-                fn ($query) => $query->where(
+                fn (Builder $query) => $query->where(
                     'status',
-                    $request->string('status')
+                    $request->string('status')->toString()
                 )
             )
+            ->when(
+                $search !== '',
+                function (Builder $query) use ($search) {
+                    $query->where(
+                        function (Builder $builder) use ($search) {
+                            $builder
+                                ->where(
+                                    'ticket_number',
+                                    'like',
+                                    '%' . $search . '%'
+                                )
+                                ->orWhere(
+                                    'subject',
+                                    'like',
+                                    '%' . $search . '%'
+                                )
+                                ->orWhereHas(
+                                    'user',
+                                    function (Builder $userQuery) use ($search) {
+                                        $userQuery
+                                            ->where(
+                                                'name',
+                                                'like',
+                                                '%' . $search . '%'
+                                            )
+                                            ->orWhere(
+                                                'email',
+                                                'like',
+                                                '%' . $search . '%'
+                                            );
+                                    }
+                                )
+                                ->orWhereHas(
+                                    'assignedEmployee',
+                                    function (Builder $employeeQuery) use ($search) {
+                                        $employeeQuery
+                                            ->where(
+                                                'name',
+                                                'like',
+                                                '%' . $search . '%'
+                                            )
+                                            ->orWhere(
+                                                'email',
+                                                'like',
+                                                '%' . $search . '%'
+                                            );
+                                    }
+                                );
+                        }
+                    );
+                }
+            )
             ->latest('last_message_at')
-            ->paginate(15);
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
         return view(
             'admin.support.index',
