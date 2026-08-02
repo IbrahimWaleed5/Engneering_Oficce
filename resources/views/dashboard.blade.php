@@ -700,15 +700,58 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document
-                .querySelectorAll('a, button')
-                .forEach(function (element) {
-                    if (element.textContent.trim() === 'أعمالي') {
-                        element.remove();
-                    }
-                });
-        });
+        (function () {
+            function removeStandaloneMyWorksButton() {
+                document
+                    .querySelectorAll(
+                        'a, button, [role="button"]'
+                    )
+                    .forEach(function (element) {
+                        const text =
+                            element.textContent
+                                .replace(/\s+/g, ' ')
+                                .trim();
+
+                        if (text === 'أعمالي') {
+                            element.remove();
+                        }
+                    });
+            }
+
+            removeStandaloneMyWorksButton();
+
+            if (document.readyState === 'loading') {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    removeStandaloneMyWorksButton
+                );
+            }
+
+            window.addEventListener(
+                'load',
+                removeStandaloneMyWorksButton
+            );
+
+            const observer = new MutationObserver(
+                removeStandaloneMyWorksButton
+            );
+
+            observer.observe(
+                document.documentElement,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
+
+            window.setTimeout(
+                function () {
+                    removeStandaloneMyWorksButton();
+                    observer.disconnect();
+                },
+                5000
+            );
+        })();
     </script>
 
 </x-app-layout>

@@ -570,4 +570,71 @@
             ⌂
         </a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const openButton =
+                document.getElementById('support-mobile-menu-open');
+
+            const closeButton =
+                document.getElementById('support-mobile-menu-close');
+
+            const menu =
+                document.getElementById('support-mobile-menu');
+
+            const backdrop =
+                document.getElementById('support-mobile-backdrop');
+
+            function openMenu() {
+                if (! menu || ! backdrop) {
+                    return;
+                }
+
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+
+                backdrop.classList.remove('hidden');
+
+                document.body.classList.add('overflow-hidden');
+
+                openButton?.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeMenu() {
+                if (! menu || ! backdrop) {
+                    return;
+                }
+
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+
+                backdrop.classList.add('hidden');
+
+                document.body.classList.remove('overflow-hidden');
+
+                openButton?.setAttribute('aria-expanded', 'false');
+            }
+
+            openButton?.addEventListener('click', openMenu);
+            closeButton?.addEventListener('click', closeMenu);
+            backdrop?.addEventListener('click', closeMenu);
+
+            menu?.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 1024) {
+                    closeMenu();
+                }
+            });
+        });
+    </script>
+
 </x-app-layout>
