@@ -59,11 +59,14 @@ return new class extends Migration
 
                 $table->timestamps();
 
-                $table->index([
-                    'office_id',
-                    'engineer_id',
-                    'status',
-                ]);
+                $table->index(
+    [
+        'office_id',
+        'engineer_id',
+        'status',
+    ],
+    'office_member_app_lookup_idx'
+);
             }
         );
     }
