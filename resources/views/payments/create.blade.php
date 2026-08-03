@@ -332,8 +332,9 @@
                             </p>
 
                             <p class="text-3xl font-black text-[#b4c5ff]">
-                                {{ $paymentAmount }}
-                                <span class="text-xs">شيكل</span>
+                                <p class="text-3xl font-black text-[#b4c5ff]">
+    ${{ number_format((float) $consultation->final_price, 2) }}
+</p>
                             </p>
                         </div>
                     </div>
