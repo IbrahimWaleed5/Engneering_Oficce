@@ -9,6 +9,8 @@
         ? route('dashboard')
         : route('home');
 
+    $welcomeLink = route('home');
+
     $navItemBase = 'group relative inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200';
     $navItemIdle = 'text-slate-300 hover:-translate-y-0.5 hover:bg-white/[0.07] hover:text-white';
     $navItemActive = 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-300/20';
@@ -70,8 +72,18 @@
                 {{-- روابط سطح المكتب --}}
                 <div class="hidden items-center gap-1.5 lg:flex">
                     <a
+                        href="{{ $welcomeLink }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('home') ? $navItemActive : $navItemIdle }}"
+                    >
+                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5M9 20v-6h6v6" />
+                        </svg>
+                        <span>الصفحة الرئيسية</span>
+                    </a>
+
+                    <a
                         href="{{ $homeLink }}"
-                        class="{{ $navItemBase }} {{ request()->routeIs('dashboard', 'home') ? $navItemActive : $navItemIdle }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('dashboard') ? $navItemActive : $navItemIdle }}"
                     >
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h14V10M9 20v-6h6v6" />
@@ -422,8 +434,16 @@
 
                 <div class="space-y-2">
                     <a
+                        href="{{ $welcomeLink }}"
+                        class="{{ $mobileItemBase }} {{ request()->routeIs('home') ? $mobileItemActive : $mobileItemIdle }}"
+                    >
+                        <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">🌐</span>
+                        <span>الصفحة الرئيسية</span>
+                    </a>
+
+                    <a
                         href="{{ $homeLink }}"
-                        class="{{ $mobileItemBase }} {{ request()->routeIs('dashboard', 'home') ? $mobileItemActive : $mobileItemIdle }}"
+                        class="{{ $mobileItemBase }} {{ request()->routeIs('dashboard') ? $mobileItemActive : $mobileItemIdle }}"
                     >
                         <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🏠</span>
                         <span>لوحة التحكم</span>
