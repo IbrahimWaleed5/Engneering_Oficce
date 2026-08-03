@@ -235,10 +235,7 @@
                                 </button>
 
                                 <a
-                                    href="{{ route(
-                                        'consultations.show',
-                                        $consultation
-                                    ) }}"
+                                    href="{{ route('consultations.index') }}"
                                     class="inline-flex items-center justify-center px-6 py-3 font-bold text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
                                 >
                                     العودة إلى الاستشارة
