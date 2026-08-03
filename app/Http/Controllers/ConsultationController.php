@@ -6,9 +6,13 @@ use App\Models\Consultation;
 use App\Models\Conversation;
 use App\Models\ConsultationType;
 use App\Models\User;
+use App\Models\OfficeMember;
+use App\Models\Office;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ConsultationController extends Controller
 {
@@ -21,10 +25,11 @@ class ConsultationController extends Controller
     public function index(Request $request)
     {
         $query = Consultation::with([
-            'customer',
-            'engineer',
-            'consultationType',
-        ]);
+    'customer',
+    'engineer',
+    'consultationType',
+    'assignedOffice',
+]);
 
         /*
         |--------------------------------------------------------------------------
@@ -83,6 +88,19 @@ class ConsultationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | فلترة حسب المكتب الهندسي
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('office_id')) {
+            $query->where(
+                'assigned_office_id',
+                $request->office_id
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | فلترة من تاريخ
         |--------------------------------------------------------------------------
         */
@@ -119,11 +137,24 @@ class ConsultationController extends Controller
             ->orderBy('name')
             ->get();
 
+        $offices = Office::query()
+            ->whereIn(
+                'status',
+                [
+                    'active',
+                    'suspended',
+                    'closed',
+                ]
+            )
+            ->orderBy('name')
+            ->get();
+
         return view(
             'consultations.index',
             compact(
                 'consultations',
-                'engineers'
+                'engineers',
+                'offices'
             )
         );
     }
@@ -562,28 +593,50 @@ class ConsultationController extends Controller
     public function uploadEngineerFile(
         Request $request,
         Consultation $consultation
-    ) {
-        $isAdmin =
-            $request->user()->role === 'admin';
+    ): RedirectResponse {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null,
+            401,
+            'يجب تسجيل الدخول.'
+        );
+
+        $isAdmin = $user->role === 'admin';
 
         $isAssignedEngineer =
-            (int) $consultation->engineer_id
-            === (int) $request->user()->id;
+            $user->role === 'engineer'
+            && (int) $consultation->engineer_id
+                === (int) $user->id;
 
         abort_unless(
             $isAdmin || $isAssignedEngineer,
-            403
+            403,
+            'ليس لديك صلاحية رفع الملف النهائي لهذه الاستشارة.'
         );
 
+        abort_if(
+            $consultation->status === 'cancelled',
+            422,
+            'لا يمكن رفع ملف نهائي لاستشارة ملغاة.'
+        );
+
+        if ($consultation->payment_status !== 'paid') {
+            return back()->withErrors([
+                'engineer_file' =>
+                    'لا يمكن رفع الملف النهائي قبل تأكيد الدفع.',
+            ]);
+        }
+
         /*
-         * المدير يستطيع رفع الملف.
-         * المهندس يجب أن يكون اشتراكه نشطًا.
-         */
+        |--------------------------------------------------------------------------
+        | التحقق من حالة المهندس
+        |--------------------------------------------------------------------------
+        */
+
         if (
             ! $isAdmin
-            && ! $request
-                ->user()
-                ->hasActiveEngineerMembership()
+            && ! $user->hasActiveEngineerMembership()
         ) {
             return back()->withErrors([
                 'engineer_file' =>
@@ -591,46 +644,144 @@ class ConsultationController extends Controller
             ]);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | إذا كانت الاستشارة محولة إلى مكتب هندسي
+        |--------------------------------------------------------------------------
+        */
+
         if (
-            $consultation->payment_status
-            !== 'paid'
+            ! $isAdmin
+            && $consultation->assigned_office_id !== null
         ) {
-            return back()->withErrors([
-                'engineer_file' =>
-                    'لا يمكن رفع الملف النهائي قبل تأكيد الدفع.',
-            ]);
-        }
+            $officeMember = OfficeMember::query()
+                ->where(
+                    'office_id',
+                    $consultation->assigned_office_id
+                )
+                ->where(
+                    'user_id',
+                    $user->id
+                )
+                ->where(
+                    'office_role',
+                    'engineer'
+                )
+                ->where(
+                    'status',
+                    'active'
+                )
+                ->first();
 
-        $request->validate([
-            'engineer_file' => [
-                'required',
-                'file',
-                'mimes:pdf,jpg,jpeg,png,dwg',
-                'max:512000',
-            ],
-        ]);
-
-        $filePath = $request
-            ->file('engineer_file')
-            ->store(
-                'consultations',
-                'public'
+            abort_unless(
+                $officeMember !== null,
+                403,
+                'أنت لست عضوًا فعالًا في المكتب المسؤول عن هذه الاستشارة.'
             );
 
+            $office = $consultation
+                ->assignedOffice()
+                ->first();
+
+            abort_unless(
+                $office !== null,
+                404,
+                'المكتب المسؤول عن الاستشارة غير موجود.'
+            );
+
+            abort_unless(
+                $office->isOperational(),
+                403,
+                'المكتب المسؤول عن الاستشارة غير فعال أو اشتراكه منتهي.'
+            );
+        }
+
         /*
-         * عند رفع الملف تصبح الاستشارة مكتملة،
-         * وبذلك يستطيع العميل تقييم المهندس.
-         */
-        $consultation->update([
-            'engineer_file' =>
-                $filePath,
+        |--------------------------------------------------------------------------
+        | التحقق من الملف
+        |--------------------------------------------------------------------------
+        */
 
-            'status' =>
-                'completed',
+        $validated = $request->validate(
+            [
+                'engineer_file' => [
+                    'required',
+                    'file',
+                    'mimes:pdf,jpg,jpeg,png,dwg',
+                    'max:512000',
+                ],
+            ],
+            [
+                'engineer_file.required' =>
+                    'يجب اختيار ملف التسليم النهائي.',
 
-            'delivered_at' =>
-                now(),
-        ]);
+                'engineer_file.file' =>
+                    'الملف المرفوع غير صالح.',
+
+                'engineer_file.mimes' =>
+                    'الملف يجب أن يكون PDF أو صورة أو DWG.',
+
+                'engineer_file.max' =>
+                    'حجم الملف يجب ألا يتجاوز 500 ميجابايت.',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | حفظ الملف الجديد
+        |--------------------------------------------------------------------------
+        */
+
+        $newFilePath = $validated['engineer_file']->store(
+            'consultations/'
+            . $consultation->id
+            . '/engineer-deliveries',
+            'public'
+        );
+
+        $oldFilePath = $consultation->engineer_file;
+
+        try {
+            DB::transaction(
+                function () use (
+                    $consultation,
+                    $newFilePath
+                ): void {
+                    $consultation->update([
+                        'engineer_file' => $newFilePath,
+                        'status' => 'completed',
+                        'delivered_at' => now(),
+                    ]);
+                }
+            );
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete(
+                $newFilePath
+            );
+
+            throw $exception;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | حذف الملف السابق بعد نجاح تحديث قاعدة البيانات
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $oldFilePath
+            && $oldFilePath !== $newFilePath
+        ) {
+            Storage::disk('public')->delete(
+                $oldFilePath
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | إشعار العميل
+        |--------------------------------------------------------------------------
+        */
 
         $consultation->load('customer');
 

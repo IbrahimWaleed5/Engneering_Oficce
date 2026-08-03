@@ -14,6 +14,9 @@ class Consultation extends Model
         'customer_id',
         'consultation_type_id',
         'engineer_id',
+        'assigned_office_id',
+        'office_assigned_by',
+        'office_assigned_at',
         'title',
         'description',
         'final_price',
@@ -28,6 +31,7 @@ class Consultation extends Model
 
     protected $casts = [
         'final_price' => 'decimal:2',
+        'office_assigned_at' => 'datetime',
         'started_at' => 'datetime',
         'expected_delivery_at' => 'datetime',
         'delivered_at' => 'datetime',
@@ -54,6 +58,29 @@ class Consultation extends Model
             User::class,
             'engineer_id'
         );
+    }
+
+    public function assignedOffice(): BelongsTo
+    {
+        return $this->belongsTo(
+            Office::class,
+            'assigned_office_id'
+        );
+    }
+
+    public function officeAssigner(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'office_assigned_by'
+        );
+    }
+
+    public function officeAssignments(): HasMany
+    {
+        return $this->hasMany(
+            ConsultationOfficeAssignment::class
+        )->latest('assigned_at');
     }
 
     public function messages(): HasMany
@@ -90,12 +117,6 @@ class Consultation extends Model
             Invoice::class
         );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | المحادثة الموحدة المرتبطة بالاستشارة
-    |--------------------------------------------------------------------------
-    */
 
     public function conversation(): HasOne
     {

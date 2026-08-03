@@ -23,9 +23,17 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureActiveEngineerMembership;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SecureFileController;
+use App\Http\Controllers\AdminOfficeController;
+use App\Http\Controllers\OfficeApplicationController;
 use App\Http\Controllers\AdminSupportController;
 use App\Http\Controllers\SupportMessageController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\OfficeSubscriptionController;
+use App\Http\Controllers\EngineeringOfficeController;
+use App\Http\Controllers\OfficeMembershipApplicationController;
+use App\Http\Controllers\OfficeApplicationFileController;
+use App\Http\Controllers\OfficeMemberController;
+use App\Http\Controllers\ConsultationOfficeAssignmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -797,4 +805,547 @@ Route::get(
     [SupportTicketController::class, 'employeeIndex']
 )->middleware('auth')
  ->name('employee.support.index');
+ /*
+|--------------------------------------------------------------------------
+| طلب تسجيل مكتب هندسي
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:customer,engineer',
+])->group(function () {
+    Route::get(
+        '/office-application',
+        [
+            OfficeApplicationController::class,
+            'create',
+        ]
+    )->name('office-applications.create');
+
+    Route::post(
+        '/office-application',
+        [
+            OfficeApplicationController::class,
+            'store',
+        ]
+    )->name('office-applications.store');
+
+    Route::get(
+        '/office-application/status',
+        [
+            OfficeApplicationController::class,
+            'status',
+        ]
+    )->name('office-applications.status');
+});
+
+/*
+|--------------------------------------------------------------------------
+| إدارة طلبات المكاتب — مدير النظام
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/office-applications',
+            [
+                AdminOfficeController::class,
+                'applicationsIndex',
+            ]
+        )->name('office-applications.index');
+
+        Route::get(
+            '/office-applications/{officeApplication}',
+            [
+                AdminOfficeController::class,
+                'applicationShow',
+            ]
+        )
+            ->whereNumber('officeApplication')
+            ->name('office-applications.show');
+
+        Route::patch(
+            '/office-applications/{officeApplication}/review',
+            [
+                AdminOfficeController::class,
+                'reviewApplication',
+            ]
+        )
+            ->whereNumber('officeApplication')
+            ->name('office-applications.review');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| لوحة المكتب المؤقتة
+|--------------------------------------------------------------------------
+|
+| هذا المسار مؤقت حتى نبرمج لوحة المكتب كاملة.
+|
+*/
+
+Route::get('/office/dashboard', function () {
+    return view('office.dashboard');
+})
+    ->middleware([
+        'auth',
+        'verified',
+        'role:office_owner',
+    ])
+    ->name('office.dashboard');
+    /*
+|--------------------------------------------------------------------------
+| اشتراك المكتب الهندسي
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:office_owner',
+])->group(function () {
+    Route::get(
+        '/office/subscription',
+        [
+            OfficeSubscriptionController::class,
+            'show',
+        ]
+    )->name('office.subscription');
+
+    Route::post(
+        '/office/subscription',
+        [
+            OfficeSubscriptionController::class,
+            'store',
+        ]
+    )->name('office.subscription.store');
+});
+/*
+|--------------------------------------------------------------------------
+| إدارة اشتراكات المكاتب — مدير النظام
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/office-subscriptions',
+            [
+                AdminOfficeController::class,
+                'subscriptionsIndex',
+            ]
+        )->name('office-subscriptions.index');
+
+        Route::patch(
+            '/office-subscriptions/{officeSubscription}/review',
+            [
+                AdminOfficeController::class,
+                'reviewSubscription',
+            ]
+        )
+            ->whereNumber('officeSubscription')
+            ->name('office-subscriptions.review');
+    });
+    /*
+|--------------------------------------------------------------------------
+| إدارة المكاتب الهندسية — مدير النظام
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/offices',
+            [
+                AdminOfficeController::class,
+                'officesIndex',
+            ]
+        )->name('offices.index');
+
+        Route::get(
+            '/offices/{office}',
+            [
+                AdminOfficeController::class,
+                'officeShow',
+            ]
+        )->name('offices.show');
+
+        Route::patch(
+            '/offices/{office}/status',
+            [
+                AdminOfficeController::class,
+                'updateOfficeStatus',
+            ]
+        )->name('offices.status');
+    });
+    /*
+|--------------------------------------------------------------------------
+| المكاتب الهندسية للمهندسين
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:engineer',
+])->group(function () {
+    Route::get(
+        '/engineering-offices',
+        [
+            EngineeringOfficeController::class,
+            'index',
+        ]
+    )->name('engineering-offices.index');
+
+    Route::get(
+        '/engineering-offices/{office}',
+        [
+            EngineeringOfficeController::class,
+            'show',
+        ]
+    )->name('engineering-offices.show');
+
+    Route::get(
+        '/engineering-offices/{office}/join',
+        [
+            OfficeMembershipApplicationController::class,
+            'create',
+        ]
+    )->name('office-membership-applications.create');
+
+    Route::post(
+        '/engineering-offices/{office}/join',
+        [
+            OfficeMembershipApplicationController::class,
+            'store',
+        ]
+    )->name('office-membership-applications.store');
+
+    Route::get(
+        '/my-office-applications',
+        [
+            OfficeMembershipApplicationController::class,
+            'mine',
+        ]
+    )->name('office-membership-applications.mine');
+});
+
+/*
+|--------------------------------------------------------------------------
+| إدارة طلبات انضمام المهندسين — مالك أو مدير المكتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->group(function () {
+    Route::get(
+        '/office/membership-applications',
+        [
+            OfficeMembershipApplicationController::class,
+            'index',
+        ]
+    )->name('office-membership-applications.index');
+
+    Route::get(
+        '/office/membership-applications/{officeMembershipApplication}',
+        [
+            OfficeMembershipApplicationController::class,
+            'show',
+        ]
+    )->name('office-membership-applications.show');
+
+    Route::patch(
+        '/office/membership-applications/{officeMembershipApplication}/review',
+        [
+            OfficeMembershipApplicationController::class,
+            'review',
+        ]
+    )->name('office-membership-applications.review');
+});
+
+/*
+|--------------------------------------------------------------------------
+| إدارة طلبات انضمام المهندسين
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->group(function () {
+    /*
+    | يمكن للمالك أو المدير مشاهدة الطلبات حتى عند توقف المكتب،
+    | حتى يعرف الطلبات الموجودة وحالة المكتب.
+    */
+    Route::get(
+        '/office/membership-applications',
+        [
+            OfficeMembershipApplicationController::class,
+            'index',
+        ]
+    )->name('office-membership-applications.index');
+
+    Route::get(
+        '/office/membership-applications/{officeMembershipApplication}',
+        [
+            OfficeMembershipApplicationController::class,
+            'show',
+        ]
+    )->name('office-membership-applications.show');
+
+    /*
+    | قبول أو رفض الطلب يحتاج مكتبًا فعالًا واشتراكًا ساريًا.
+    */
+    Route::patch(
+        '/office/membership-applications/{officeMembershipApplication}/review',
+        [
+            OfficeMembershipApplicationController::class,
+            'review',
+        ]
+    )
+        ->middleware('office.operational')
+        ->name('office-membership-applications.review');
+});
+/*
+|--------------------------------------------------------------------------
+| إدارة أعضاء المكتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'office.operational',
+])->prefix('office')->name('office.')->group(function () {
+    Route::get(
+        '/consultations',
+        [
+            ConsultationOfficeAssignmentController::class,
+            'index',
+        ]
+    )->name('consultations.index');
+
+    Route::patch(
+        '/consultations/{consultation}/assign-engineer',
+        [
+            ConsultationOfficeAssignmentController::class,
+            'assignEngineer',
+        ]
+    )->name('consultations.assign-engineer');
+});
+
+    Route::patch(
+        '/members/{officeMember}',
+        [
+            OfficeMemberController::class,
+            'update',
+        ]
+    )->name('members.update');
+
+    Route::delete(
+        '/members/{officeMember}',
+        [
+            OfficeMemberController::class,
+            'destroy',
+        ]
+    )->name('members.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| استشارات المكتب الهندسي
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->prefix('office')->name('office.')->group(function () {
+    Route::get(
+        '/consultations',
+        [
+            ConsultationOfficeAssignmentController::class,
+            'index',
+        ]
+    )->name('consultations.index');
+
+    Route::patch(
+        '/consultations/{consultation}/assign-engineer',
+        [
+            ConsultationOfficeAssignmentController::class,
+            'assignEngineer',
+        ]
+    )->name('consultations.assign-engineer');
+});
+/*
+|--------------------------------------------------------------------------
+| تحويل الاستشارات إلى المكاتب — مدير النظام
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/consultations/{consultation}/assign-office',
+            [
+                ConsultationOfficeAssignmentController::class,
+                'adminAssignForm',
+            ]
+        )->name('consultation-office.form');
+
+        Route::patch(
+            '/consultations/{consultation}/assign-office',
+            [
+                ConsultationOfficeAssignmentController::class,
+                'adminAssign',
+            ]
+        )->name('consultation-office.assign');
+
+        Route::delete(
+            '/consultations/{consultation}/assign-office',
+            [
+                ConsultationOfficeAssignmentController::class,
+                'adminUnassign',
+            ]
+        )->name('consultation-office.unassign');
+    });
+    /*
+|--------------------------------------------------------------------------
+| الملف الشخصي للمكتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->prefix('office')->name('office.')->group(function () {
+    Route::get(
+        '/profile',
+        [
+            EngineeringOfficeController::class,
+            'profile',
+        ]
+    )->name('profile');
+
+    Route::patch(
+        '/profile',
+        [
+            EngineeringOfficeController::class,
+            'updateProfile',
+        ]
+    )->name('profile.update');
+});
+/*
+|--------------------------------------------------------------------------
+| لوحة تحكم المكتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->get(
+    '/office/dashboard',
+    [
+        EngineeringOfficeController::class,
+        'dashboard',
+    ]
+)->name('office.dashboard');
+/*
+|--------------------------------------------------------------------------
+| إدارة أعضاء المكتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])
+    ->prefix('office')
+    ->name('office.')
+    ->group(function () {
+        /*
+        | يمكن مشاهدة الأعضاء حتى لو كان الاشتراك منتهيًا
+        | أو كان المكتب موقوفًا.
+        */
+        Route::get(
+            '/members',
+            [
+                OfficeMemberController::class,
+                'index',
+            ]
+        )->name('members.index');
+
+        /*
+        | تعديل بيانات العضو يحتاج مكتبًا فعالًا
+        | واشتراكًا شهريًا ساريًا.
+        */
+        Route::patch(
+            '/members/{officeMember}',
+            [
+                OfficeMemberController::class,
+                'update',
+            ]
+        )
+            ->middleware('office.operational')
+            ->name('members.update');
+
+        /*
+        | إزالة عضو من المكتب تحتاج مكتبًا فعالًا
+        | واشتراكًا شهريًا ساريًا.
+        */
+        Route::delete(
+            '/members/{officeMember}',
+            [
+                OfficeMemberController::class,
+                'destroy',
+            ]
+        )
+            ->middleware('office.operational')
+            ->name('members.destroy');
+    });
+    /*
+|--------------------------------------------------------------------------
+| إيصالات اشتراكات المكاتب
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+])->get(
+    '/office-subscriptions/{officeSubscription}/receipt',
+    [
+        OfficeApplicationFileController::class,
+        'subscriptionReceipt',
+    ]
+)->name('office-subscriptions.receipt');
 require __DIR__.'/auth.php';

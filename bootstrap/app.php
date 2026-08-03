@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'office.operational' => \App\Http\Middleware\EnsureOfficeOperational::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

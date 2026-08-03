@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -147,6 +148,67 @@ class User extends Authenticatable implements MustVerifyEmail
             Review::class,
             'customer_id'
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | المكاتب الهندسية
+    |--------------------------------------------------------------------------
+    */
+
+    public function ownedOffice(): HasOne
+    {
+        return $this->hasOne(
+            Office::class,
+            'owner_user_id'
+        );
+    }
+
+    public function officeApplication(): HasOne
+    {
+        return $this->hasOne(
+            OfficeApplication::class
+        )->latestOfMany();
+    }
+
+    public function officeMembershipApplications(): HasMany
+    {
+        return $this->hasMany(
+            OfficeMembershipApplication::class,
+            'engineer_id'
+        );
+    }
+
+    public function officeMemberships(): HasMany
+    {
+        return $this->hasMany(
+            OfficeMember::class
+        );
+    }
+
+    public function activeOfficeMembership(): HasOne
+    {
+        return $this->hasOne(
+            OfficeMember::class
+        )
+            ->where('status', 'active')
+            ->latestOfMany();
+    }
+
+    public function managedOfficeMemberships(): HasMany
+    {
+        return $this->officeMemberships()
+            ->whereIn(
+                'office_role',
+                ['owner', 'manager']
+            )
+            ->where('status', 'active');
+    }
+
+    public function isOfficeOwner(): bool
+    {
+        return $this->role === 'office_owner'
+            && $this->ownedOffice !== null;
     }
 
     /*

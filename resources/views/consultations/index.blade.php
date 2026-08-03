@@ -441,7 +441,7 @@
                 {{-- البحث والفلاتر --}}
                 <section
                     id="consultationFilterPanel"
-                    class="{{ request()->hasAny(['search', 'status', 'engineer_id', 'date_from', 'date_to']) ? '' : 'hidden' }} p-6 consultations-glass rounded-3xl"
+                    class="{{ request()->hasAny(['search', 'status', 'engineer_id', 'office_id', 'date_from', 'date_to']) ? '' : 'hidden' }} p-6 consultations-glass rounded-3xl"
                 >
                     <form
                         method="GET"
@@ -500,6 +500,36 @@
                                         @selected((string) request('engineer_id') === (string) $engineer->id)
                                     >
                                         {{ $engineer->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="office_id" class="block mb-2 text-sm font-bold text-[#c3c6d7]">
+                                المكتب الهندسي
+                            </label>
+
+                            <select
+                                id="office_id"
+                                name="office_id"
+                                class="w-full rounded-xl border border-[#434655]/30 bg-[#131b2e] px-4 py-3 text-white focus:border-[#b4c5ff] focus:ring-1 focus:ring-[#b4c5ff]"
+                            >
+                                <option value="">جميع المكاتب</option>
+
+                                @foreach ($offices as $office)
+                                    <option
+                                        value="{{ $office->id }}"
+                                        @selected((string) request('office_id') === (string) $office->id)
+                                    >
+                                        {{ $office->name }}
+                                        —
+                                        {{ match ($office->status) {
+                                            'active' => 'فعال',
+                                            'suspended' => 'موقوف',
+                                            'closed' => 'مغلق',
+                                            default => 'غير فعال',
+                                        } }}
                                     </option>
                                 @endforeach
                             </select>
@@ -569,7 +599,7 @@
                                 id="toggleConsultationFilters"
                                 type="button"
                                 aria-controls="consultationFilterPanel"
-                                aria-expanded="{{ request()->hasAny(['search', 'status', 'engineer_id', 'date_from', 'date_to']) ? 'true' : 'false' }}"
+                                aria-expanded="{{ request()->hasAny(['search', 'status', 'engineer_id', 'office_id', 'date_from', 'date_to']) ? 'true' : 'false' }}"
                                 class="flex items-center gap-2 rounded-xl border border-[#434655]/20 bg-[#222a3d] px-4 py-2 text-[#dae2fd] transition hover:bg-[#31394d]"
                             >
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -600,6 +630,7 @@
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">العميل</th>
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">عنوان الطلب</th>
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">المهندس</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">المكتب الهندسي</th>
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">السعر</th>
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">الدفع</th>
                                     <th class="px-6 py-4 text-xs font-bold text-[#8d90a0]">الحالة</th>
@@ -624,7 +655,8 @@
                                             ($consultation->title ?? '') . ' ' .
                                             ($consultation->customer?->name ?? '') . ' ' .
                                             ($consultation->customer?->email ?? '') . ' ' .
-                                            ($consultation->engineer?->name ?? '')
+                                            ($consultation->engineer?->name ?? '') . ' ' .
+                                            ($consultation->assignedOffice?->name ?? '')
                                         );
                                     @endphp
 
@@ -669,6 +701,52 @@
 
                                         <td class="px-6 py-5 text-sm text-[#c3c6d7]">
                                             {{ $consultation->engineer?->name ?? 'غير معيّن' }}
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            @if ($consultation->assignedOffice)
+                                                <div class="flex items-center gap-3">
+                                                    <div class="flex items-center justify-center w-8 h-8 text-purple-300 rounded-lg shrink-0 bg-purple-500/10">
+                                                        <svg
+                                                            class="w-4 h-4"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.9"
+                                                        >
+                                                            <path d="M3 21h18"/>
+                                                            <path d="M5 21V7l7-4 7 4v14"/>
+                                                            <path d="M9 21v-5h6v5"/>
+                                                            <path d="M9 9h.01M15 9h.01M9 12h.01M15 12h.01"/>
+                                                        </svg>
+                                                    </div>
+
+                                                    <div class="min-w-0">
+                                                        <p
+                                                            class="max-w-[170px] truncate text-xs font-bold text-[#dae2fd]"
+                                                            title="{{ $consultation->assignedOffice->name }}"
+                                                        >
+                                                            {{ $consultation->assignedOffice->name }}
+                                                        </p>
+
+                                                        <p class="mt-1 text-[10px]">
+                                                            @if ($consultation->assignedOffice->status === 'active')
+                                                                <span class="text-green-300">مكتب فعال</span>
+                                                            @elseif ($consultation->assignedOffice->status === 'suspended')
+                                                                <span class="text-amber-300">مكتب موقوف</span>
+                                                            @elseif ($consultation->assignedOffice->status === 'closed')
+                                                                <span class="text-red-300">مكتب مغلق</span>
+                                                            @else
+                                                                <span class="text-[#8d90a0]">غير فعال</span>
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 rounded-full border border-[#434655]/20 bg-[#2d3449]/40 px-3 py-1 text-[10px] font-bold text-[#8d90a0]">
+                                                    غير محولة لمكتب
+                                                </span>
+                                            @endif
                                         </td>
 
                                         <td class="px-6 py-5">
@@ -734,7 +812,74 @@
                                                         <path d="M3 20a6 6 0 0 1 12 0M18 8v6M15 11h6"/>
                                                     </svg>
                                                 </a>
+@if ($currentUser->role === 'admin')
+    <a
+        href="{{ route(
+            'admin.consultation-office.form',
+            $consultation
+        ) }}"
+        class="flex items-center justify-center text-purple-300 transition rounded-lg w-9 h-9 bg-purple-500/10 hover:bg-purple-600 hover:text-white"
+        title="{{ $consultation->assigned_office_id
+            ? 'تغيير المكتب الهندسي'
+            : 'تحويل إلى مكتب هندسي' }}"
+    >
+        <svg
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+        >
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l7-4 7 4v14"/>
+            <path d="M9 21v-5h6v5"/>
+            <path d="M9 9h.01M15 9h.01M9 12h.01M15 12h.01"/>
+        </svg>
+    </a>
 
+    @if (
+        $consultation->assigned_office_id
+        && ! in_array(
+            $consultation->status,
+            ['completed', 'cancelled'],
+            true
+        )
+    )
+        <form
+            method="POST"
+            action="{{ route(
+                'admin.consultation-office.unassign',
+                $consultation
+            ) }}"
+            class="inline-flex"
+            onsubmit="return confirm('هل أنت متأكد من إلغاء تحويل هذه الاستشارة من المكتب الهندسي؟ سيتم أيضًا إزالة المهندس المعيّن من المكتب.')"
+        >
+            @csrf
+            @method('DELETE')
+
+            <button
+                type="submit"
+                class="flex items-center justify-center text-red-300 transition rounded-lg w-9 h-9 bg-red-500/10 hover:bg-red-600 hover:text-white"
+                title="إلغاء تحويل المكتب الهندسي"
+                aria-label="إلغاء تحويل المكتب الهندسي"
+            >
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M18 6 6 18M6 6l12 12"
+                    />
+                </svg>
+            </button>
+        </form>
+    @endif
+@endif
                                                 @if ($consultation->customer_file)
                                                     <a
                                                         href="{{ asset('storage/' . $consultation->customer_file) }}"
@@ -770,7 +915,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-6 py-16 text-center text-[#c3c6d7]">
+                                        <td colspan="9" class="px-6 py-16 text-center text-[#c3c6d7]">
                                             لا توجد استشارات حتى الآن.
                                         </td>
                                     </tr>

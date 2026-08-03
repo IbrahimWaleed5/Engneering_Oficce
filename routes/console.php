@@ -10,3 +10,13 @@ Artisan::command('inspire', function () {
 Schedule::command(
     'engineers:expire-memberships'
 )->hourly();
+/*
+|--------------------------------------------------------------------------
+| فحص اشتراكات المكاتب المنتهية
+|--------------------------------------------------------------------------
+*/
+
+Schedule::command('offices:expire-subscriptions')
+    ->dailyAt('00:10')
+    ->withoutOverlapping()
+    ->onOneServer();
