@@ -16,6 +16,7 @@ class DashboardController extends Controller
 
         return match ($user->role) {
             'admin' => $this->adminDashboard(),
+            'office_owner' => redirect()->route('office.dashboard'),
             'engineer' => $this->engineerDashboard($user),
             'customer' => $this->customerDashboard($user),
             'employee' => $this->employeeDashboard(),
