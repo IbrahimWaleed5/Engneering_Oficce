@@ -59,21 +59,19 @@ class OfficeApplicationController extends Controller
                 );
         }
 
+        $baseDirectory = 'office-applications/' . $user->id;
+
         $commercialRegistrationPath = $request
             ->file('commercial_registration_file')
-            ->store(
-                'office-applications/'
-                . $user->id
-                . '/commercial-registration'
-            );
+            ->store($baseDirectory . '/commercial-registration');
 
         $licenseDocumentPath = $request
             ->file('license_document')
-            ->store(
-                'office-applications/'
-                . $user->id
-                . '/licenses'
-            );
+            ->store($baseDirectory . '/licenses');
+
+        $paymentReceiptPath = $request
+            ->file('payment_receipt')
+            ->store($baseDirectory . '/payment-receipts');
 
         try {
             OfficeApplication::create([
@@ -93,12 +91,20 @@ class OfficeApplicationController extends Controller
                     $commercialRegistrationPath,
                 'license_document_path' =>
                     $licenseDocumentPath,
+                'payment_method' =>
+                    $request->validated('payment_method'),
+                'payment_reference' =>
+                    $request->validated('payment_reference'),
+                'payment_receipt_path' =>
+                    $paymentReceiptPath,
+                'paid_at' => now(),
                 'status' => 'pending',
             ]);
         } catch (\Throwable $exception) {
             Storage::delete([
                 $commercialRegistrationPath,
                 $licenseDocumentPath,
+                $paymentReceiptPath,
             ]);
 
             throw $exception;
@@ -108,38 +114,24 @@ class OfficeApplicationController extends Controller
             ->route('office-applications.status')
             ->with(
                 'success',
-                'تم إرسال طلب تسجيل المكتب بنجاح، وسيقوم مدير النظام بمراجعته.'
+                'تم إرسال طلب المكتب وإيصال اشتراك 300 دولار بنجاح، وسيقوم مدير النظام بمراجعتهما.'
             );
     }
 
     public function status(): View
     {
-        $user = request()->user();
-
         $application = OfficeApplication::query()
-            ->where('user_id', $user->id)
+            ->where(
+                'user_id',
+                request()->user()->id
+            )
             ->with('reviewer')
             ->latest()
             ->first();
 
-        $office = $user->ownedOffice()
-            ->with([
-                'subscriptions' => fn ($query) =>
-                    $query->latest(),
-            ])
-            ->first();
-
-        $latestSubscription = $office
-            ? $office->subscriptions->first()
-            : null;
-
         return view(
             'office-applications.status',
-            compact(
-                'application',
-                'office',
-                'latestSubscription'
-            )
+            compact('application')
         );
     }
 }

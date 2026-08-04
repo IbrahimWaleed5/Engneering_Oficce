@@ -20,6 +20,10 @@ class OfficeApplication extends Model
         'notes',
         'commercial_registration_path',
         'license_document_path',
+        'payment_method',
+        'payment_reference',
+        'payment_receipt_path',
+        'paid_at',
         'status',
         'reviewed_by',
         'reviewed_at',
@@ -27,6 +31,7 @@ class OfficeApplication extends Model
     ];
 
     protected $casts = [
+        'paid_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
 

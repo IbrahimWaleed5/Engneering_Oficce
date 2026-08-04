@@ -119,65 +119,62 @@ class StoreOfficeApplicationRequest extends FormRequest
                 'mimes:pdf,jpg,jpeg,png,webp',
                 'max:10240',
             ],
+
+            'payment_method' => [
+                'required',
+                Rule::in([
+                    'bank_transfer',
+                    'wallet',
+                    'other',
+                ]),
+            ],
+
+            'payment_reference' => [
+                'nullable',
+                'string',
+                'max:190',
+            ],
+
+            'payment_receipt' => [
+                'required',
+                'file',
+                'mimes:pdf,jpg,jpeg,png,webp',
+                'max:10240',
+            ],
+
+            'terms' => [
+                'accepted',
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'office_name.required' =>
-                'اسم المكتب مطلوب.',
-
-            'office_name.max' =>
-                'اسم المكتب طويل جدًا.',
-
-            'email.required' =>
-                'البريد الإلكتروني للمكتب مطلوب.',
-
-            'email.email' =>
-                'صيغة البريد الإلكتروني غير صحيحة.',
-
-            'phone.required' =>
-                'رقم هاتف المكتب مطلوب.',
-
-            'commercial_registration.required' =>
-                'رقم السجل التجاري مطلوب.',
-
-            'commercial_registration.unique' =>
-                'رقم السجل التجاري مستخدم في طلب أو مكتب آخر.',
-
-            'license_number.required' =>
-                'رقم ترخيص المكتب مطلوب.',
-
-            'license_number.unique' =>
-                'رقم الترخيص مستخدم في طلب أو مكتب آخر.',
-
-            'country.required' =>
-                'الدولة مطلوبة.',
-
-            'city.required' =>
-                'المدينة مطلوبة.',
-
-            'address.required' =>
-                'عنوان المكتب مطلوب.',
-
-            'commercial_registration_file.required' =>
-                'ملف السجل التجاري مطلوب.',
-
-            'commercial_registration_file.mimes' =>
-                'ملف السجل التجاري يجب أن يكون PDF أو صورة.',
-
-            'commercial_registration_file.max' =>
-                'حجم ملف السجل التجاري يجب ألا يتجاوز 10 ميجابايت.',
-
-            'license_document.required' =>
-                'ملف ترخيص المكتب مطلوب.',
-
-            'license_document.mimes' =>
-                'ملف الترخيص يجب أن يكون PDF أو صورة.',
-
-            'license_document.max' =>
-                'حجم ملف الترخيص يجب ألا يتجاوز 10 ميجابايت.',
+            'office_name.required' => 'اسم المكتب مطلوب.',
+            'office_name.max' => 'اسم المكتب طويل جدًا.',
+            'email.required' => 'البريد الإلكتروني للمكتب مطلوب.',
+            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            'phone.required' => 'رقم هاتف المكتب مطلوب.',
+            'commercial_registration.required' => 'رقم السجل التجاري مطلوب.',
+            'commercial_registration.unique' => 'رقم السجل التجاري مستخدم في طلب أو مكتب آخر.',
+            'license_number.required' => 'رقم ترخيص المكتب مطلوب.',
+            'license_number.unique' => 'رقم الترخيص مستخدم في طلب أو مكتب آخر.',
+            'country.required' => 'الدولة مطلوبة.',
+            'city.required' => 'المدينة مطلوبة.',
+            'address.required' => 'عنوان المكتب مطلوب.',
+            'commercial_registration_file.required' => 'ملف السجل التجاري مطلوب.',
+            'commercial_registration_file.mimes' => 'ملف السجل التجاري يجب أن يكون PDF أو صورة.',
+            'commercial_registration_file.max' => 'حجم ملف السجل التجاري يجب ألا يتجاوز 10 ميجابايت.',
+            'license_document.required' => 'ملف ترخيص المكتب مطلوب.',
+            'license_document.mimes' => 'ملف الترخيص يجب أن يكون PDF أو صورة.',
+            'license_document.max' => 'حجم ملف الترخيص يجب ألا يتجاوز 10 ميجابايت.',
+            'payment_method.required' => 'طريقة الدفع مطلوبة.',
+            'payment_method.in' => 'طريقة الدفع غير صحيحة.',
+            'payment_receipt.required' => 'إيصال دفع اشتراك المكتب مطلوب.',
+            'payment_receipt.mimes' => 'إيصال الدفع يجب أن يكون PDF أو صورة.',
+            'payment_receipt.max' => 'حجم إيصال الدفع يجب ألا يتجاوز 10 ميجابايت.',
+            'terms.accepted' => 'يجب الموافقة على الشروط والأحكام.',
         ];
     }
 }

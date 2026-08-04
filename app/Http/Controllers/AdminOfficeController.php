@@ -159,11 +159,9 @@ class AdminOfficeController extends Controller
 
                 'subscription_status' => 'pending',
 
-                'monthly_subscription_amount' =>
-                    $request->validated('subscription_amount'),
+                'monthly_subscription_amount' => 300,
 
-                'subscription_currency' =>
-                    $request->validated('subscription_currency'),
+                'subscription_currency' => 'USD',
 
                 'approved_at' => now(),
 
@@ -191,24 +189,23 @@ class AdminOfficeController extends Controller
 
             OfficeSubscription::create([
                 'office_id' => $office->id,
-
-                'amount' =>
-                    $request->validated('subscription_amount'),
-
-                'currency' =>
-                    $request->validated('subscription_currency'),
-
-                'duration_value' =>
-                    $request->validated('duration_value'),
-
-                'duration_unit' =>
-                    $request->validated('duration_unit'),
-
-                'status' => 'pending',
-
+                'amount' => 300,
+                'currency' => 'USD',
+                'duration_value' => 1,
+                'duration_unit' => 'month',
+                'status' => 'under_review',
+                'payment_method' =>
+                    $officeApplication->payment_method
+                    ?? 'bank_transfer',
+                'payment_reference' =>
+                    $officeApplication->payment_reference,
+                'receipt_path' =>
+                    $officeApplication->payment_receipt_path,
+                'paid_at' =>
+                    $officeApplication->paid_at
+                    ?? now(),
                 'notes' =>
-                    $request->validated('subscription_notes')
-                    ?? 'الاشتراك الأول بعد قبول طلب المكتب.',
+                    'الاشتراك الشهري الأول المرفق مع طلب تسجيل المكتب.',
             ]);
 
             $officeApplication
@@ -235,7 +232,7 @@ class AdminOfficeController extends Controller
             )
             ->with(
                 'success',
-                'تم قبول المكتب وإنشاء حسابه والاشتراك المبدئي وفق القيمة والمدة المحددتين.'
+                'تم قبول المكتب وإنشاء اشتراك شهري بقيمة 300 دولار، وتم إرسال الإيصال إلى مراجعة الاشتراكات.'
             );
     }
 
