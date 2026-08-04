@@ -799,10 +799,6 @@ Route::middleware('auth')->group(function () {
 Route::get(
     '/employee/support',
     [SupportTicketController::class, 'employeeIndex']
-)->name('employee.support.index');
-Route::get(
-    '/employee/support',
-    [SupportTicketController::class, 'employeeIndex']
 )->middleware('auth')
  ->name('employee.support.index');
  /*
@@ -885,24 +881,6 @@ Route::middleware([
     });
 
 /*
-|--------------------------------------------------------------------------
-| لوحة المكتب المؤقتة
-|--------------------------------------------------------------------------
-|
-| هذا المسار مؤقت حتى نبرمج لوحة المكتب كاملة.
-|
-*/
-
-Route::get('/office/dashboard', function () {
-    return view('office.dashboard');
-})
-    ->middleware([
-        'auth',
-        'verified',
-        'role:office_owner',
-    ])
-    ->name('office.dashboard');
-    /*
 |--------------------------------------------------------------------------
 | اشتراك المكتب الهندسي
 |--------------------------------------------------------------------------
@@ -1053,41 +1031,6 @@ Route::middleware([
 
 /*
 |--------------------------------------------------------------------------
-| إدارة طلبات انضمام المهندسين — مالك أو مدير المكتب
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware([
-    'auth',
-    'verified',
-])->group(function () {
-    Route::get(
-        '/office/membership-applications',
-        [
-            OfficeMembershipApplicationController::class,
-            'index',
-        ]
-    )->name('office-membership-applications.index');
-
-    Route::get(
-        '/office/membership-applications/{officeMembershipApplication}',
-        [
-            OfficeMembershipApplicationController::class,
-            'show',
-        ]
-    )->name('office-membership-applications.show');
-
-    Route::patch(
-        '/office/membership-applications/{officeMembershipApplication}/review',
-        [
-            OfficeMembershipApplicationController::class,
-            'review',
-        ]
-    )->name('office-membership-applications.review');
-});
-
-/*
-|--------------------------------------------------------------------------
 | إدارة طلبات انضمام المهندسين
 |--------------------------------------------------------------------------
 */
@@ -1131,50 +1074,6 @@ Route::middleware([
 });
 /*
 |--------------------------------------------------------------------------
-| إدارة أعضاء المكتب
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware([
-    'auth',
-    'verified',
-    'office.operational',
-])->prefix('office')->name('office.')->group(function () {
-    Route::get(
-        '/consultations',
-        [
-            ConsultationOfficeAssignmentController::class,
-            'index',
-        ]
-    )->name('consultations.index');
-
-    Route::patch(
-        '/consultations/{consultation}/assign-engineer',
-        [
-            ConsultationOfficeAssignmentController::class,
-            'assignEngineer',
-        ]
-    )->name('consultations.assign-engineer');
-});
-
-    Route::patch(
-        '/members/{officeMember}',
-        [
-            OfficeMemberController::class,
-            'update',
-        ]
-    )->name('members.update');
-
-    Route::delete(
-        '/members/{officeMember}',
-        [
-            OfficeMemberController::class,
-            'destroy',
-        ]
-    )->name('members.destroy');
-
-/*
-|--------------------------------------------------------------------------
 | استشارات المكتب الهندسي
 |--------------------------------------------------------------------------
 */
@@ -1197,7 +1096,9 @@ Route::middleware([
             ConsultationOfficeAssignmentController::class,
             'assignEngineer',
         ]
-    )->name('consultations.assign-engineer');
+    )
+        ->middleware('office.operational')
+        ->name('consultations.assign-engineer');
 });
 /*
 |--------------------------------------------------------------------------
