@@ -2,6 +2,30 @@
     @php
         $currentUser = auth()->user();
 
+        $dashboardRoute = Route::has('dashboard')
+            ? route('dashboard')
+            : url('/dashboard');
+
+        $consultationsRoute = Route::has('consultations.index')
+            ? route('consultations.index')
+            : url('/consultations');
+
+        $officesRoute = Route::has('admin.offices.index')
+            ? route('admin.offices.index')
+            : (
+                Route::has('engineering-offices.index')
+                    ? route('engineering-offices.index')
+                    : url('/engineering-offices')
+            );
+
+        $profileRoute = Route::has('profile.edit')
+            ? route('profile.edit')
+            : url('/profile');
+
+        $notificationsRoute = Route::has('notifications.index')
+            ? route('notifications.index')
+            : $dashboardRoute;
+
         $totalConsultations = $consultations->total();
 
         $unpaidCount = $consultations
@@ -80,6 +104,40 @@
             background: #434655;
         }
 
+        [x-cloak] {
+            display: none !important;
+        }
+
+        body.consultations-menu-open {
+            overflow: hidden;
+        }
+
+        .consultations-mobile-drawer {
+            width: min(88vw, 390px);
+        }
+
+        .consultations-nav-link {
+            transition: transform .2s ease, background-color .2s ease, color .2s ease;
+        }
+
+        .consultations-nav-link:hover {
+            transform: translateX(-2px);
+        }
+
+        @media (min-width: 1024px) {
+            .consultations-sidebar {
+                width: 18rem !important;
+            }
+
+            .consultations-main {
+                margin-right: 18rem !important;
+            }
+
+            .consultations-topbar {
+                right: 18rem !important;
+            }
+        }
+
         @media (max-width: 1023px) {
             .consultations-sidebar {
                 display: none !important;
@@ -95,22 +153,172 @@
         }
     </style>
 
-    <div class="consultations-page" dir="rtl">
+    <div
+        class="consultations-page"
+        dir="rtl"
+        x-data="{ mobileMenuOpen: false }"
+        x-init="$watch('mobileMenuOpen', value => document.body.classList.toggle('consultations-menu-open', value))"
+        @keydown.escape.window="mobileMenuOpen = false"
+    >
+        {{-- شريط الجوال --}}
+        <header class="fixed inset-x-0 top-0 z-[70] border-b border-white/10 bg-[#060e20]/95 px-4 py-3 shadow-2xl backdrop-blur-xl lg:hidden">
+            <div class="flex items-center justify-between gap-3">
+                <button
+                    type="button"
+                    @click="mobileMenuOpen = true"
+                    aria-label="فتح القائمة"
+                    class="flex items-center justify-center w-14 h-14 text-white transition rounded-2xl border border-[#b4c5ff]/30 bg-[#2563eb] shadow-lg active:scale-95"
+                >
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                        <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
+                    </svg>
+                </button>
+
+                <div class="min-w-0 text-center">
+                    <p class="truncate text-lg font-black text-[#b4c5ff]">صرح الهندسة</p>
+                    <p class="truncate text-xs text-[#c3c6d7]">إدارة الاستشارات</p>
+                </div>
+
+                <a
+                    href="{{ $notificationsRoute }}"
+                    class="flex items-center justify-center w-12 h-12 text-[#c3c6d7] border rounded-2xl border-white/10 bg-white/5"
+                    aria-label="الإشعارات"
+                >
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17H9m10-2H5l1.5-2V9a5.5 5.5 0 0 1 11 0v4L19 15ZM10 20h4"/>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        {{-- خلفية قائمة الجوال --}}
+        <div
+            x-cloak
+            x-show="mobileMenuOpen"
+            x-transition.opacity
+            @click="mobileMenuOpen = false"
+            class="fixed inset-0 z-[80] bg-black/75 backdrop-blur-sm lg:hidden"
+        ></div>
+
+        {{-- قائمة الجوال الفخمة --}}
+        <aside
+            x-cloak
+            x-show="mobileMenuOpen"
+            x-transition:enter="transition duration-300 ease-out"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition duration-200 ease-in"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+            class="consultations-mobile-drawer fixed right-0 top-0 z-[90] flex h-dvh flex-col border-l border-white/10 bg-[#0b1326]/98 shadow-2xl backdrop-blur-2xl lg:hidden"
+        >
+            <div class="flex items-center justify-between p-5 border-b border-white/10">
+                <div>
+                    <h2 class="text-2xl font-black text-[#b4c5ff]">صرح الهندسة</h2>
+                    <p class="mt-1 text-sm text-[#c3c6d7]">قائمة إدارة النظام</p>
+                </div>
+
+                <button
+                    type="button"
+                    @click="mobileMenuOpen = false"
+                    class="flex items-center justify-center w-12 h-12 text-white border rounded-2xl border-white/10 bg-white/5"
+                    aria-label="إغلاق القائمة"
+                >
+                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-5 space-y-3 overflow-y-auto consultations-scroll">
+                <a href="{{ $dashboardRoute }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                    <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">⌂</span>
+                    <span>لوحة التحكم</span>
+                </a>
+
+                <a href="{{ $consultationsRoute }}" @click="mobileMenuOpen = false" class="flex items-center gap-4 rounded-2xl border border-blue-400/20 bg-gradient-to-l from-blue-600/25 to-violet-600/20 px-5 py-4 font-black text-[#dbe1ff] shadow-lg shadow-blue-950/30">
+                    <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">📄</span>
+                    <span>الاستشارات</span>
+                </a>
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.offices.index'))
+                    <a href="{{ route('admin.offices.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">🏢</span>
+                        <span>المكاتب الهندسية</span>
+                    </a>
+                @endif
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.office-applications.index'))
+                    <a href="{{ route('admin.office-applications.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">📋</span>
+                        <span>طلبات إنشاء المكاتب</span>
+                    </a>
+                @endif
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.office-subscriptions.index'))
+                    <a href="{{ route('admin.office-subscriptions.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">💳</span>
+                        <span>اشتراكات المكاتب</span>
+                    </a>
+                @endif
+
+                @if (Route::has('users.index'))
+                    <a href="{{ route('users.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">👥</span>
+                        <span>المستخدمون</span>
+                    </a>
+                @endif
+
+                @if (Route::has('payments.index'))
+                    <a href="{{ route('payments.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">💰</span>
+                        <span>الدفعات</span>
+                    </a>
+                @endif
+
+                @if (Route::has('conversations.index'))
+                    <a href="{{ route('conversations.index') }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                        <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">💬</span>
+                        <span>المحادثات</span>
+                    </a>
+                @endif
+
+                <a href="{{ $profileRoute }}" @click="mobileMenuOpen = false" class="consultations-nav-link flex items-center gap-4 rounded-2xl border border-transparent px-5 py-4 font-black text-[#c3c6d7] hover:border-white/10 hover:bg-white/5 hover:text-white">
+                    <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5">⚙</span>
+                    <span>الإعدادات</span>
+                </a>
+            </nav>
+
+            <div class="p-5 border-t border-white/10">
+                <div class="p-4 mb-4 border rounded-2xl border-white/10 bg-white/5">
+                    <p class="font-black text-white">{{ $currentUser->name }}</p>
+                    <p class="mt-1 text-xs text-[#c3c6d7] break-all">{{ $currentUser->email }}</p>
+                </div>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="w-full px-5 py-4 font-black text-red-100 transition border rounded-2xl border-red-500/20 bg-red-500/10 hover:bg-red-500/20">
+                        تسجيل الخروج
+                    </button>
+                </form>
+            </div>
+        </aside>
+
         {{-- القائمة الجانبية --}}
-        <aside class="consultations-sidebar fixed right-0 top-0 z-50 flex h-screen w-64 flex-col border-l border-[#434655]/10 bg-[#131b2e]/90 p-4 shadow-xl backdrop-blur-xl">
+        <aside class="consultations-sidebar fixed right-0 top-0 z-50 flex h-screen w-72 flex-col border-l border-[#434655]/10 bg-[#131b2e]/90 p-4 shadow-xl backdrop-blur-xl">
             <div class="px-4 mb-10">
                 <h1 class="text-2xl font-black tracking-tight text-[#b4c5ff]">
-                    CreativeHome
+                    صرح الهندسة
                 </h1>
 
                 <p class="text-sm text-[#c3c6d7] opacity-60">
-                    Engineering Office
+                    نظام الإدارة الفاخر
                 </p>
             </div>
 
             <nav class="flex-1 space-y-2">
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ $dashboardRoute }}"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -124,7 +332,7 @@
                 </a>
 
                 <a
-                    href="{{ route('consultations.index') }}"
+                    href="{{ $consultationsRoute }}"
                     class="flex items-center gap-3 rounded-xl bg-[#2563eb]/20 px-4 py-3 font-bold text-[#b4c5ff] shadow-[0_0_15px_rgba(37,99,235,.1)]"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -134,6 +342,37 @@
 
                     <span>الاستشارات</span>
                 </a>
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.offices.index'))
+                    <a
+                        href="{{ route('admin.offices.index') }}"
+                        class="consultations-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white"
+                    >
+                        <span class="flex items-center justify-center w-5 h-5">🏢</span>
+                        <span>المكاتب الهندسية</span>
+                    </a>
+                @endif
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.office-applications.index'))
+                    <a
+                        href="{{ route('admin.office-applications.index') }}"
+                        class="consultations-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white"
+                    >
+                        <span class="flex items-center justify-center w-5 h-5">📋</span>
+                        <span>طلبات إنشاء المكاتب</span>
+                    </a>
+                @endif
+
+                @if ($currentUser->role === 'admin' && Route::has('admin.office-subscriptions.index'))
+                    <a
+                        href="{{ route('admin.office-subscriptions.index') }}"
+                        class="consultations-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white"
+                    >
+                        <span class="flex items-center justify-center w-5 h-5">💳</span>
+                        <span>اشتراكات المكاتب</span>
+                    </a>
+                @endif
+
 
                 @if (Route::has('users.index'))
                     <a
@@ -178,7 +417,7 @@
                 @endif
 
                 <a
-                    href="{{ route('profile.edit') }}"
+                    href="{{ $profileRoute }}"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:scale-[1.02] hover:bg-white/5 hover:text-white"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -192,7 +431,7 @@
 
             <div class="pt-6 mt-auto space-y-2 border-t border-[#434655]/10">
                 <a
-                    href="{{ route('profile.edit') }}"
+                    href="{{ $profileRoute }}"
                     class="flex items-center gap-3 px-4 py-3 text-[#c3c6d7] transition hover:text-white"
                 >
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -221,7 +460,7 @@
         </aside>
 
         {{-- الشريط العلوي --}}
-        <header class="consultations-topbar fixed top-0 left-0 right-64 z-40 flex h-16 items-center justify-between border-b border-[#434655]/10 bg-[#060e20]/60 px-6 backdrop-blur-md">
+        <header class="consultations-topbar fixed hidden lg:flex top-0 left-0 right-72 z-40 flex h-16 items-center justify-between border-b border-[#434655]/10 bg-[#060e20]/60 px-6 backdrop-blur-md">
             <div class="flex items-center gap-4">
                 <h2 class="text-2xl font-black text-[#dae2fd]">
                     سجل الاستشارات
@@ -281,7 +520,7 @@
                     </div>
 
                     <a
-                        href="{{ route('profile.edit') }}"
+                        href="{{ $profileRoute }}"
                         class="flex items-center justify-center w-10 h-10 overflow-hidden border rounded-xl border-[#b4c5ff]/20"
                     >
                         @if ($currentUser->profile_photo)
@@ -300,7 +539,7 @@
             </div>
         </header>
 
-        <main class="min-h-screen px-6 pt-24 pb-12 consultations-main lg:mr-64">
+        <main class="min-h-screen px-4 pb-12 pt-28 consultations-main sm:px-6 lg:mr-72 lg:px-8 lg:pt-24">
             <div class="mx-auto max-w-[1700px] space-y-8">
                 {{-- الرسائل --}}
                 @if (session('success'))
@@ -327,16 +566,18 @@
                         </p>
                     </div>
 
-                    <a
-                        href="{{ route('consultations.create') }}"
-                        class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white shadow-lg shadow-blue-500/20 transition hover:brightness-110 active:scale-95"
-                    >
+                    @if (Route::has('consultations.create'))
+                        <a
+                            href="{{ route('consultations.create') }}"
+                            class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white shadow-lg shadow-blue-500/20 transition hover:brightness-110 active:scale-95"
+                        >
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
 
                         استشارة جديدة
                     </a>
+                    @endif
                 </section>
 
                 {{-- الإحصائيات --}}
@@ -609,16 +850,18 @@
                                 <span class="text-xs font-bold">تصفية</span>
                             </button>
 
-                            <a
-                                href="{{ route('consultations.create') }}"
-                                class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2 text-white shadow-lg transition hover:brightness-110 active:scale-95"
-                            >
+                            @if (Route::has('consultations.create'))
+                                <a
+                                    href="{{ route('consultations.create') }}"
+                                    class="flex items-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2 text-white shadow-lg transition hover:brightness-110 active:scale-95"
+                                >
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 5v14M5 12h14"/>
                                 </svg>
 
                                 <span class="text-xs font-bold">إضافة استشارة</span>
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -802,17 +1045,24 @@
 
                                         <td class="px-6 py-5">
                                             <div class="flex flex-wrap gap-2">
-                                                <a
-                                                    href="{{ route('consultations.assign.form', $consultation) }}"
-                                                    class="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2d3449] text-[#b4c5ff] transition hover:bg-[#2563eb] hover:text-white"
-                                                    title="{{ $consultation->engineer ? 'تغيير المهندس' : 'تعيين مهندس' }}"
-                                                >
+                                                @if (
+                                                    in_array($currentUser->role, ['admin', 'employee'], true)
+                                                    && Route::has('consultations.assign.form')
+                                                    && ! in_array($consultation->status, ['completed', 'cancelled'], true)
+                                                )
+                                                    <a
+                                                        href="{{ route('consultations.assign.form', $consultation) }}"
+                                                        class="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2d3449] text-[#b4c5ff] transition hover:bg-[#2563eb] hover:text-white"
+                                                        title="{{ $consultation->engineer ? 'تغيير المهندس' : 'تعيين مهندس' }}"
+                                                    >
                                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
                                                         <circle cx="9" cy="8" r="3"/>
                                                         <path d="M3 20a6 6 0 0 1 12 0M18 8v6M15 11h6"/>
                                                     </svg>
                                                 </a>
-@if ($currentUser->role === 'admin')
+                                                @endif
+
+@if ($currentUser->role === 'admin' && Route::has('admin.consultation-office.form'))
     <a
         href="{{ route(
             'admin.consultation-office.form',
@@ -838,7 +1088,8 @@
     </a>
 
     @if (
-        $consultation->assigned_office_id
+        Route::has('admin.consultation-office.unassign')
+        && $consultation->assigned_office_id
         && ! in_array(
             $consultation->status,
             ['completed', 'cancelled'],
