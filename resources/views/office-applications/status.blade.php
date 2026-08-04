@@ -153,12 +153,7 @@
             -webkit-mask-composite: xor;
             mask-composite: exclude;
         }
-
-        .office-status-icon {
-            font-variation-settings: 'FILL' 1;
-        }
-
-        @media (max-width: 640px) {
+@media (max-width: 640px) {
             .office-status-main {
                 padding: 1rem !important;
             }
@@ -214,9 +209,9 @@
                         <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#b4c5ff]/10 to-transparent"></div>
 
                         <div class="office-status-icon-wrap relative mb-5 flex h-32 w-32 items-center justify-center rounded-full bg-[#171f33] shadow-[0_0_40px_rgba(37,99,235,.2)]">
-                            <span class="office-status-icon material-symbols-outlined text-6xl text-[#b4c5ff]">
-                                corporate_fare
-                            </span>
+                            <span class="office-status-icon  text-6xl text-[#b4c5ff]"><svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 21h16M6 21V8l6-4 6 4v13M9 11h.01M15 11h.01M9 15h.01M15 15h.01M10 21v-3h4v3"/>
+    </svg></span>
                         </div>
 
                         <div class="relative z-10 text-center">
@@ -232,7 +227,9 @@
                                 href="{{ route('office-applications.create') }}"
                                 class="mt-7 inline-flex items-center gap-2 rounded-full border border-[#b4c5ff]/25 bg-[#2563eb] px-8 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#0053db]"
                             >
-                                <span class="text-xl office-status-icon material-symbols-outlined">add_business</span>
+                                <span class="text-xl office-status-icon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 21h16M6 21V8l6-4 6 4v13M9 12h6M12 9v6"/>
+    </svg></span>
                                 تقديم طلب مكتب
                             </a>
                         </div>
@@ -242,9 +239,35 @@
                         <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#b4c5ff]/10 to-transparent"></div>
 
                         <div class="office-status-icon-wrap {{ $statusData['ringClass'] }} relative mb-5 flex h-32 w-32 items-center justify-center rounded-full bg-[#171f33]">
-                            <span class="office-status-icon material-symbols-outlined {{ $statusData['iconClass'] }} text-6xl {{ $application->status === 'pending' ? 'animate-pulse' : '' }}">
-                                {{ $statusData['icon'] }}
-                            </span>
+                            <div class="{{ $statusData['iconClass'] }} {{ $application->status === 'pending' ? 'animate-pulse' : '' }}">
+                                @switch($application->status)
+                                    @case('approved')
+                                        <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8 12 2.5 2.5L16.5 8.5"/>
+                                        </svg>
+                                        @break
+
+                                    @case('rejected')
+                                        <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <path stroke-linecap="round" d="m9 9 6 6m0-6-6 6"/>
+                                        </svg>
+                                        @break
+
+                                    @case('cancelled')
+                                        <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <path stroke-linecap="round" d="M6 6l12 12"/>
+                                        </svg>
+                                        @break
+
+                                    @default
+                                        <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h10M7 21h10M8 3c0 4 1.8 6 4 7.5C14.2 9 16 7 16 3M8 21c0-4 1.8-6 4-7.5 2.2 1.5 4 3.5 4 7.5"/>
+                                        </svg>
+                                @endswitch
+                            </div>
                         </div>
 
                         <div class="relative z-10 text-center">
@@ -262,9 +285,10 @@
                         </div>
 
                         <div class="{{ $statusData['noticeClass'] }} relative z-10 mt-7 flex w-full max-w-xl items-start gap-4 rounded-xl border p-4 text-right">
-                            <span class="office-status-icon material-symbols-outlined {{ $statusData['noticeTextClass'] }} mt-0.5">
-                                info
-                            </span>
+                            <span class="office-status-icon  {{ $statusData['noticeTextClass'] }} mt-0.5"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path stroke-linecap="round" d="M12 11v5M12 8h.01"/>
+    </svg></span>
 
                             <div>
                                 <h3 class="text-xs font-black uppercase tracking-[.14em] {{ $statusData['noticeTextClass'] }}">
@@ -319,7 +343,10 @@
                                         href="{{ route('office.subscription') }}"
                                         class="inline-flex items-center gap-2 px-6 py-3 mt-5 font-black text-white transition rounded-full bg-emerald-600 hover:bg-emerald-500"
                                     >
-                                        <span class="office-status-icon material-symbols-outlined">payments</span>
+                                        <span class="office-status-icon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/>
+        <path stroke-linecap="round" d="M3 10h18M7 15h4"/>
+    </svg></span>
                                         فتح صفحة الاشتراك
                                     </a>
                                 @endif
@@ -330,7 +357,10 @@
                     <section class="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                         <article class="office-status-glass flex items-center gap-4 rounded-xl p-4 transition hover:border-[#b4c5ff]/30 hover:bg-[#31394d]/10">
                             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#434655]/30 bg-[#222a3d]">
-                                <span class="office-status-icon material-symbols-outlined text-[#b4c5ff]">tag</span>
+                                <span class="office-status-icon  text-[#b4c5ff]"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 13 11 22 2 13V4h9l9 9Z"/>
+        <circle cx="7.5" cy="9.5" r="1"/>
+    </svg></span>
                             </div>
 
                             <div class="min-w-0">
@@ -346,7 +376,10 @@
 
                         <article class="office-status-glass flex items-center gap-4 rounded-xl p-4 transition hover:border-[#b4c5ff]/30 hover:bg-[#31394d]/10">
                             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#434655]/30 bg-[#222a3d]">
-                                <span class="office-status-icon material-symbols-outlined text-[#b4c5ff]">event</span>
+                                <span class="office-status-icon  text-[#b4c5ff]"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="15" rx="2"/>
+        <path stroke-linecap="round" d="M8 3v4m8-4v4M4 10h16"/>
+    </svg></span>
                             </div>
 
                             <div class="min-w-0">
@@ -362,7 +395,10 @@
 
                         <article class="office-status-glass flex items-center gap-4 rounded-xl p-4 transition hover:border-[#b4c5ff]/30 hover:bg-[#31394d]/10">
                             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#434655]/30 bg-[#222a3d]">
-                                <span class="office-status-icon material-symbols-outlined text-[#b4c5ff]">update</span>
+                                <span class="office-status-icon  text-[#b4c5ff]"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+        <path stroke-linecap="round" d="M3 4v4h4M12 7v5l3 2"/>
+    </svg></span>
                             </div>
 
                             <div class="min-w-0">
@@ -378,7 +414,9 @@
 
                         <article class="office-status-glass flex items-center gap-4 rounded-xl p-4 transition hover:border-[#b4c5ff]/30 hover:bg-[#31394d]/10">
                             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#434655]/30 bg-[#222a3d]">
-                                <span class="office-status-icon material-symbols-outlined text-[#b4c5ff]">location_city</span>
+                                <span class="office-status-icon  text-[#b4c5ff]"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V8l6-4v17M10 10l6-3v14M16 12h4v9M7 11h.01M7 15h.01M13 11h.01M13 15h.01"/>
+    </svg></span>
                             </div>
 
                             <div class="min-w-0">
@@ -406,7 +444,9 @@
                         href="{{ route('dashboard') }}"
                         class="inline-flex items-center gap-2 rounded-full border border-[#434655]/50 bg-[#2d3449]/30 px-8 py-4 text-xs font-black text-white transition hover:bg-[#2d3449]/50 hover:shadow-[0_0_20px_rgba(67,70,85,.4)]"
                     >
-                        <span class="text-sm office-status-icon material-symbols-outlined">arrow_back</span>
+                        <span class="text-sm office-status-icon"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/>
+    </svg></span>
                         العودة للرئيسية
                     </a>
                 </div>
