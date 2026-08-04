@@ -24,6 +24,25 @@
                         $currentUser->id
                     )
                     ->exists();
+
+            $activeOfficeMembership =
+                \App\Models\OfficeMember::query()
+                    ->with('office')
+                    ->where('user_id', $currentUser->id)
+                    ->where('status', 'active')
+                    ->latest('joined_at')
+                    ->first();
+
+            $managedOfficeMembership =
+                \App\Models\OfficeMember::query()
+                    ->with('office')
+                    ->where('user_id', $currentUser->id)
+                    ->where('status', 'active')
+                    ->whereIn('office_role', ['owner', 'manager'])
+                    ->latest('joined_at')
+                    ->first();
+
+            $managedOffice = $managedOfficeMembership?->office;
         @endphp
 
         <div
@@ -435,6 +454,67 @@
                         </a>
 
 
+                        {{-- دليل المكاتب الهندسية --}}
+                        @if (Route::has('engineering-offices.index'))
+                            <a
+                                href="{{ route('engineering-offices.index') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-indigo-500"
+                            >
+                                <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-indigo-600/20">
+                                    🏢
+                                </div>
+
+                                <h2 class="text-xl font-bold text-white">
+                                    المكاتب الهندسية
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-7 text-slate-400">
+                                    تصفح المكاتب وقدّم طلب انضمام إلى المكتب المناسب.
+                                </p>
+                            </a>
+                        @endif
+
+                        {{-- طلبات الانضمام للمكاتب --}}
+                        @if (Route::has('office-membership-applications.mine'))
+                            <a
+                                href="{{ route('office-membership-applications.mine') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-yellow-500"
+                            >
+                                <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-yellow-600/20">
+                                    📩
+                                </div>
+
+                                <h2 class="text-xl font-bold text-white">
+                                    طلبات انضمامي
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-7 text-slate-400">
+                                    تابع حالة طلبات الانضمام إلى المكاتب الهندسية.
+                                </p>
+                            </a>
+                        @endif
+
+                        {{-- عضويتي في المكتب --}}
+                        @if ($activeOfficeMembership && $activeOfficeMembership->office)
+                            <a
+                                href="{{ route('engineering-offices.show', $activeOfficeMembership->office) }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-teal-500"
+                            >
+                                <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-teal-600/20">
+                                    🤝
+                                </div>
+
+                                <h2 class="text-xl font-bold text-white">
+                                    مكتبي الحالي
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-7 text-slate-400">
+                                    {{ $activeOfficeMembership->office->name }}
+                                    — {{ $activeOfficeMembership->office_role === 'manager' ? 'مدير' : ($activeOfficeMembership->office_role === 'owner' ? 'مالك' : 'عضو') }}
+                                </p>
+                            </a>
+                        @endif
+
                         {{-- الدعم الفني --}}
                         <a
                             href="{{ route('support.index') }}"
@@ -587,6 +667,75 @@
                         </a>
 
 
+                        {{-- طلبات إنشاء المكاتب --}}
+                        @if (Route::has('admin.office-applications.index'))
+                            <a
+                                href="{{ route('admin.office-applications.index') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-indigo-500"
+                            >
+                                <div class="mb-3 text-3xl">🏢</div>
+
+                                <h2 class="font-bold text-white">
+                                    طلبات إنشاء المكاتب
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-6 text-slate-400">
+                                    مراجعة طلبات المكاتب واعتمادها أو رفضها.
+                                </p>
+                            </a>
+                        @endif
+
+                        {{-- اشتراكات المكاتب --}}
+                        @if (Route::has('admin.office-subscriptions.index'))
+                            <a
+                                href="{{ route('admin.office-subscriptions.index') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-amber-500"
+                            >
+                                <div class="mb-3 text-3xl">🧾</div>
+
+                                <h2 class="font-bold text-white">
+                                    اشتراكات المكاتب
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-6 text-slate-400">
+                                    مراجعة إيصالات الاشتراك وتفعيل المكاتب.
+                                </p>
+                            </a>
+                        @endif
+
+                        {{-- إدارة المكاتب --}}
+                        @if (Route::has('admin.offices.index'))
+                            <a
+                                href="{{ route('admin.offices.index') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-teal-500"
+                            >
+                                <div class="mb-3 text-3xl">🏙️</div>
+
+                                <h2 class="font-bold text-white">
+                                    إدارة المكاتب
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-6 text-slate-400">
+                                    عرض المكاتب وإيقافها أو إغلاقها وإدارة حالتها.
+                                </p>
+                            </a>
+                        @elseif (Route::has('engineering-offices.index'))
+                            <a
+                                href="{{ route('engineering-offices.index') }}"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-teal-500"
+                            >
+                                <div class="mb-3 text-3xl">🏙️</div>
+
+                                <h2 class="font-bold text-white">
+                                    دليل المكاتب
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-6 text-slate-400">
+                                    استعراض جميع المكاتب الهندسية المسجلة.
+                                </p>
+                            </a>
+                        @endif
+
                         {{-- إدارة الدعم الفني --}}
                         <a
                             href="{{ route('admin.support.index') }}"
@@ -646,6 +795,71 @@
                                 فتح تذكرة دعم أو متابعة التذاكر المسندة إليك.
                             </p>
                         </a>
+                    </div>
+
+                @endif
+
+                {{-- =========================
+                    لوحة إدارة المكتب للمالك أو المدير
+                ========================== --}}
+                @if ($managedOffice)
+
+                    <div class="p-6 mt-8 border shadow-xl rounded-2xl border-indigo-500/30 bg-gradient-to-l from-slate-900 to-indigo-950/30">
+                        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                            <div class="flex items-start gap-4">
+                                <div class="flex items-center justify-center flex-none text-3xl w-14 h-14 rounded-2xl bg-indigo-500/20">
+                                    🏢
+                                </div>
+
+                                <div>
+                                    <h2 class="text-2xl font-black text-white">
+                                        إدارة مكتب {{ $managedOffice->name }}
+                                    </h2>
+
+                                    <p class="mt-2 leading-7 text-slate-300">
+                                        تابع الاستشارات وطلبات انضمام المهندسين والأعضاء والاشتراك والملف الشخصي للمكتب.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                @if (Route::has('office.dashboard'))
+                                    <a
+                                        href="{{ route('office.dashboard') }}"
+                                        class="inline-flex items-center justify-center px-5 py-3 font-black text-white transition bg-indigo-600 rounded-xl hover:bg-indigo-500"
+                                    >
+                                        لوحة المكتب
+                                    </a>
+                                @endif
+
+                                @if (Route::has('office.profile'))
+                                    <a
+                                        href="{{ route('office.profile') }}"
+                                        class="inline-flex items-center justify-center px-5 py-3 font-black text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+                                    >
+                                        ملف المكتب
+                                    </a>
+                                @endif
+
+                                @if (Route::has('office.members.index'))
+                                    <a
+                                        href="{{ route('office.members.index') }}"
+                                        class="inline-flex items-center justify-center px-5 py-3 font-black text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+                                    >
+                                        أعضاء المكتب
+                                    </a>
+                                @endif
+
+                                @if (Route::has('office.membership-applications.index'))
+                                    <a
+                                        href="{{ route('office.membership-applications.index') }}"
+                                        class="inline-flex items-center justify-center px-5 py-3 font-black text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+                                    >
+                                        طلبات الانضمام
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
 
                 @endif
