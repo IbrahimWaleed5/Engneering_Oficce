@@ -124,16 +124,6 @@
                                 </svg>
                                 <span>طلباتي</span>
                             </a>
-
-                            <a
-                                href="{{ route('engineer.works.mine') }}"
-                                class="{{ $navItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $navItemActive : $navItemIdle }}"
-                            >
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M7 20v-9h10v9M9 11V7h6v4M8 7l4-4 4 4" />
-                                </svg>
-                                <span>أعمالي</span>
-                            </a>
                         @endif
 
                         @if ($role === 'admin')
@@ -530,14 +520,6 @@
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">📐</span>
                                 <span>استشارات المهندس</span>
-                            </a>
-
-                            <a
-                                href="{{ route('engineer.works.mine') }}"
-                                    class="{{ $mobileItemBase }} {{ request()->routeIs('engineer.works.mine', 'engineer.works.create') ? $mobileItemActive : $mobileItemIdle }}"
-                            >
-                                <span class="flex items-center justify-center w-10 h-10 text-blue-300 shrink-0 rounded-xl bg-blue-500/10">🏗️</span>
-                                <span>أعمالي</span>
                             </a>
 
                             <a

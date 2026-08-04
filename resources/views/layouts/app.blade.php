@@ -87,25 +87,6 @@
 
             @endisset
 
-            @auth
-
-                @if (auth()->user()->role === 'engineer')
-
-                    <div class="relative z-10 px-4 pt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-                        <a
-                            href="{{ route('engineer.works.mine') }}"
-                            class="inline-block px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
-                        >
-                            أعمالي
-                        </a>
-
-                    </div>
-
-                @endif
-
-            @endauth
-
         @endunless
 
         <main class="{{ $isConsultationChat ? '' : 'relative z-10' }}">
