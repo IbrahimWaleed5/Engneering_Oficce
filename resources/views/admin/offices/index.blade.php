@@ -1,4 +1,13 @@
 <x-app-layout>
+    @php
+        $search = $search ?? request('search', '');
+        $status = $status ?? request('status', '');
+        $statistics = $statistics ?? [
+            'all' => isset($offices) ? $offices->total() : 0,
+            'active' => 0,
+            'suspended' => 0,
+        ];
+    @endphp
     <div class="py-10" dir="rtl">
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
 
@@ -23,30 +32,20 @@
             <div class="flex flex-col gap-5 mb-8 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <p class="text-sm font-bold text-cyan-300">
-                        دليل المكاتب الهندسية
+                        إدارة المكاتب الهندسية
                     </p>
 
                     <h1 class="mt-2 text-3xl font-black text-white">
-                        المكاتب الهندسية المشتركة
+                        جميع المكاتب الهندسية
                     </h1>
 
                     <p class="mt-3 leading-7 text-slate-400">
-                        استعرض المكاتب الهندسية المشتركة، ثم افتح الملف
+                        استعرض جميع المكاتب الهندسية، ثم افتح الملف
                         الشخصي للمكتب وقدّم طلب انضمام.
                     </p>
                 </div>
 
-             @if (
-    auth()->check()
-    && auth()->user()->role === 'engineer'
-)
-    <a
-        href="{{ route('office-membership-applications.mine') }}"
-        class="inline-flex items-center justify-center px-5 py-3 font-bold text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
-    >
-        طلبات انضمامي
-    </a>
-@endif
+
             </div>
 
             <div class="grid gap-4 mb-8 sm:grid-cols-3">
@@ -84,7 +83,7 @@
             <div class="p-5 mb-8 border rounded-3xl border-white/10 bg-slate-900/70">
                 <form
                     method="GET"
-                    action="{{ route('engineering-offices.index') }}"
+                    action="{{ route('admin.offices.index') }}"
                     class="grid gap-4 md:grid-cols-[1fr_220px_auto]"
                 >
                     <div>
@@ -148,7 +147,7 @@
 
                         @if ($search !== '' || $status)
                             <a
-                                href="{{ route('engineering-offices.index') }}"
+                                href="{{ route('admin.offices.index') }}"
                                 class="inline-flex items-center justify-center px-5 py-3 font-bold text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
                             >
                                 مسح
@@ -295,12 +294,12 @@
 
                             <a
                                 href="{{ route(
-                                    'engineering-offices.show',
+                                    'admin.offices.show',
                                     $office
                                 ) }}"
                                 class="inline-flex items-center justify-center w-full px-5 py-3 mt-6 font-black text-white transition rounded-xl bg-cyan-600 hover:bg-cyan-500"
                             >
-                                عرض الملف الشخصي للمكتب
+                                إدارة المكتب
                             </a>
                         </div>
                     </div>
