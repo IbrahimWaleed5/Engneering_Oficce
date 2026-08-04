@@ -348,13 +348,100 @@
 
                             <p class="mt-3 text-sm leading-7 text-slate-300">
                                 سيتم إنشاء المكتب وتحويل حساب مقدم الطلب
-                                إلى مالك مكتب، وإنشاء اشتراك مبدئي بقيمة
-                                1000 ريال وحالته قيد الانتظار.
+                                إلى مالك مكتب، وإنشاء اشتراك مبدئي بالقيمة
+                                والمدة اللتين تحددهما الآن.
                             </p>
+
+
+                            <div class="grid gap-4 mt-5 sm:grid-cols-2">
+                                <div>
+                                    <label for="subscription_amount" class="block mb-2 text-sm font-bold text-white">
+                                        قيمة الاشتراك
+                                    </label>
+
+                                    <input
+                                        id="subscription_amount"
+                                        name="subscription_amount"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value="{{ old('subscription_amount', 1000) }}"
+                                        required
+                                        class="w-full px-4 py-3 text-white border rounded-xl border-white/10 bg-slate-800"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label for="subscription_currency" class="block mb-2 text-sm font-bold text-white">
+                                        العملة
+                                    </label>
+
+                                    <select
+                                        id="subscription_currency"
+                                        name="subscription_currency"
+                                        required
+                                        class="w-full px-4 py-3 text-white border rounded-xl border-white/10 bg-slate-800"
+                                    >
+                                        @foreach (['SAR', 'USD', 'ILS', 'JOD', 'EUR'] as $currency)
+                                            <option value="{{ $currency }}" @selected(old('subscription_currency', 'SAR') === $currency)>
+                                                {{ $currency }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="duration_value" class="block mb-2 text-sm font-bold text-white">
+                                        مقدار المدة
+                                    </label>
+
+                                    <input
+                                        id="duration_value"
+                                        name="duration_value"
+                                        type="number"
+                                        min="1"
+                                        max="120"
+                                        value="{{ old('duration_value', 1) }}"
+                                        required
+                                        class="w-full px-4 py-3 text-white border rounded-xl border-white/10 bg-slate-800"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label for="duration_unit" class="block mb-2 text-sm font-bold text-white">
+                                        وحدة المدة
+                                    </label>
+
+                                    <select
+                                        id="duration_unit"
+                                        name="duration_unit"
+                                        required
+                                        class="w-full px-4 py-3 text-white border rounded-xl border-white/10 bg-slate-800"
+                                    >
+                                        <option value="day" @selected(old('duration_unit') === 'day')>يوم</option>
+                                        <option value="month" @selected(old('duration_unit', 'month') === 'month')>شهر</option>
+                                        <option value="year" @selected(old('duration_unit') === 'year')>سنة</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label for="subscription_notes" class="block mb-2 text-sm font-bold text-white">
+                                    ملاحظات الاشتراك
+                                </label>
+
+                                <textarea
+                                    id="subscription_notes"
+                                    name="subscription_notes"
+                                    rows="3"
+                                    class="w-full px-4 py-3 text-white border rounded-xl border-white/10 bg-slate-800"
+                                    placeholder="ملاحظات اختيارية عن قيمة أو مدة الاشتراك"
+                                >{{ old('subscription_notes') }}</textarea>
+                            </div>
 
                             <button
                                 type="submit"
-                                onclick="return confirm('هل أنت متأكد من قبول المكتب؟')"
+                                onclick="return confirm('هل أنت متأكد من قبول المكتب وإنشاء الاشتراك بهذه القيمة والمدة؟')"
                                 class="w-full px-5 py-3 mt-5 font-black text-white transition bg-green-600 rounded-xl hover:bg-green-500"
                             >
                                 قبول وإنشاء المكتب

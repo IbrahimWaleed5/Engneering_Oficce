@@ -11,6 +11,8 @@ class OfficeSubscription extends Model
         'office_id',
         'amount',
         'currency',
+        'duration_value',
+        'duration_unit',
         'starts_at',
         'ends_at',
         'status',
@@ -26,6 +28,7 @@ class OfficeSubscription extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'duration_value' => 'integer',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'paid_at' => 'datetime',
@@ -43,5 +46,17 @@ class OfficeSubscription extends Model
             User::class,
             'approved_by'
         );
+    }
+
+    public function durationLabel(): string
+    {
+        $unit = match ($this->duration_unit) {
+            'day' => $this->duration_value === 1 ? 'يوم' : 'أيام',
+            'month' => $this->duration_value === 1 ? 'شهر' : 'أشهر',
+            'year' => $this->duration_value === 1 ? 'سنة' : 'سنوات',
+            default => 'مدة',
+        };
+
+        return $this->duration_value . ' ' . $unit;
     }
 }

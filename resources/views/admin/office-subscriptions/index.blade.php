@@ -380,6 +380,7 @@
                                     <th class="p-4 text-right">اسم المكتب</th>
                                     <th class="p-4 text-right">المالك</th>
                                     <th class="p-4 text-right">القيمة</th>
+                                    <th class="p-4 text-right">المدة</th>
                                     <th class="p-4 text-right">طريقة الدفع</th>
                                     <th class="p-4 text-right">المرجع</th>
                                     <th class="p-4 text-right">الحالة</th>
@@ -451,6 +452,10 @@
                                             {{ $subscription->currency }}
                                         </td>
 
+
+                                        <td class="p-4 text-[#c3c6d7]">
+                                            {{ $subscription->durationLabel() }}
+                                        </td>
                                         <td class="p-4 text-[#c3c6d7]">
                                             {{ match ($subscription->payment_method) {
                                                 'bank_transfer' => 'تحويل بنكي',
@@ -517,9 +522,43 @@
                                                             placeholder="ملاحظات اختيارية"
                                                         ></textarea>
 
+
+                                                        <div class="grid gap-3 mt-3 sm:grid-cols-2">
+                                                            <div>
+                                                                <label class="block mb-2 text-xs font-bold text-[#c3c6d7]">
+                                                                    مقدار المدة
+                                                                </label>
+
+                                                                <input
+                                                                    name="duration_value"
+                                                                    type="number"
+                                                                    min="1"
+                                                                    max="120"
+                                                                    value="{{ old('duration_value', $subscription->duration_value ?? 1) }}"
+                                                                    required
+                                                                    class="w-full px-3 py-2 text-sm text-white border rounded-xl border-white/10 bg-[#222a3d]"
+                                                                >
+                                                            </div>
+
+                                                            <div>
+                                                                <label class="block mb-2 text-xs font-bold text-[#c3c6d7]">
+                                                                    وحدة المدة
+                                                                </label>
+
+                                                                <select
+                                                                    name="duration_unit"
+                                                                    required
+                                                                    class="w-full px-3 py-2 text-sm text-white border rounded-xl border-white/10 bg-[#222a3d]"
+                                                                >
+                                                                    <option value="day" @selected(($subscription->duration_unit ?? 'month') === 'day')>يوم</option>
+                                                                    <option value="month" @selected(($subscription->duration_unit ?? 'month') === 'month')>شهر</option>
+                                                                    <option value="year" @selected(($subscription->duration_unit ?? 'month') === 'year')>سنة</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                         <button
                                                             type="submit"
-                                                            onclick="return confirm('هل أنت متأكد من اعتماد اشتراك هذا المكتب لمدة شهر؟')"
+                                                            onclick="return confirm('هل أنت متأكد من اعتماد الاشتراك بالمدة المحددة؟')"
                                                             class="w-full px-4 py-2 mt-3 font-black text-white transition bg-green-600 rounded-xl hover:bg-green-500"
                                                         >
                                                             اعتماد الاشتراك
@@ -581,7 +620,7 @@
                                         && $subscription->rejection_reason
                                     )
                                         <tr>
-                                            <td colspan="8" class="p-4 border-b border-red-500/10 bg-red-500/5">
+                                            <td colspan="9" class="p-4 border-b border-red-500/10 bg-red-500/5">
                                                 <span class="font-black text-red-200">سبب الرفض:</span>
                                                 <span class="text-red-100">{{ $subscription->rejection_reason }}</span>
                                             </td>
@@ -589,7 +628,7 @@
                                     @endif
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center p-14">
+                                        <td colspan="9" class="text-center p-14">
                                             <div class="flex items-center justify-center w-24 h-24 mx-auto text-5xl border rounded-3xl border-white/10 bg-white/5">
                                                 📦
                                             </div>

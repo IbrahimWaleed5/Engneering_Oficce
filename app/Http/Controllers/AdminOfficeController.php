@@ -159,9 +159,11 @@ class AdminOfficeController extends Controller
 
                 'subscription_status' => 'pending',
 
-                'monthly_subscription_amount' => 1000,
+                'monthly_subscription_amount' =>
+                    $request->validated('subscription_amount'),
 
-                'subscription_currency' => 'SAR',
+                'subscription_currency' =>
+                    $request->validated('subscription_currency'),
 
                 'approved_at' => now(),
 
@@ -190,14 +192,23 @@ class AdminOfficeController extends Controller
             OfficeSubscription::create([
                 'office_id' => $office->id,
 
-                'amount' => 1000,
+                'amount' =>
+                    $request->validated('subscription_amount'),
 
-                'currency' => 'SAR',
+                'currency' =>
+                    $request->validated('subscription_currency'),
+
+                'duration_value' =>
+                    $request->validated('duration_value'),
+
+                'duration_unit' =>
+                    $request->validated('duration_unit'),
 
                 'status' => 'pending',
 
                 'notes' =>
-                    'الاشتراك الأول بعد قبول طلب المكتب.',
+                    $request->validated('subscription_notes')
+                    ?? 'الاشتراك الأول بعد قبول طلب المكتب.',
             ]);
 
             $officeApplication
@@ -224,7 +235,7 @@ class AdminOfficeController extends Controller
             )
             ->with(
                 'success',
-                'تم قبول المكتب وإنشاء حسابه، وهو الآن بانتظار دفع اشتراك 1000 ريال.'
+                'تم قبول المكتب وإنشاء حسابه والاشتراك المبدئي وفق القيمة والمدة المحددتين.'
             );
     }
 
@@ -372,10 +383,31 @@ class AdminOfficeController extends Controller
             $office,
             $request
         ) {
+            $durationValue =
+                (int) $request->validated('duration_value');
+
+            $durationUnit =
+                $request->validated('duration_unit');
+
             $startsAt = now();
-            $endsAt = $startsAt
-                ->copy()
-                ->addMonth();
+
+            $endsAt = match ($durationUnit) {
+                'day' => $startsAt
+                    ->copy()
+                    ->addDays($durationValue),
+
+                'month' => $startsAt
+                    ->copy()
+                    ->addMonthsNoOverflow($durationValue),
+
+                'year' => $startsAt
+                    ->copy()
+                    ->addYears($durationValue),
+
+                default => $startsAt
+                    ->copy()
+                    ->addMonth(),
+            };
 
             $office
                 ->subscriptions()
@@ -392,6 +424,10 @@ class AdminOfficeController extends Controller
 
             $officeSubscription->update([
                 'status' => 'active',
+
+                'duration_value' => $durationValue,
+
+                'duration_unit' => $durationUnit,
 
                 'starts_at' => $startsAt,
 
@@ -426,7 +462,7 @@ class AdminOfficeController extends Controller
             )
             ->with(
                 'success',
-                'تم اعتماد اشتراك المكتب وتفعيله لمدة شهر.'
+                'تم اعتماد اشتراك المكتب وتفعيله بالمدة المحددة.'
             );
     }
     /*
