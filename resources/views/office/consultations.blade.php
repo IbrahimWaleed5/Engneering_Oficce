@@ -24,22 +24,25 @@
                 </div>
             @endif
 
-            <div class="flex flex-col gap-4 mb-8 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <p class="text-sm font-bold text-cyan-300">
-                        إدارة أعمال المكتب
-                    </p>
+            <div class="relative p-8 mb-8 overflow-hidden border shadow-xl rounded-2xl bg-gradient-to-l from-blue-700 to-cyan-600 border-blue-500/30">
+                <div class="absolute w-48 h-48 rounded-full -top-20 -left-10 bg-white/10"></div>
 
-                    <h1 class="mt-2 text-3xl font-black text-white">
-                        استشارات {{ $office->name }}
-                    </h1>
+                <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p class="mb-2 text-blue-100">
+                            إدارة أعمال المكتب
+                        </p>
 
-                    <p class="mt-3 leading-7 text-slate-400">
-                        عرض الاستشارات المحولة إلى المكتب وتعيين مهندس فعال من فريق المكتب لكل استشارة.
-                    </p>
-                </div>
+                        <h1 class="mb-3 text-3xl font-bold text-white">
+                            استشارات {{ $office->name }}
+                        </h1>
 
-                <div class="flex flex-wrap gap-3">
+                        <p class="max-w-3xl leading-7 text-blue-100">
+                            عرض الاستشارات المحولة إلى المكتب وتعيين مهندس فعال من فريق المكتب لكل استشارة.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
                     <a
                         href="{{ route('office.members.index') }}"
                         class="inline-flex items-center justify-center px-5 py-3 font-bold text-white transition rounded-xl bg-cyan-600 hover:bg-cyan-500"
@@ -53,11 +56,12 @@
                     >
                         لوحة المكتب
                     </a>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid gap-4 mb-8 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="p-5 border rounded-2xl border-cyan-500/20 bg-cyan-500/10">
+            <div class="grid gap-6 mb-8 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800">
                     <p class="text-sm text-cyan-100">
                         جميع الاستشارات
                     </p>
@@ -67,7 +71,7 @@
                     </p>
                 </div>
 
-                <div class="p-5 border rounded-2xl border-yellow-500/20 bg-yellow-500/10">
+                <div class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800">
                     <p class="text-sm text-yellow-100">
                         قيد الانتظار
                     </p>
@@ -77,7 +81,7 @@
                     </p>
                 </div>
 
-                <div class="p-5 border rounded-2xl border-blue-500/20 bg-blue-500/10">
+                <div class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800">
                     <p class="text-sm text-blue-100">
                         قيد التنفيذ
                     </p>
@@ -87,7 +91,7 @@
                     </p>
                 </div>
 
-                <div class="p-5 border rounded-2xl border-green-500/20 bg-green-500/10">
+                <div class="p-6 border shadow rounded-2xl bg-slate-900 border-slate-800">
                     <p class="text-sm text-green-100">
                         مكتملة
                     </p>
@@ -97,6 +101,15 @@
                     </p>
                 </div>
             </div>
+
+            @php
+                $officeEngineers = $office
+                    ->members()
+                    ->where('office_role', 'engineer')
+                    ->where('status', 'active')
+                    ->with('user:id,name,email')
+                    ->get();
+            @endphp
 
             <div class="space-y-5">
                 @forelse ($consultations as $consultation)
@@ -123,15 +136,9 @@
                             ],
                         };
 
-                        $officeEngineers = $office
-                            ->members()
-                            ->where('office_role', 'engineer')
-                            ->where('status', 'active')
-                            ->with('user:id,name,email')
-                            ->get();
                     @endphp
 
-                    <div class="p-6 border rounded-3xl border-white/10 bg-slate-900/70">
+                    <div id="consultation-{{ $consultation->id }}" class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:border-blue-500/40">
                         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <div class="flex flex-wrap items-center gap-3">
@@ -282,10 +289,10 @@
 
                         <div class="flex flex-wrap gap-3 mt-6">
                             <a
-                                href="{{ route('consultations.show', $consultation) }}"
+                                href="{{ route('office.consultations.index') }}#consultation-{{ $consultation->id }}"
                                 class="inline-flex items-center justify-center px-5 py-3 font-bold text-white transition border rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
                             >
-                                عرض تفاصيل الاستشارة
+                                الاستشارة الحالية
                             </a>
 
                             @if ($consultation->engineer)
@@ -299,7 +306,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="p-10 text-center border rounded-3xl border-white/10 bg-slate-900/70">
+                    <div class="p-10 text-center border shadow rounded-2xl bg-slate-900 border-slate-800">
                         <div class="text-6xl">
                             📋
                         </div>
