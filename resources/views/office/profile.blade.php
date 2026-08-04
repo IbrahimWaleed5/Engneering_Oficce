@@ -25,6 +25,12 @@
         $profileRoute = Route::has('profile.edit')
             ? route('profile.edit')
             : $dashboardRoute;
+
+        $officeProfileRoute = Route::has('office.profile.edit')
+            ? route('office.profile.edit')
+            : (Route::has('office.profile')
+                ? route('office.profile')
+                : url('/office/profile'));
     @endphp
 
     <style>
@@ -281,7 +287,7 @@
                 <a href="{{ $dashboardRoute }}" class="office-profile-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white">لوحة المكتب</a>
                 <a href="{{ $consultationsRoute }}" class="office-profile-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white">الاستشارات</a>
                 <a href="{{ $membersRoute }}" class="office-profile-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white">فريق العمل</a>
-                <a href="{{ route('office.profile.edit') }}" class="office-profile-nav-link active flex items-center gap-3 rounded-xl bg-[#2563eb]/25 px-4 py-3 font-black text-[#dbe1ff]">الملف الشخصي</a>
+                <a href="{{ $officeProfileRoute }}" class="office-profile-nav-link active flex items-center gap-3 rounded-xl bg-[#2563eb]/25 px-4 py-3 font-black text-[#dbe1ff]">الملف الشخصي</a>
                 <a href="{{ $subscriptionRoute }}" class="office-profile-nav-link flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] hover:bg-white/5 hover:text-white">الاشتراك</a>
             </nav>
         </aside>
@@ -334,7 +340,7 @@
                     فريق العمل
                 </a>
 
-                <a href="{{ route('office.profile.edit') }}" class="office-profile-nav-link active flex items-center gap-4 rounded-xl border border-[#b4c5ff]/25 bg-gradient-to-l from-[#2563eb]/65 to-[#2563eb]/15 p-4 font-black text-white shadow-[0_0_20px_rgba(37,99,235,.18)]">
+                <a href="{{ $officeProfileRoute }}" class="office-profile-nav-link active flex items-center gap-4 rounded-xl border border-[#b4c5ff]/25 bg-gradient-to-l from-[#2563eb]/65 to-[#2563eb]/15 p-4 font-black text-white shadow-[0_0_20px_rgba(37,99,235,.18)]">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M4 21h16M6 21V8l6-4 6 4v13"/>
                     </svg>
