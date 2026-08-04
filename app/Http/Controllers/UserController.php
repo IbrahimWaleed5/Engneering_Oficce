@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Office;
+use App\Models\OfficeMember;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
@@ -23,9 +25,10 @@ class UserController extends Controller
     {
         $this->ensureAdmin($request);
 
-       $query = User::with([
-    'employeeProfile.specialty',
-]);
+        $query = User::with([
+            'employeeProfile.specialty',
+            'ownedOffice',
+        ]);
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
@@ -57,6 +60,7 @@ class UserController extends Controller
             'engineers' => User::where('role', 'engineer')->count(),
             'employees' => User::where('role', 'employee')->count(),
             'customers' => User::where('role', 'customer')->count(),
+            'office_owners' => User::where('role', 'office_owner')->count(),
             'active' => User::where('status', 'active')->count(),
             'inactive' => User::where('status', 'inactive')->count(),
         ];
@@ -79,33 +83,10 @@ class UserController extends Controller
         $this->ensureAdmin($request);
 
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                'unique:users,email',
-            ],
-
-            'phone' => [
-                'nullable',
-                'string',
-                'max:20',
-                'unique:users,phone',
-            ],
-
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
-
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => [
                 'required',
                 Rule::in([
@@ -113,33 +94,16 @@ class UserController extends Controller
                     'engineer',
                     'employee',
                     'customer',
+                    'office_owner',
                 ]),
             ],
-
             'status' => [
                 'required',
-                Rule::in([
-                    'active',
-                    'inactive',
-                ]),
+                Rule::in(['active', 'inactive']),
             ],
-
-            'job_title' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'salary' => [
-                'nullable',
-                'numeric',
-                'min:0',
-            ],
-
-            'hire_date' => [
-                'nullable',
-                'date',
-            ],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'salary' => ['nullable', 'numeric', 'min:0'],
+            'hire_date' => ['nullable', 'date'],
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -152,16 +116,15 @@ class UserController extends Controller
                 'status' => $validated['status'],
             ]);
 
-            $this->syncEmployeeProfile(
-                $user,
-                $validated
-            );
+            $this->syncEmployeeProfile($user, $validated);
 
             $user->notify(
                 new SystemNotification(
-                    'مرحبًا بك في المكتب الهندسي',
-                    'تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول ومتابعة حسابك.',
-                    '/dashboard'
+                    title: 'تم إنشاء حسابك',
+                    message: 'تم إنشاء حساب جديد لك في نظام المكتب الهندسي.',
+                    url: '/login',
+                    sendMail: true,
+                    buttonText: 'تسجيل الدخول'
                 )
             );
         });
@@ -169,26 +132,35 @@ class UserController extends Controller
         return redirect()
             ->route('users.index')
             ->with('success', 'تم إنشاء المستخدم بنجاح.');
-            $user->notify(
-    new SystemNotification(
-        title: 'تم إنشاء حسابك',
-        message: 'تم إنشاء حساب جديد لك في نظام المكتب الهندسي.',
-        url: '/login',
-        sendMail: true,
-        buttonText: 'تسجيل الدخول'
-    )
-);
-
     }
-
 
     public function edit(Request $request, User $user)
     {
         $this->ensureAdmin($request);
 
-        $user->load('employeeProfile');
+        $user->load([
+            'employeeProfile',
+            'ownedOffice',
+            'officeMemberships.office',
+        ]);
 
-        return view('users.edit', compact('user'));
+        $offices = Office::query()
+            ->with('owner:id,name,email')
+            ->orderBy('name')
+            ->get([
+                'id',
+                'owner_user_id',
+                'name',
+                'slug',
+                'city',
+                'country',
+                'status',
+            ]);
+
+        return view('users.edit', compact(
+            'user',
+            'offices'
+        ));
     }
 
     public function update(Request $request, User $user)
@@ -196,26 +168,19 @@ class UserController extends Controller
         $this->ensureAdmin($request);
 
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
+            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user),
             ],
-
             'phone' => [
                 'nullable',
                 'string',
                 'max:20',
                 Rule::unique('users', 'phone')->ignore($user),
             ],
-
             'role' => [
                 'required',
                 Rule::in([
@@ -223,32 +188,28 @@ class UserController extends Controller
                     'engineer',
                     'employee',
                     'customer',
+                    'office_owner',
                 ]),
             ],
-
             'status' => [
                 'required',
-                Rule::in([
-                    'active',
-                    'inactive',
-                ]),
+                Rule::in(['active', 'inactive']),
             ],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'salary' => ['nullable', 'numeric', 'min:0'],
+            'hire_date' => ['nullable', 'date'],
 
-            'job_title' => [
+            'office_owner_action' => [
                 'nullable',
-                'string',
-                'max:255',
+                Rule::in(['keep', 'assign', 'remove']),
             ],
-
-            'salary' => [
+            'office_id' => [
                 'nullable',
-                'numeric',
-                'min:0',
-            ],
-
-            'hire_date' => [
-                'nullable',
-                'date',
+                'integer',
+                'exists:offices,id',
+                Rule::requiredIf(
+                    $request->input('office_owner_action') === 'assign'
+                ),
             ],
         ]);
 
@@ -276,11 +237,18 @@ class UserController extends Controller
 
         $oldRole = $user->role;
         $oldStatus = $user->status;
+        $ownershipChanged = false;
+        $assignedOffice = null;
 
         DB::transaction(function () use (
+            $request,
             $user,
-            $validated
+            $validated,
+            &$ownershipChanged,
+            &$assignedOffice
         ) {
+            $ownerAction = $validated['office_owner_action'] ?? 'keep';
+
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -289,11 +257,29 @@ class UserController extends Controller
                 'status' => $validated['status'],
             ]);
 
-            $this->syncEmployeeProfile(
-                $user,
-                $validated
-            );
+            $this->syncEmployeeProfile($user, $validated);
+
+            if ($ownerAction === 'assign') {
+                $assignedOffice = Office::query()
+                    ->lockForUpdate()
+                    ->findOrFail($validated['office_id']);
+
+                $this->assignOfficeOwner(
+                    $request,
+                    $user,
+                    $assignedOffice
+                );
+
+                $ownershipChanged = true;
+            }
+
+            if ($ownerAction === 'remove') {
+                $this->removeOfficeOwnership($user);
+                $ownershipChanged = true;
+            }
         });
+
+        $user->refresh();
 
         if ($oldRole !== $user->role) {
             $user->notify(
@@ -318,9 +304,28 @@ class UserController extends Controller
             );
         }
 
+        if ($ownershipChanged) {
+            $message = $assignedOffice
+                ? 'تم تعيينك مالكًا لمكتب: ' . $assignedOffice->name
+                : 'تم إنهاء ملكيتك للمكتب الهندسي.';
+
+            $user->notify(
+                new SystemNotification(
+                    'تحديث ملكية المكتب',
+                    $message,
+                    '/dashboard'
+                )
+            );
+        }
+
         return redirect()
-            ->route('users.index')
-            ->with('success', 'تم تحديث بيانات المستخدم بنجاح.');
+            ->route('users.edit', $user)
+            ->with(
+                'success',
+                $ownershipChanged
+                    ? 'تم تحديث المستخدم وملكية المكتب بنجاح.'
+                    : 'تم تحديث بيانات المستخدم بنجاح.'
+            );
     }
 
     public function destroy(Request $request, User $user)
@@ -333,11 +338,147 @@ class UserController extends Controller
             ]);
         }
 
+        if ($user->ownedOffice()->exists()) {
+            return back()->withErrors([
+                'delete' => 'لا يمكن حذف مالك مكتب قبل نقل أو إزالة ملكية المكتب.',
+            ]);
+        }
+
         $user->delete();
 
         return redirect()
             ->route('users.index')
             ->with('success', 'تم حذف المستخدم بنجاح.');
+    }
+
+    private function assignOfficeOwner(
+        Request $request,
+        User $newOwner,
+        Office $office
+    ): void {
+        /*
+        |--------------------------------------------------------------------------
+        | إزالة ملكية المستخدم من أي مكتب سابق
+        |--------------------------------------------------------------------------
+        */
+        Office::query()
+            ->where('owner_user_id', $newOwner->id)
+            ->whereKeyNot($office->id)
+            ->get()
+            ->each(function (Office $previousOffice) use ($newOwner) {
+                $previousOffice->update([
+                    'owner_user_id' => null,
+                ]);
+
+                OfficeMember::query()
+                    ->where('office_id', $previousOffice->id)
+                    ->where('user_id', $newOwner->id)
+                    ->where('office_role', 'owner')
+                    ->update([
+                        'status' => 'inactive',
+                        'left_at' => now(),
+                    ]);
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | إنهاء ملكية المالك السابق للمكتب
+        |--------------------------------------------------------------------------
+        */
+        $previousOwnerId = $office->owner_user_id;
+
+        if (
+            $previousOwnerId
+            && (int) $previousOwnerId !== (int) $newOwner->id
+        ) {
+            OfficeMember::query()
+                ->where('office_id', $office->id)
+                ->where('user_id', $previousOwnerId)
+                ->where('office_role', 'owner')
+                ->update([
+                    'status' => 'inactive',
+                    'left_at' => now(),
+                ]);
+
+            $previousOwner = User::query()->find($previousOwnerId);
+
+            if (
+                $previousOwner
+                && $previousOwner->role === 'office_owner'
+            ) {
+                $previousOwner->update([
+                    'role' => 'customer',
+                ]);
+
+                $previousOwner->notify(
+                    new SystemNotification(
+                        'تم نقل ملكية المكتب',
+                        'تم نقل ملكية مكتب '
+                        . $office->name
+                        . ' إلى مستخدم آخر بواسطة مدير النظام.',
+                        '/dashboard'
+                    )
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | تعيين المالك الجديد
+        |--------------------------------------------------------------------------
+        */
+        $office->update([
+            'owner_user_id' => $newOwner->id,
+        ]);
+
+        OfficeMember::query()->updateOrCreate(
+            [
+                'office_id' => $office->id,
+                'user_id' => $newOwner->id,
+            ],
+            [
+                'office_role' => 'owner',
+                'position' => 'مالك المكتب',
+                'status' => 'active',
+                'approved_by' => $request->user()->id,
+                'joined_at' => now(),
+                'left_at' => null,
+            ]
+        );
+
+        $newOwner->update([
+            'role' => 'office_owner',
+            'status' => 'active',
+        ]);
+    }
+
+    private function removeOfficeOwnership(User $user): void
+    {
+        $ownedOffices = Office::query()
+            ->where('owner_user_id', $user->id)
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($ownedOffices as $office) {
+            $office->update([
+                'owner_user_id' => null,
+            ]);
+
+            OfficeMember::query()
+                ->where('office_id', $office->id)
+                ->where('user_id', $user->id)
+                ->where('office_role', 'owner')
+                ->update([
+                    'status' => 'inactive',
+                    'left_at' => now(),
+                ]);
+        }
+
+        if ($user->role === 'office_owner') {
+            $user->update([
+                'role' => 'customer',
+            ]);
+        }
     }
 
     private function syncEmployeeProfile(
@@ -365,19 +506,15 @@ class UserController extends Controller
                     'EMP-%06d',
                     $user->id
                 ),
-
                 'job_title' => $data['job_title']
                     ?? (
                         $user->role === 'engineer'
                             ? 'مهندس'
                             : 'موظف'
                     ),
-
                 'salary' => $data['salary'] ?? 0,
-
                 'hire_date' => $data['hire_date']
                     ?? now()->toDateString(),
-
                 'specialty_id' => $user
                     ->employeeProfile
                     ?->specialty_id,
@@ -392,9 +529,8 @@ class UserController extends Controller
             'engineer' => 'مهندس',
             'employee' => 'موظف',
             'customer' => 'عميل',
+            'office_owner' => 'مالك مكتب',
             default => 'مستخدم',
         };
-
     }
-
 }
