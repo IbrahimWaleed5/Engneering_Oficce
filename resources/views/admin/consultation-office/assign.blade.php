@@ -3,7 +3,7 @@
         $currentUser = auth()->user();
         $dashboardRoute = Route::has('dashboard') ? route('dashboard') : url('/dashboard');
         $consultationsRoute = Route::has('consultations.index') ? route('consultations.index') : url('/consultations');
-        $officesRoute = Route::has('engineering-offices.index') ? route('engineering-offices.index') : url('/engineering-offices');
+        $officesRoute = Route::has('admin.offices.index') ? route('admin.offices.index') : url('/admin/offices');
         $profileRoute = Route::has('profile.edit') ? route('profile.edit') : url('/profile');
         $notificationsRoute = Route::has('notifications.index') ? route('notifications.index') : '#';
     @endphp
@@ -29,7 +29,7 @@
                 <button type="button" @click="mobileMenuOpen=true" aria-label="فتح القائمة" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#b4c5ff]/30 bg-[#2563eb] text-white shadow-lg active:scale-95">
                     <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
                 </button>
-                <div class="min-w-0 text-center"><p class="truncate text-lg font-black text-[#b4c5ff]">Al-Waleed Engineering</p><p class="truncate text-xs text-[#c3c6d7]">تحويل الاستشارة</p></div>
+                <div class="min-w-0 text-center"><p class="truncate text-lg font-black text-[#b4c5ff]">صرح الهندسة</p><p class="truncate text-xs text-[#c3c6d7]">تحويل الاستشارة</p></div>
                 <a href="{{ $notificationsRoute }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[#c3c6d7]" aria-label="الإشعارات">
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17H9m10-2H5l1.5-2V9a5.5 5.5 0 0 1 11 0v4L19 15ZM10 20h4"/></svg>
                 </a>
@@ -40,13 +40,19 @@
 
         <aside x-cloak x-show="mobileMenuOpen" x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition duration-250 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="transfer-mobile-drawer fixed right-0 top-0 z-[90] flex h-dvh flex-col border-l border-white/10 bg-[#0b1326] shadow-2xl lg:hidden">
             <div class="flex items-center justify-between p-5 border-b border-white/10">
-                <div><h2 class="text-2xl font-black text-[#b4c5ff]">Al-Waleed</h2><p class="mt-1 text-sm text-[#c3c6d7]">Engineering Office</p></div>
+                <div><h2 class="text-2xl font-black text-[#b4c5ff]">صرح الهندسة</h2><p class="mt-1 text-sm text-[#c3c6d7]">نظام الإدارة الفاخر</p></div>
                 <button type="button" @click="mobileMenuOpen=false" class="flex items-center justify-center w-12 h-12 text-white border rounded-2xl border-white/10 bg-white/5" aria-label="إغلاق القائمة"><svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg></button>
             </div>
             <nav class="flex-1 p-5 space-y-3 overflow-y-auto">
                 <a href="{{ $dashboardRoute }}" class="transfer-sidebar-link" @click="mobileMenuOpen=false">لوحة التحكم</a>
                 <a href="{{ $consultationsRoute }}" class="transfer-sidebar-link active" @click="mobileMenuOpen=false">الاستشارات</a>
                 <a href="{{ $officesRoute }}" class="transfer-sidebar-link" @click="mobileMenuOpen=false">المكاتب الهندسية</a>
+                @if (Route::has('admin.office-applications.index'))
+                    <a href="{{ route('admin.office-applications.index') }}" class="transfer-sidebar-link" @click="mobileMenuOpen=false">طلبات إنشاء المكاتب</a>
+                @endif
+                @if (Route::has('admin.office-subscriptions.index'))
+                    <a href="{{ route('admin.office-subscriptions.index') }}" class="transfer-sidebar-link" @click="mobileMenuOpen=false">اشتراكات المكاتب</a>
+                @endif
                 <a href="{{ $profileRoute }}" class="transfer-sidebar-link" @click="mobileMenuOpen=false">الإعدادات</a>
             </nav>
             @auth
@@ -58,11 +64,17 @@
         </aside>
 
         <aside class="transfer-desktop-sidebar fixed right-0 top-0 z-50 hidden h-screen w-72 flex-col border-l border-white/10 bg-[#131b2e]/90 shadow-xl backdrop-blur-xl">
-            <div class="p-6"><h2 class="text-2xl font-black text-[#b4c5ff]">Al-Waleed</h2><p class="mt-1 text-sm text-[#c3c6d7]">Engineering Office</p></div>
+            <div class="p-6"><h2 class="text-2xl font-black text-[#b4c5ff]">صرح الهندسة</h2><p class="mt-1 text-sm text-[#c3c6d7]">نظام الإدارة الفاخر</p></div>
             <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
                 <a href="{{ $dashboardRoute }}" class="transfer-sidebar-link">لوحة التحكم</a>
                 <a href="{{ $consultationsRoute }}" class="transfer-sidebar-link active">الاستشارات</a>
                 <a href="{{ $officesRoute }}" class="transfer-sidebar-link">المكاتب الهندسية</a>
+                @if (Route::has('admin.office-applications.index'))
+                    <a href="{{ route('admin.office-applications.index') }}" class="transfer-sidebar-link">طلبات إنشاء المكاتب</a>
+                @endif
+                @if (Route::has('admin.office-subscriptions.index'))
+                    <a href="{{ route('admin.office-subscriptions.index') }}" class="transfer-sidebar-link">اشتراكات المكاتب</a>
+                @endif
                 <a href="{{ $profileRoute }}" class="transfer-sidebar-link">الإعدادات</a>
             </nav>
             @auth

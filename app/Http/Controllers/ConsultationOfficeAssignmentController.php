@@ -10,6 +10,8 @@ use Illuminate\View\View;
 use App\Http\Requests\AssignConsultationToOfficeRequest;
 use App\Models\Office;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConsultationOfficeAssignmentController extends Controller
 {
@@ -326,10 +328,7 @@ public function adminAssign(
     });
 
     return redirect()
-        ->route(
-            'consultations.show',
-            $consultation
-        )
+        ->route('consultations.index')
         ->with(
             'success',
             'تم تحويل الاستشارة إلى المكتب الهندسي بنجاح.'
