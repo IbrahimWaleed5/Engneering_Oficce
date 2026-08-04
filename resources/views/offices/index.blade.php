@@ -1,6 +1,8 @@
 <x-app-layout>
     @php
         $currentUser = auth()->user();
+        $search = $search ?? request('search', '');
+        $status = $status ?? request('status', '');
     @endphp
 
     <style>
@@ -55,7 +57,7 @@
                     <span>لوحة التحكم</span>
                 </a>
 
-                <a href="{{ route('engineering-offices.index') }}" class="flex items-center gap-3 rounded-xl bg-[#2563eb]/20 px-4 py-3 font-bold text-[#b4c5ff]">
+                <a href="{{ route('admin.offices.index') }}" class="flex items-center gap-3 rounded-xl bg-[#2563eb]/20 px-4 py-3 font-bold text-[#b4c5ff]">
                     <span>المكاتب الهندسية</span>
                 </a>
 
@@ -84,7 +86,7 @@
 
         <header class="offices-topbar fixed top-0 left-0 right-64 z-40 flex h-16 items-center justify-between border-b border-[#434655]/10 bg-[#060e20]/60 px-6 backdrop-blur-md">
             <div>
-                <h2 class="text-2xl font-black text-[#dae2fd]">دليل المكاتب الهندسية</h2>
+                <h2 class="text-2xl font-black text-[#dae2fd]">إدارة المكاتب الهندسية</h2>
             </div>
 
             @auth
@@ -102,10 +104,10 @@
             <div class="mx-auto max-w-[1500px] space-y-8">
                 <section class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <p class="text-sm font-bold text-[#b4c5ff]">استكشف المكاتب</p>
-                        <h1 class="mt-2 text-3xl font-black text-white">المكاتب الهندسية المعتمدة</h1>
+                        <p class="text-sm font-bold text-[#b4c5ff]">إدارة النظام</p>
+                        <h1 class="mt-2 text-3xl font-black text-white">المكاتب الهندسية</h1>
                         <p class="mt-3 max-w-2xl leading-7 text-[#c3c6d7]">
-                            تصفح المكاتب الهندسية، اطّلع على تخصصاتها وأعضائها وحالة عملها الحالية.
+                            استعرض المكاتب الهندسية، راجع بياناتها، وتابع حالة التفعيل والإيقاف والاشتراك.
                         </p>
                     </div>
 
@@ -128,7 +130,7 @@
                 </section>
 
                 <section class="p-6 offices-glass rounded-3xl">
-                    <form method="GET" action="{{ route('engineering-offices.index') }}" class="grid gap-4 md:grid-cols-[1fr_220px_auto]">
+                    <form method="GET" action="{{ route('admin.offices.index') }}" class="grid gap-4 md:grid-cols-[1fr_220px_auto]">
                         <div>
                             <label for="search" class="mb-2 block text-sm font-bold text-[#c3c6d7]">بحث</label>
                             <input
@@ -159,7 +161,7 @@
                                 تطبيق
                             </button>
 
-                            <a href="{{ route('engineering-offices.index') }}" class="rounded-xl border border-[#434655] px-5 py-3 font-bold text-[#c3c6d7] transition hover:bg-[#2d3449]">
+                            <a href="{{ route('admin.offices.index') }}" class="rounded-xl border border-[#434655] px-5 py-3 font-bold text-[#c3c6d7] transition hover:bg-[#2d3449]">
                                 مسح
                             </a>
                         </div>
@@ -241,10 +243,10 @@
                                     </div>
 
                                     <a
-                                        href="{{ route('engineering-offices.show', $office) }}"
+                                        href="{{ route('admin.offices.show', $office) }}"
                                         class="rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white transition hover:brightness-110"
                                     >
-                                        عرض المكتب
+                                        إدارة المكتب
                                     </a>
                                 </div>
                             </div>
