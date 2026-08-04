@@ -78,44 +78,21 @@ class OfficeApplicationController extends Controller
         try {
             OfficeApplication::create([
                 'user_id' => $user->id,
-
-                'office_name' =>
-                    $request->validated('office_name'),
-
-                'email' =>
-                    $request->validated('email'),
-
-                'phone' =>
-                    $request->validated('phone'),
-
+                'office_name' => $request->validated('office_name'),
+                'email' => $request->validated('email'),
+                'phone' => $request->validated('phone'),
                 'commercial_registration' =>
-                    $request->validated(
-                        'commercial_registration'
-                    ),
-
+                    $request->validated('commercial_registration'),
                 'license_number' =>
-                    $request->validated(
-                        'license_number'
-                    ),
-
-                'country' =>
-                    $request->validated('country'),
-
-                'city' =>
-                    $request->validated('city'),
-
-                'address' =>
-                    $request->validated('address'),
-
-                'notes' =>
-                    $request->validated('notes'),
-
+                    $request->validated('license_number'),
+                'country' => $request->validated('country'),
+                'city' => $request->validated('city'),
+                'address' => $request->validated('address'),
+                'notes' => $request->validated('notes'),
                 'commercial_registration_path' =>
                     $commercialRegistrationPath,
-
                 'license_document_path' =>
                     $licenseDocumentPath,
-
                 'status' => 'pending',
             ]);
         } catch (\Throwable $exception) {
@@ -131,24 +108,38 @@ class OfficeApplicationController extends Controller
             ->route('office-applications.status')
             ->with(
                 'success',
-                'تم إرسال طلب انضمام المكتب بنجاح، وسيقوم مدير النظام بمراجعته.'
+                'تم إرسال طلب تسجيل المكتب بنجاح، وسيقوم مدير النظام بمراجعته.'
             );
     }
 
     public function status(): View
     {
+        $user = request()->user();
+
         $application = OfficeApplication::query()
-            ->where(
-                'user_id',
-                request()->user()->id
-            )
+            ->where('user_id', $user->id)
             ->with('reviewer')
             ->latest()
             ->first();
 
+        $office = $user->ownedOffice()
+            ->with([
+                'subscriptions' => fn ($query) =>
+                    $query->latest(),
+            ])
+            ->first();
+
+        $latestSubscription = $office
+            ? $office->subscriptions->first()
+            : null;
+
         return view(
             'office-applications.status',
-            compact('application')
+            compact(
+                'application',
+                'office',
+                'latestSubscription'
+            )
         );
     }
 }

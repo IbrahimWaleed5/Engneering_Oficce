@@ -11,6 +11,25 @@
 
     $welcomeLink = route('home');
 
+    $latestOfficeApplication = null;
+    $officeApplicationRoute = null;
+    $officeApplicationLabel = 'تسجيل مكتب هندسي';
+
+    if ($user && in_array($role, ['customer', 'engineer'], true)) {
+        $latestOfficeApplication = \App\Models\OfficeApplication::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $officeApplicationRoute = $latestOfficeApplication
+            ? route('office-applications.status')
+            : route('office-applications.create');
+
+        $officeApplicationLabel = $latestOfficeApplication
+            ? 'متابعة طلب المكتب'
+            : 'تسجيل مكتب هندسي';
+    }
+
     $navItemBase = 'group relative inline-flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold transition-all duration-200';
     $navItemIdle = 'text-slate-300 hover:-translate-y-0.5 hover:bg-white/[0.07] hover:text-white';
     $navItemActive = 'bg-gradient-to-l from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-300/20';
@@ -126,6 +145,30 @@
                             </a>
                         @endif
 
+                        @if (in_array($role, ['customer', 'engineer'], true) && $officeApplicationRoute)
+                            <a
+                                href="{{ $officeApplicationRoute }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('office-applications.*') ? $navItemActive : $navItemIdle }}"
+                            >
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 20V8l6-4 6 4v12M9 11h1m4 0h1M9 15h1m4 0h1" />
+                                </svg>
+                                <span>{{ $officeApplicationLabel }}</span>
+                            </a>
+                        @endif
+
+                        @if ($role === 'office_owner')
+                            <a
+                                href="{{ route('office.dashboard') }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('office.*') ? $navItemActive : $navItemIdle }}"
+                            >
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 20V8l6-4 6 4v12M9 11h1m4 0h1M9 15h1m4 0h1" />
+                                </svg>
+                                <span>لوحة المكتب</span>
+                            </a>
+                        @endif
+
                         @if ($role === 'admin')
                             <a
                                 href="{{ route('consultations.index') }}"
@@ -214,6 +257,7 @@
                                         @case('admin') مدير النظام @break
                                         @case('engineer') مهندس @break
                                         @case('employee') موظف @break
+                                        @case('office_owner') مالك مكتب @break
                                         @default عميل
                                     @endswitch
                                 </p>
@@ -274,6 +318,26 @@
                                 >
                                     <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-violet-500/10 text-violet-300">🎓</span>
                                     <span>التخصص والنبذة</span>
+                                </a>
+                            @endif
+
+                            @if (in_array($role, ['customer', 'engineer'], true) && $officeApplicationRoute)
+                                <a
+                                    href="{{ $officeApplicationRoute }}"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                                >
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-300">🏢</span>
+                                    <span>{{ $officeApplicationLabel }}</span>
+                                </a>
+                            @endif
+
+                            @if ($role === 'office_owner')
+                                <a
+                                    href="{{ route('office.dashboard') }}"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                                >
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-cyan-500/10 text-cyan-300">🏢</span>
+                                    <span>لوحة المكتب</span>
                                 </a>
                             @endif
 
@@ -503,6 +567,16 @@
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">➕</span>
                                 <span>طلب استشارة جديدة</span>
                             </a>
+
+                            @if ($officeApplicationRoute)
+                                <a
+                                    href="{{ $officeApplicationRoute }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('office-applications.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                >
+                                    <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">🏢</span>
+                                    <span>{{ $officeApplicationLabel }}</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -536,6 +610,42 @@
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">🎓</span>
                                 <span>التخصص والنبذة</span>
+                            </a>
+
+                            @if ($officeApplicationRoute)
+                                <a
+                                    href="{{ $officeApplicationRoute }}"
+                                    class="{{ $mobileItemBase }} {{ request()->routeIs('office-applications.*') ? $mobileItemActive : $mobileItemIdle }}"
+                                >
+                                    <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">🏢</span>
+                                    <span>{{ $officeApplicationLabel }}</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @if ($role === 'office_owner')
+                    <div>
+                        <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                            إدارة المكتب
+                        </p>
+
+                        <div class="space-y-2">
+                            <a
+                                href="{{ route('office.dashboard') }}"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('office.dashboard') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🏢</span>
+                                <span>لوحة المكتب</span>
+                            </a>
+
+                            <a
+                                href="{{ route('office.subscription') }}"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('office.subscription*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">💳</span>
+                                <span>اشتراك المكتب</span>
                             </a>
                         </div>
                     </div>
