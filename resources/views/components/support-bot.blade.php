@@ -23,7 +23,7 @@
     >
         <header class="support-bot-header">
             <div>
-                <h3>مساعد إبداع هوم</h3>
+                <h3>مساعد الوليد الهندسي</h3>
                 <p id="supportBotStatus">
                     متصل وجاهز للمساعدة
                 </p>
@@ -80,6 +80,23 @@
 
 @push('styles')
 <style>
+    :root {
+        --support-bg: #0b1326;
+        --support-surface: #171f33;
+        --support-surface-low: #131b2e;
+        --support-surface-high: #222a3d;
+        --support-surface-highest: #2d3449;
+        --support-bright: #31394d;
+        --support-outline: #424754;
+        --support-primary: #adc6ff;
+        --support-primary-container: #4d8eff;
+        --support-secondary: #4edea3;
+        --support-secondary-container: #00a572;
+        --support-text: #dae2fd;
+        --support-muted: #c2c6d6;
+        --support-warning: #ffb95f;
+    }
+
     .support-bot-widget {
         position: fixed;
         left: 24px;
@@ -92,18 +109,26 @@
     .support-bot-toggle {
         width: 58px;
         height: 58px;
-        border: 0;
-        border-radius: 50%;
-        background: #1f5f56;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(173, 198, 255, .22);
+        border-radius: 16px;
+        background:
+            linear-gradient(145deg, rgba(77, 142, 255, .95), rgba(24, 74, 155, .95));
         color: #fff;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+        box-shadow:
+            0 18px 45px rgba(0, 0, 0, .35),
+            inset 0 1px rgba(255, 255, 255, .15);
         position: relative;
-        transition: transform .2s ease;
+        transition: transform .2s ease, box-shadow .2s ease;
     }
 
     .support-bot-toggle:hover {
-        transform: scale(1.05);
+        transform: translateY(-2px);
+        box-shadow:
+            0 22px 55px rgba(0, 0, 0, .42),
+            0 0 24px rgba(77, 142, 255, .25);
     }
 
     .support-bot-toggle-icon {
@@ -112,18 +137,20 @@
 
     .support-bot-unread {
         position: absolute;
-        top: -3px;
-        right: -3px;
-        width: 21px;
-        height: 21px;
-        border-radius: 50%;
-        background: #dc3545;
+        top: -5px;
+        right: -5px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: #ef4444;
         color: white;
-        font-size: 12px;
+        font-size: 11px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid white;
+        border: 2px solid var(--support-bg);
+        font-weight: 800;
     }
 
     .d-none {
@@ -134,17 +161,18 @@
         position: absolute;
         left: 0;
         bottom: 72px;
-        width: 380px;
+        width: 420px;
         max-width: calc(100vw - 32px);
-        height: 560px;
-        max-height: calc(100vh - 120px);
+        height: 650px;
+        max-height: calc(100vh - 112px);
         display: none;
         flex-direction: column;
         overflow: hidden;
         border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 18px 50px rgba(0, 0, 0, .25);
-        border: 1px solid #e7e7e7;
+        background: var(--support-surface);
+        color: var(--support-text);
+        box-shadow: 0 28px 90px rgba(0, 0, 0, .55);
+        border: 1px solid var(--support-outline);
     }
 
     .support-bot-panel.is-open {
@@ -152,50 +180,88 @@
     }
 
     .support-bot-header {
-        background: #1f5f56;
-        color: white;
+        min-height: 80px;
         padding: 16px 18px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 16px;
+        color: var(--support-text);
+        background:
+            linear-gradient(135deg, rgba(45, 52, 73, .98), rgba(23, 31, 51, .98));
+        border-bottom: 1px solid var(--support-outline);
+    }
+
+    .support-bot-header > div::before {
+        content: "🎧";
+        float: right;
+        width: 46px;
+        height: 46px;
+        margin-left: 12px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--support-primary-container);
+        border: 1px solid rgba(173, 198, 255, .2);
+        box-shadow: inset 0 1px rgba(255,255,255,.14);
+        font-size: 21px;
     }
 
     .support-bot-header h3 {
-        margin: 0 0 4px;
+        margin: 1px 0 5px;
         font-size: 17px;
+        font-weight: 800;
+        color: var(--support-text);
     }
 
     .support-bot-header p {
         margin: 0;
         font-size: 12px;
-        opacity: .9;
+        color: var(--support-muted);
     }
 
     .support-bot-close {
-        border: 0;
-        background: transparent;
-        color: white;
-        font-size: 30px;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--support-outline);
+        border-radius: 10px;
+        background: rgba(255,255,255,.035);
+        color: var(--support-muted);
+        font-size: 25px;
         cursor: pointer;
         line-height: 1;
+        transition: .2s ease;
+    }
+
+    .support-bot-close:hover {
+        color: white;
+        border-color: rgba(173,198,255,.45);
+        background: rgba(173,198,255,.08);
     }
 
     .support-bot-messages {
         flex: 1;
-        padding: 16px;
+        padding: 24px;
         overflow-y: auto;
-        background: #f7f8fa;
+        background:
+            radial-gradient(circle at top, rgba(77,142,255,.08), transparent 36%),
+            var(--support-bg);
+        scrollbar-width: thin;
+        scrollbar-color: #424754 transparent;
     }
 
     .support-bot-loading {
         text-align: center;
-        color: #777;
-        padding: 20px 10px;
+        color: var(--support-muted);
+        padding: 28px 10px;
     }
 
     .support-message-row {
         display: flex;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 
     .support-message-row.customer {
@@ -204,65 +270,74 @@
 
     .support-message-row.bot,
     .support-message-row.employee,
-    .support-message-row.admin,
-    .support-message-row.system {
+    .support-message-row.admin {
         justify-content: flex-end;
     }
 
+    .support-message-row.system {
+        justify-content: center;
+    }
+
     .support-message {
-        max-width: 82%;
-        padding: 11px 14px;
-        border-radius: 14px;
-        line-height: 1.7;
+        max-width: 84%;
+        padding: 13px 15px;
+        border-radius: 16px;
+        line-height: 1.8;
         font-size: 14px;
         word-break: break-word;
         white-space: pre-wrap;
+        box-shadow: 0 7px 18px rgba(0,0,0,.12);
     }
 
     .support-message-row.customer .support-message {
-        background: #1f5f56;
-        color: white;
-        border-bottom-right-radius: 4px;
+        color: #eafff6;
+        background: var(--support-secondary-container);
+        border: 1px solid rgba(78,222,163,.22);
+        border-top-left-radius: 4px;
     }
 
     .support-message-row.bot .support-message {
-        background: white;
-        color: #222;
-        border: 1px solid #e3e3e3;
-        border-bottom-left-radius: 4px;
+        color: var(--support-text);
+        background: var(--support-bright);
+        border: 1px solid var(--support-outline);
+        border-top-right-radius: 4px;
     }
 
     .support-message-row.employee .support-message,
     .support-message-row.admin .support-message {
-        background: #e9f4ff;
-        color: #1e293b;
-        border: 1px solid #cfe5ff;
-        border-bottom-left-radius: 4px;
+        color: var(--support-text);
+        background: linear-gradient(135deg, #243754, #1e304b);
+        border: 1px solid rgba(173,198,255,.22);
+        border-top-right-radius: 4px;
     }
 
     .support-message-row.system .support-message {
-        max-width: 95%;
+        max-width: 92%;
         text-align: center;
-        background: #fff3cd;
-        color: #664d03;
-        border: 1px solid #ffecb5;
+        color: #ffddb8;
+        background: rgba(202,129,0,.18);
+        border: 1px solid rgba(255,185,95,.3);
+        border-radius: 999px;
+        padding: 9px 18px;
         font-size: 12px;
+        box-shadow: none;
     }
 
     .support-message-meta {
         display: block;
-        margin-top: 5px;
+        margin-top: 6px;
         font-size: 10px;
-        opacity: .7;
+        color: inherit;
+        opacity: .68;
     }
 
     .support-bot-actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-        padding: 10px 14px;
-        background: white;
-        border-top: 1px solid #eee;
+        padding: 12px 14px;
+        background: var(--support-surface-highest);
+        border-top: 1px solid var(--support-outline);
     }
 
     .support-bot-actions:empty {
@@ -270,64 +345,128 @@
     }
 
     .support-bot-action {
-        border: 1px solid #1f5f56;
-        background: white;
-        color: #1f5f56;
-        border-radius: 20px;
-        padding: 8px 13px;
+        min-height: 40px;
+        border: 1px solid var(--support-outline);
+        background: var(--support-surface);
+        color: var(--support-primary);
+        border-radius: 10px;
+        padding: 9px 14px;
         cursor: pointer;
         font-size: 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+        font-weight: 800;
+        transition: .2s ease;
+    }
+
+    .support-bot-action:hover {
+        border-color: rgba(173,198,255,.5);
+        background: var(--support-surface-high);
+        transform: translateY(-1px);
     }
 
     .support-bot-action.primary {
-        color: white;
-        background: #1f5f56;
+        color: #003824;
+        border-color: rgba(78,222,163,.3);
+        background: var(--support-secondary);
     }
 
     .support-bot-action.danger {
-        color: #b42318;
-        border-color: #b42318;
+        color: #ffb4ab;
+        border-color: rgba(255,180,171,.4);
     }
 
     .support-bot-form {
         display: flex;
-        gap: 8px;
+        gap: 12px;
         align-items: flex-end;
-        padding: 12px;
-        background: white;
-        border-top: 1px solid #eee;
+        padding: 14px;
+        background: var(--support-surface-highest);
+        border-top: 1px solid var(--support-outline);
     }
 
     .support-bot-form textarea {
         flex: 1;
-        min-height: 44px;
+        min-height: 46px;
         max-height: 120px;
         resize: none;
-        border: 1px solid #d7d7d7;
-        border-radius: 12px;
-        padding: 10px 12px;
+        border: 1px solid var(--support-outline);
+        border-radius: 11px;
+        padding: 11px 13px;
         outline: none;
         font-family: inherit;
+        color: var(--support-text);
+        background: var(--support-bg);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,.15);
+        transition: .2s ease;
+    }
+
+    .support-bot-form textarea::placeholder {
+        color: #8c909f;
     }
 
     .support-bot-form textarea:focus {
-        border-color: #1f5f56;
+        border-color: var(--support-primary);
+        box-shadow: 0 0 0 2px rgba(173,198,255,.12);
     }
 
     .support-bot-form button {
-        height: 44px;
-        border: 0;
+        height: 46px;
+        border: 1px solid rgba(78,222,163,.22);
         border-radius: 11px;
-        padding: 0 17px;
-        background: #1f5f56;
-        color: white;
+        padding: 0 21px;
+        background: var(--support-secondary-container);
+        color: #eafff6;
         cursor: pointer;
+        font-weight: 900;
+        transition: .2s ease;
+    }
+
+    .support-bot-form button:hover {
+        background: var(--support-secondary);
+        color: #003824;
     }
 
     .support-bot-form button:disabled,
     .support-bot-action:disabled {
         opacity: .6;
         cursor: not-allowed;
+        transform: none;
+    }
+
+    /*
+     * عندما يُعرض المكوّن داخل صفحة الدعم المستقلة.
+     */
+    #support-center-page .support-bot-widget {
+        position: static !important;
+        inset: auto !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: auto !important;
+    }
+
+    #support-center-page .support-bot-toggle {
+        display: none !important;
+    }
+
+    #support-center-page .support-bot-panel {
+        position: static !important;
+        inset: auto !important;
+        display: flex !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 100% !important;
+        max-height: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    #support-center-page .support-bot-close {
+        display: none !important;
     }
 
     @media (max-width: 600px) {
@@ -347,10 +486,28 @@
             position: fixed;
             inset: 0;
             width: 100%;
-            height: 100%;
+            height: 100dvh;
             max-width: none;
             max-height: none;
             border-radius: 0;
+        }
+
+        #support-center-page .support-bot-panel {
+            position: static !important;
+            height: 100% !important;
+        }
+
+        .support-bot-messages {
+            padding: 16px;
+        }
+
+        .support-message {
+            max-width: 90%;
+        }
+
+        .support-bot-form {
+            padding-bottom:
+                max(14px, env(safe-area-inset-bottom));
         }
     }
 </style>
@@ -391,6 +548,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const routes = {
         start: @json(route('support-bot.start')),
         send: @json(route('support-bot.send')),
+
+        officialConversationTemplate: @json(
+            \Illuminate\Support\Facades\Route::has('support.show')
+                ? route(
+                    'support.show',
+                    ['supportTicket' => '__TICKET__']
+                )
+                : null
+        ),
+
         messagesTemplate: @json(
             route(
                 'support-bot.messages',
@@ -592,6 +759,43 @@ document.addEventListener('DOMContentLoaded', function () {
         return button;
     }
 
+    function createLinkAction(
+        label,
+        url,
+        type = ''
+    ) {
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.className =
+            `support-bot-action ${type}`.trim();
+        link.textContent = label;
+
+        actionsContainer.appendChild(link);
+
+        return link;
+    }
+
+    function showEmployeeConversationLink() {
+        if (
+            !ticketId ||
+            !routes.officialConversationTemplate
+        ) {
+            return;
+        }
+
+        clearActions();
+
+        createLinkAction(
+            'فتح المحادثة الرسمية مع موظف الدعم',
+            routeFor(
+                routes.officialConversationTemplate,
+                ticketId
+            ),
+            'primary'
+        );
+    }
+
     function showBotFeedbackActions() {
         clearActions();
 
@@ -627,12 +831,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ticketMode === 'waiting_employee') {
             statusText.textContent =
                 'بانتظار موظف الدعم';
+
+            showEmployeeConversationLink();
             return;
         }
 
         if (ticketMode === 'employee') {
             statusText.textContent =
                 'المحادثة مع موظف الدعم';
+
+            showEmployeeConversationLink();
             return;
         }
 
@@ -680,7 +888,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 addMessage({
                     sender_type: 'bot',
                     message:
-                        'مرحبًا بك في دعم إبداع هوم. كيف يمكنني مساعدتك؟',
+                        'مرحبًا بك في دعم الوليد الهندسي. كيف يمكنني مساعدتك؟',
                 });
             }
 
