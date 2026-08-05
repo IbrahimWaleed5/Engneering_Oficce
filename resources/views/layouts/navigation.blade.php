@@ -190,6 +190,18 @@
                                 <span>الدفعات</span>
                             </a>
                         @endif
+
+                        @if (in_array($role, ['employee', 'admin'], true))
+                            <a
+                                href="{{ route('employee.support-tickets.index') }}"
+                                class="{{ $navItemBase }} {{ request()->routeIs('employee.support-tickets.*') ? $navItemActive : $navItemIdle }}"
+                            >
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H9l-4 3v-3H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                                </svg>
+                                <span>تذاكر الدعم</span>
+                            </a>
+                        @endif
                     @endauth
                 </div>
             </div>
@@ -350,6 +362,29 @@
                                     <span>إدارة المستخدمين</span>
                                 </a>
                             @endif
+
+
+                            <a
+                                href="{{ route('privacy-policy') }}"
+                                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                            >
+                                <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-300">
+                                    🔒
+                                </span>
+
+                                <span>سياسة الخصوصية</span>
+                            </a>
+
+                            <a
+                                href="{{ route('terms-and-conditions') }}"
+                                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                            >
+                                <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-amber-500/10 text-amber-300">
+                                    📜
+                                </span>
+
+                                <span>الشروط والأحكام</span>
+                            </a>
 
                             <div class="my-2 h-px bg-white/[0.07]"></div>
 
@@ -542,6 +577,30 @@
                             </span>
                             <span>الإشعارات</span>
                         </a>
+
+
+                        <a
+                            href="{{ route('privacy-policy') }}"
+                            class="{{ $mobileItemBase }} {{ request()->routeIs('privacy-policy') ? $mobileItemActive : $mobileItemIdle }}"
+                        >
+                            <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">
+                                🔒
+                            </span>
+
+                            <span>سياسة الخصوصية</span>
+                        </a>
+
+                        <a
+                            href="{{ route('terms-and-conditions') }}"
+                            class="{{ $mobileItemBase }} {{ request()->routeIs('terms-and-conditions') ? $mobileItemActive : $mobileItemIdle }}"
+                        >
+                            <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-amber-500/10 text-amber-300">
+                                📜
+                            </span>
+
+                            <span>الشروط والأحكام</span>
+                        </a>
+
                     </div>
                 </div>
 
@@ -688,6 +747,24 @@
                             >
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-violet-500/10 text-violet-300">⚙️</span>
                                 <span>إدارة المستخدمين</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                @if (in_array($role, ['employee', 'admin'], true))
+                    <div>
+                        <p class="mb-2 px-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                            الدعم الفني
+                        </p>
+
+                        <div class="space-y-2">
+                            <a
+                                href="{{ route('employee.support-tickets.index') }}"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('employee.support-tickets.*') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-cyan-500/10 text-cyan-300">🎫</span>
+                                <span>تذاكر الدعم الفني</span>
                             </a>
                         </div>
                     </div>

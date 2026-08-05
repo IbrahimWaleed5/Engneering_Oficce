@@ -34,7 +34,8 @@ use App\Http\Controllers\OfficeMembershipApplicationController;
 use App\Http\Controllers\OfficeApplicationFileController;
 use App\Http\Controllers\OfficeMemberController;
 use App\Http\Controllers\ConsultationOfficeAssignmentController;
-
+use App\Http\Controllers\SupportBotController;
+use App\Http\Controllers\Employee\SupportTicketController as EmployeeSupportTicketController;
 /*
 |--------------------------------------------------------------------------
 | الصفحة الرئيسية والصفحات العامة
@@ -1286,4 +1287,84 @@ Route::middleware([
         'subscriptionReceipt',
     ]
 )->name('office-subscriptions.receipt');
+Route::middleware([
+    'auth',
+    'verified',
+])->prefix('support-bot')
+    ->name('support-bot.')
+    ->group(function () {
+        Route::post(
+            '/start',
+            [SupportBotController::class, 'start']
+        )->name('start');
+
+        Route::post(
+            '/send',
+            [SupportBotController::class, 'send']
+        )->name('send');
+
+        Route::get(
+            '/tickets/{ticket}/messages',
+            [SupportBotController::class, 'messages']
+        )->name('messages');
+
+        Route::post(
+            '/tickets/{ticket}/resolve',
+            [SupportBotController::class, 'resolve']
+        )->name('resolve');
+
+        Route::post(
+            '/tickets/{ticket}/transfer',
+            [SupportBotController::class, 'transfer']
+        )->name('transfer');
+    });
+    Route::middleware([
+    'auth',
+    'verified',
+])->prefix('employee')
+    ->name('employee.')
+    ->group(function () {
+        Route::get(
+            '/support-tickets',
+            [EmployeeSupportTicketController::class, 'index']
+        )->name('support-tickets.index');
+
+        Route::get(
+            '/support-tickets/{ticket}',
+            [EmployeeSupportTicketController::class, 'show']
+        )->name('support-tickets.show');
+
+        Route::post(
+            '/support-tickets/{ticket}/claim',
+            [EmployeeSupportTicketController::class, 'claim']
+        )->name('support-tickets.claim');
+
+        Route::post(
+            '/support-tickets/{ticket}/reply',
+            [EmployeeSupportTicketController::class, 'reply']
+        )->name('support-tickets.reply');
+
+        Route::post(
+            '/support-tickets/{ticket}/resolve',
+            [EmployeeSupportTicketController::class, 'resolve']
+        )->name('support-tickets.resolve');
+
+        Route::post(
+            '/support-tickets/{ticket}/close',
+            [EmployeeSupportTicketController::class, 'close']
+        )->name('support-tickets.close');
+    });
+    Route::view(
+    '/privacy-policy',
+    'privacy-policy'
+)->name('privacy-policy');
+Route::view(
+    '/privacy-policy',
+    'privacy-policy'
+)->name('privacy-policy');
+
+Route::view(
+    '/terms-and-conditions',
+    'terms-and-conditions'
+)->name('terms-and-conditions');
 require __DIR__.'/auth.php';

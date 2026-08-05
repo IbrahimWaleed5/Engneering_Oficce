@@ -253,4 +253,41 @@ class User extends Authenticatable implements MustVerifyEmail
             'created_by'
         );
     }
+    /*
+|--------------------------------------------------------------------------
+| الدعم الفني
+|--------------------------------------------------------------------------
+*/
+
+public function supportTickets(): HasMany
+{
+    return $this->hasMany(
+        SupportTicket::class,
+        'user_id'
+    );
+}
+
+public function assignedSupportTickets(): HasMany
+{
+    return $this->hasMany(
+        SupportTicket::class,
+        'assigned_employee_id'
+    );
+}
+
+public function supportMessages(): HasMany
+{
+    return $this->hasMany(
+        SupportMessage::class,
+        'sender_id'
+    );
+}
+
+public function createdKnowledgeBaseArticles(): HasMany
+{
+    return $this->hasMany(
+        KnowledgeBaseArticle::class,
+        'created_by'
+    );
+}
 }

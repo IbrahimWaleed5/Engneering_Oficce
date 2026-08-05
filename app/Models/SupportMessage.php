@@ -10,8 +10,10 @@ class SupportMessage extends Model
     protected $fillable = [
         'support_ticket_id',
         'sender_id',
+        'sender_type',
         'message',
         'message_type',
+        'is_internal',
         'attachment_path',
         'attachment_name',
         'attachment_mime',
@@ -20,6 +22,7 @@ class SupportMessage extends Model
     ];
 
     protected $casts = [
+        'is_internal' => 'boolean',
         'read_at' => 'datetime',
     ];
 
@@ -42,5 +45,24 @@ class SupportMessage extends Model
     public function hasAttachment(): bool
     {
         return filled($this->attachment_path);
+    }
+
+    public function isFromBot(): bool
+    {
+        return $this->sender_type === 'bot';
+    }
+
+    public function isFromCustomer(): bool
+    {
+        return $this->sender_type === 'customer';
+    }
+
+    public function isFromEmployee(): bool
+    {
+        return in_array(
+            $this->sender_type,
+            ['employee', 'admin'],
+            true
+        );
     }
 }

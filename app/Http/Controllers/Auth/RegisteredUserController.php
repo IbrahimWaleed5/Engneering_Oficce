@@ -79,6 +79,15 @@ class RegisteredUserController extends Controller
             'mimes:jpg,jpeg,png,webp',
             'max:2048',
         ],
+        'privacy_accepted' => [
+    'required',
+    'accepted',
+],
+
+'terms_accepted' => [
+    'required',
+    'accepted',
+],
     ]);
 
     $countryCode = strtoupper($validated['country_code']);

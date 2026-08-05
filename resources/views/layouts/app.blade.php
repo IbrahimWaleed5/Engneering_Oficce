@@ -105,6 +105,10 @@
 
     </div>
 
+    @unless ($isConsultationChat)
+        <x-support-bot />
+    @endunless
+
     @stack('scripts')
 
 </body>

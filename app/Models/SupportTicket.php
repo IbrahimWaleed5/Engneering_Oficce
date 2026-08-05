@@ -14,13 +14,23 @@ class SupportTicket extends Model
         'ticket_number',
         'user_id',
         'assigned_employee_id',
+
         'is_escalated',
         'escalated_by',
         'escalated_at',
         'escalation_reason',
+
         'subject',
+        'category',
         'priority',
         'status',
+        'support_mode',
+
+        'bot_confidence',
+        'bot_resolved',
+        'transferred_to_employee_at',
+        'first_response_at',
+
         'last_message_at',
         'resolved_at',
         'closed_at',
@@ -28,8 +38,13 @@ class SupportTicket extends Model
 
     protected $casts = [
         'is_escalated' => 'boolean',
+        'bot_resolved' => 'boolean',
+        'bot_confidence' => 'decimal:4',
+
         'last_message_at' => 'datetime',
         'escalated_at' => 'datetime',
+        'transferred_to_employee_at' => 'datetime',
+        'first_response_at' => 'datetime',
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
     ];
@@ -79,22 +94,22 @@ class SupportTicket extends Model
         User $user
     ): Builder {
         if ($user->role === 'admin') {
-            return $query->where(
-                'is_escalated',
-                true
-            );
+            return $query;
         }
 
-        return $query->where(
-            function (Builder $builder) use ($user) {
+        if ($user->role === 'employee') {
+            return $query->where(function (Builder $builder) use ($user) {
                 $builder
-                    ->where('user_id', $user->id)
-                    ->orWhere(
-                        'assigned_employee_id',
-                        $user->id
-                    );
-            }
-        );
+                    ->where('assigned_employee_id', $user->id)
+                    ->orWhere(function (Builder $query) {
+                        $query
+                            ->whereNull('assigned_employee_id')
+                            ->where('support_mode', 'waiting_employee');
+                    });
+            });
+        }
+
+        return $query->where('user_id', $user->id);
     }
 
     public function isOpen(): bool
@@ -104,8 +119,24 @@ class SupportTicket extends Model
             [
                 'open',
                 'in_progress',
+                'waiting_customer',
             ],
             true
         );
+    }
+
+    public function isHandledByBot(): bool
+    {
+        return $this->support_mode === 'bot';
+    }
+
+    public function isWaitingForEmployee(): bool
+    {
+        return $this->support_mode === 'waiting_employee';
+    }
+
+    public function isHandledByEmployee(): bool
+    {
+        return $this->support_mode === 'employee';
     }
 }

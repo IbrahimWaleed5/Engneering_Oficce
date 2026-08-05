@@ -783,6 +783,84 @@
 
                         </div>
 
+
+                        {{-- الموافقة على السياسات والشروط --}}
+                        <div
+                            class="p-5 space-y-4 border rounded-2xl border-cyan-500/20 bg-cyan-500/5"
+                        >
+                            <label
+                                for="privacy_accepted"
+                                class="flex items-start gap-3 cursor-pointer"
+                            >
+                                <input
+                                    id="privacy_accepted"
+                                    type="checkbox"
+                                    name="privacy_accepted"
+                                    value="1"
+                                    required
+                                    @checked(old('privacy_accepted'))
+                                    class="w-5 h-5 mt-1 rounded border-white/20 bg-slate-950 text-cyan-500 focus:ring-2 focus:ring-cyan-500/30"
+                                >
+
+                                <span class="text-sm leading-7 text-slate-300">
+                                    أقر بأنني قرأت وأوافق على
+
+                                    <a
+                                        href="{{ route('privacy-policy') }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="font-black underline transition text-cyan-300 decoration-cyan-400/40 underline-offset-4 hover:text-cyan-200"
+                                    >
+                                        سياسة الخصوصية
+                                    </a>.
+                                </span>
+                            </label>
+
+                            @error('privacy_accepted')
+                                <p class="text-sm font-bold text-red-300">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                            <div class="h-px bg-white/10"></div>
+
+                            <label
+                                for="terms_accepted"
+                                class="flex items-start gap-3 cursor-pointer"
+                            >
+                                <input
+                                    id="terms_accepted"
+                                    type="checkbox"
+                                    name="terms_accepted"
+                                    value="1"
+                                    required
+                                    @checked(old('terms_accepted'))
+                                    class="w-5 h-5 mt-1 rounded border-white/20 bg-slate-950 text-cyan-500 focus:ring-2 focus:ring-cyan-500/30"
+                                >
+
+                                <span class="text-sm leading-7 text-slate-300">
+                                    أقر بأنني قرأت وأوافق على
+
+                                    <a
+                                        href="{{ route('terms-and-conditions') }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="font-black underline transition text-cyan-300 decoration-cyan-400/40 underline-offset-4 hover:text-cyan-200"
+                                    >
+                                        الشروط والأحكام وسياسة الاستخدام والعقوبات
+                                    </a>
+
+                                    وأتحمل مسؤولية الالتزام بها.
+                                </span>
+                            </label>
+
+                            @error('terms_accepted')
+                                <p class="text-sm font-bold text-red-300">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
                         <div
                             class="flex items-start gap-3 p-4 text-sm leading-7 border rounded-2xl border-cyan-500/20 bg-cyan-500/5 text-slate-400"
                         >
