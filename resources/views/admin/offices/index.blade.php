@@ -486,7 +486,7 @@
                                                 <path d="M4 21a8 8 0 0 1 16 0"/>
                                             </svg>
 
-                                            عرض الملف الشخصي
+                                            عرض الملف الشخصي للمكتب
                                         </a>
                                     @else
                                         <button
@@ -511,7 +511,6 @@
                                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
                                             <path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-6h6v6"/>
                                         </svg>
-
                                         معلومات المكتب
                                     </a>
                                 </div>
@@ -534,7 +533,6 @@
                         </div>
                     @endforelse
                 </section>
-
                 @if ($offices->hasPages())
                     <div class="p-5 mt-8 luxury-glass rounded-2xl">
                         {{ $offices->links() }}
