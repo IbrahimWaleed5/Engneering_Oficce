@@ -446,7 +446,7 @@
 
                         <div class="terms-contact">
                             <span class="terms-contact-label">البريد القانوني</span>
-                            <span dir="ltr">legal@example.com</span>
+                            <span dir="ltr">loea20057@gmail.com</span>
                         </div>
 
                         <div class="terms-contact">

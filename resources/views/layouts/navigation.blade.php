@@ -351,6 +351,18 @@
                                     <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-cyan-500/10 text-cyan-300">🏢</span>
                                     <span>لوحة المكتب</span>
                                 </a>
+
+                                <button
+                                    type="button"
+                                    data-open-support-bot
+                                    class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-right text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                                >
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-sky-500/10 text-sky-300">
+                                        🎧
+                                    </span>
+
+                                    <span>التواصل مع الدعم الفني</span>
+                                </button>
                             @endif
 
                             @if ($role === 'admin')
@@ -706,6 +718,18 @@
                                 <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 text-emerald-300">💳</span>
                                 <span>اشتراك المكتب</span>
                             </a>
+
+                            <button
+                                type="button"
+                                data-open-support-bot
+                                class="{{ $mobileItemBase }} {{ $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-sky-500/10 text-sky-300">
+                                    🎧
+                                </span>
+
+                                <span>التواصل مع الدعم الفني</span>
+                            </button>
                         </div>
                     </div>
                 @endif
@@ -824,6 +848,7 @@
             const mobileCloseButton = document.getElementById('mobile-menu-close');
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileBackdrop = document.getElementById('mobile-menu-backdrop');
+            const supportOpenButtons = document.querySelectorAll('[data-open-support-bot]');
 
             function openAccountMenu() {
                 if (!accountMenu || !accountButton) return;
@@ -900,6 +925,26 @@
             }
 
             accountButton?.addEventListener('click', toggleAccountMenu);
+
+            supportOpenButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    closeAccountMenu();
+                    closeMobileMenu();
+
+                    window.setTimeout(function () {
+                        const supportToggle = document.getElementById('support-bot-toggle');
+
+                        if (supportToggle) {
+                            supportToggle.click();
+                            return;
+                        }
+
+                        window.dispatchEvent(
+                            new CustomEvent('open-support-bot')
+                        );
+                    }, 200);
+                });
+            });
 
             document.addEventListener('click', function (event) {
                 if (
