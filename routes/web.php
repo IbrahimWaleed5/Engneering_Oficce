@@ -89,6 +89,13 @@ Route::get('/dashboard', [
 */
 
 Route::middleware('auth')->group(function () {
+    Route::patch(
+        '/support/{supportTicket}/escalate',
+        [
+            SupportTicketController::class,
+            'escalateToAdmin',
+        ]
+    )->name('support.escalate');
     Route::get('/profile', [
         ProfileController::class,
         'edit',

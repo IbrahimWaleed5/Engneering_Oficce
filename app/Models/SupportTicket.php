@@ -14,6 +14,10 @@ class SupportTicket extends Model
         'ticket_number',
         'user_id',
         'assigned_employee_id',
+        'is_escalated',
+        'escalated_by',
+        'escalated_at',
+        'escalation_reason',
         'subject',
         'priority',
         'status',
@@ -23,7 +27,9 @@ class SupportTicket extends Model
     ];
 
     protected $casts = [
+        'is_escalated' => 'boolean',
         'last_message_at' => 'datetime',
+        'escalated_at' => 'datetime',
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
     ];
@@ -41,6 +47,14 @@ class SupportTicket extends Model
         return $this->belongsTo(
             User::class,
             'assigned_employee_id'
+        );
+    }
+
+    public function escalatedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'escalated_by'
         );
     }
 
@@ -65,7 +79,10 @@ class SupportTicket extends Model
         User $user
     ): Builder {
         if ($user->role === 'admin') {
-            return $query;
+            return $query->where(
+                'is_escalated',
+                true
+            );
         }
 
         return $query->where(

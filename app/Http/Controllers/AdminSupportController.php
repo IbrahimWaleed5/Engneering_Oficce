@@ -21,9 +21,11 @@ class AdminSupportController extends Controller
         );
 
         $tickets = SupportTicket::query()
+            ->where('is_escalated', true)
             ->with([
                 'user:id,name,email',
                 'assignedEmployee:id,name,email',
+                'escalatedBy:id,name,email',
                 'latestMessage.sender:id,name',
             ])
             ->when(
@@ -46,6 +48,11 @@ class AdminSupportController extends Controller
                                 )
                                 ->orWhere(
                                     'subject',
+                                    'like',
+                                    '%' . $search . '%'
+                                )
+                                ->orWhere(
+                                    'escalation_reason',
                                     'like',
                                     '%' . $search . '%'
                                 )
@@ -85,7 +92,7 @@ class AdminSupportController extends Controller
                     );
                 }
             )
-            ->latest('last_message_at')
+            ->latest('escalated_at')
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -103,6 +110,13 @@ class AdminSupportController extends Controller
         $setting = SupportSetting::current();
 
         $employees = User::query()
+            ->where('role', 'employee')
+            ->where('status', 'active')
+            ->whereHas(
+                'employeeProfile',
+                fn (Builder $query) =>
+                    $query->where('job_title', 'دعم فني')
+            )
             ->orderBy('name')
             ->get([
                 'id',
@@ -134,6 +148,13 @@ class AdminSupportController extends Controller
             ->whereKey(
                 $validated['support_employee_id']
             )
+            ->where('role', 'employee')
+            ->where('status', 'active')
+            ->whereHas(
+                'employeeProfile',
+                fn (Builder $query) =>
+                    $query->where('job_title', 'دعم فني')
+            )
             ->firstOrFail();
 
         $setting = SupportSetting::current();
@@ -148,7 +169,7 @@ class AdminSupportController extends Controller
 
         if (
             $oldEmployeeId
-            && $oldEmployeeId !== $employee->id
+            && (int) $oldEmployeeId !== (int) $employee->id
         ) {
             SupportTicket::query()
                 ->where(
@@ -162,6 +183,7 @@ class AdminSupportController extends Controller
                         'in_progress',
                     ]
                 )
+                ->where('is_escalated', false)
                 ->update([
                     'assigned_employee_id' =>
                         $employee->id,

@@ -256,6 +256,50 @@ class SupportTicketController extends Controller
         );
     }
 
+    public function escalateToAdmin(
+        Request $request,
+        SupportTicket $supportTicket
+    ): RedirectResponse {
+        $user = $request->user();
+
+        abort_unless(
+            (int) $supportTicket->assigned_employee_id === (int) $user->id,
+            403,
+            'موظف الدعم الفني المسؤول فقط يستطيع تحويل التذكرة إلى المدير.'
+        );
+
+        abort_if(
+            (bool) $supportTicket->is_escalated,
+            422,
+            'تم تحويل هذه التذكرة إلى المدير مسبقًا.'
+        );
+
+        $validated = $request->validate([
+            'escalation_reason' => [
+                'required',
+                'string',
+                'max:2000',
+            ],
+        ], [
+            'escalation_reason.required' =>
+                'يرجى كتابة سبب تحويل المشكلة إلى المدير.',
+        ]);
+
+        $supportTicket->update([
+            'is_escalated' => true,
+            'escalated_by' => $user->id,
+            'escalated_at' => now(),
+            'escalation_reason' =>
+                $validated['escalation_reason'],
+            'status' => 'in_progress',
+        ]);
+
+        return back()->with(
+            'success',
+            'تم تحويل المشكلة إلى المدير بنجاح.'
+        );
+    }
+
     public function employeeIndex(Request $request): View
     {
         $user = $request->user();
@@ -380,11 +424,22 @@ class SupportTicketController extends Controller
     ): void {
         $user = $request->user();
 
-        abort_unless(
+        $isOwner =
+            (int) $ticket->user_id === (int) $user->id;
+
+        $isAssignedSupportEmployee =
+            (int) $ticket->assigned_employee_id === (int) $user->id;
+
+        $isEscalatedAdmin =
             $user->role === 'admin'
-            || (int) $ticket->user_id === (int) $user->id
-            || (int) $ticket->assigned_employee_id === (int) $user->id,
-            403
+            && (bool) $ticket->is_escalated;
+
+        abort_unless(
+            $isOwner
+            || $isAssignedSupportEmployee
+            || $isEscalatedAdmin,
+            403,
+            'لا تملك صلاحية الوصول إلى هذه التذكرة.'
         );
     }
 
@@ -394,10 +449,17 @@ class SupportTicketController extends Controller
     ): void {
         $user = $request->user();
 
-        abort_unless(
+        $isAssignedSupportEmployee =
+            (int) $ticket->assigned_employee_id === (int) $user->id;
+
+        $isEscalatedAdmin =
             $user->role === 'admin'
-            || (int) $ticket->assigned_employee_id === (int) $user->id,
-            403
+            && (bool) $ticket->is_escalated;
+
+        abort_unless(
+            $isAssignedSupportEmployee || $isEscalatedAdmin,
+            403,
+            'لا تملك صلاحية إدارة هذه التذكرة.'
         );
     }
 }

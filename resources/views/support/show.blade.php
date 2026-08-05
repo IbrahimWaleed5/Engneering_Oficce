@@ -416,7 +416,67 @@
                                 </div>
                             </div>
                         </div>
+
+                        @if ($supportTicket->is_escalated)
+                            <div class="p-4 mt-5 border rounded-2xl border-violet-500/25 bg-violet-500/10">
+                                <p class="font-black text-violet-200">
+                                    تم تحويل التذكرة إلى المدير
+                                </p>
+
+                                <p class="mt-2 text-sm leading-7 text-violet-100">
+                                    {{ $supportTicket->escalation_reason }}
+                                </p>
+
+                                @if ($supportTicket->escalated_at)
+                                    <p class="mt-2 text-[10px] text-violet-200/70">
+                                        {{ $supportTicket->escalated_at->format('Y-m-d H:i') }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
                     </section>
+
+                    @if (
+                        auth()->id() === $supportTicket->assigned_employee_id
+                        && ! $supportTicket->is_escalated
+                        && $supportTicket->status !== 'closed'
+                    )
+                        <section class="p-5 support-show-glass rounded-2xl">
+                            <h3 class="font-black text-amber-200">
+                                تحويل المشكلة إلى المدير
+                            </h3>
+
+                            <p class="mt-2 text-xs leading-6 text-[#c3c6d7]">
+                                استخدم هذا الخيار فقط عندما تحتاج المشكلة إلى قرار أو تدخل إداري.
+                            </p>
+
+                            <form
+                                method="POST"
+                                action="{{ route('support.escalate', $supportTicket) }}"
+                                class="mt-4"
+                            >
+                                @csrf
+                                @method('PATCH')
+
+                                <textarea
+                                    name="escalation_reason"
+                                    rows="4"
+                                    required
+                                    maxlength="2000"
+                                    class="w-full resize-none rounded-xl border border-amber-500/20 bg-[#060e20] p-3 text-sm text-white"
+                                    placeholder="اكتب سبب تحويل المشكلة إلى المدير..."
+                                >{{ old('escalation_reason') }}</textarea>
+
+                                <button
+                                    type="submit"
+                                    class="w-full px-4 py-3 mt-3 font-black transition rounded-xl bg-amber-500/15 text-amber-200 hover:bg-amber-500/25"
+                                    onclick="return confirm('هل تريد تحويل هذه المشكلة إلى المدير؟')"
+                                >
+                                    تحويل إلى المدير
+                                </button>
+                            </form>
+                        </section>
+                    @endif
 
                     <section class="p-5 support-show-glass rounded-2xl">
                         <h3 class="mb-4 font-bold text-white">
@@ -448,8 +508,11 @@
 
                         <div class="flex items-center gap-2">
                             @if (
-                                auth()->user()->role === 'admin'
-                                || auth()->id() === $supportTicket->assigned_employee_id
+                                auth()->id() === $supportTicket->assigned_employee_id
+                                || (
+                                    auth()->user()->role === 'admin'
+                                    && $supportTicket->is_escalated
+                                )
                             )
                                 <form
                                     method="POST"
