@@ -932,7 +932,7 @@
                     closeMobileMenu();
 
                     window.setTimeout(function () {
-                        const supportToggle = document.getElementById('support-bot-toggle');
+                        const supportToggle = document.getElementById('supportBotToggle');
 
                         if (supportToggle) {
                             supportToggle.click();
