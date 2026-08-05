@@ -1,306 +1,400 @@
 <x-app-layout>
-    @php
-        $currentUser = auth()->user();
+    <div class="min-h-screen bg-[#0b1326] py-10 text-[#dae2fd]" dir="rtl">
+        <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
 
-        $statusLabel = match ($office->status) {
-            'active' => 'مكتب فعال',
-            'suspended' => 'مكتب موقوف',
-            default => 'غير فعال',
-        };
+            @if (session('success'))
+                <div class="p-4 mb-6 text-green-100 border rounded-2xl border-green-500/20 bg-green-500/10">
+                    {{ session('success') }}
+                </div>
+            @endif
 
-        $statusClass = match ($office->status) {
-            'active' => 'border-green-500/20 bg-green-500/10 text-green-300',
-            'suspended' => 'border-amber-500/20 bg-amber-500/10 text-amber-300',
-            default => 'border-white/10 bg-white/5 text-slate-300',
-        };
-    @endphp
+            @if (session('error'))
+                <div class="p-4 mb-6 text-red-100 border rounded-2xl border-red-500/20 bg-red-500/10">
+                    {{ session('error') }}
+                </div>
+            @endif
 
-    <style>
-        .office-profile-page {
-            min-height: 100vh;
-            overflow-x: hidden;
-            color: #dae2fd;
-            background: #0b1326;
-            font-family: 'Be Vietnam Pro', 'Almarai', sans-serif;
-        }
+            @if (session('info'))
+                <div class="p-4 mb-6 border text-cyan-100 rounded-2xl border-cyan-500/20 bg-cyan-500/10">
+                    {{ session('info') }}
+                </div>
+            @endif
 
-        .office-profile-glass {
-            background: rgba(23, 31, 51, .55);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, .06);
-        }
+            @php
+                $isSuspended = $office->status === 'suspended';
 
-        @media (max-width: 1023px) {
-            .office-profile-sidebar {
-                display: none !important;
-            }
+                $isSubscriptionActive =
+                    $office->subscription_status === 'active'
+                    && $office->subscription_ends_at
+                    && $office->subscription_ends_at->isFuture();
 
-            .office-profile-main {
-                margin-right: 0 !important;
-            }
+                $officeStatus = $isSuspended
+                    ? [
+                        'label' => 'مكتب موقوف عن العمل',
+                        'class' => 'text-red-200 border-red-500/20 bg-red-500/10',
+                    ]
+                    : [
+                        'label' => 'مكتب فعال',
+                        'class' => 'text-green-200 border-green-500/20 bg-green-500/10',
+                    ];
+            @endphp
 
-            .office-profile-topbar {
-                right: 0 !important;
-            }
-        }
-    </style>
-
-    <div class="office-profile-page" dir="rtl">
-        <aside class="office-profile-sidebar fixed right-0 top-0 z-50 flex h-screen w-64 flex-col border-l border-[#434655]/10 bg-[#131b2e]/90 p-4 shadow-xl backdrop-blur-xl">
-            <div class="px-4 mb-10">
-                <h1 class="text-2xl font-black tracking-tight text-[#b4c5ff]">CreativeHome</h1>
-                <p class="text-sm text-[#c3c6d7] opacity-60">Engineering Office</p>
-            </div>
-
-            <nav class="flex-1 space-y-2">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-white/5 hover:text-white">
-                    <span>لوحة التحكم</span>
-                </a>
-
-                <a href="{{ route('engineering-offices.index') }}" class="flex items-center gap-3 rounded-xl bg-[#2563eb]/20 px-4 py-3 font-bold text-[#b4c5ff]">
-                    <span>المكاتب الهندسية</span>
-                </a>
-
-                @auth
-                    @if ($currentUser?->role === 'engineer' && Route::has('office-membership-applications.mine'))
-                        <a href="{{ route('office-membership-applications.mine') }}" class="flex items-center gap-3 rounded-xl px-4 py-3 text-[#c3c6d7] transition hover:bg-white/5 hover:text-white">
-                            <span>طلبات انضمامي</span>
-                        </a>
+            <div class="overflow-hidden border rounded-3xl border-[#424754]/60 bg-[#131b2e]/90">
+                <div class="relative h-56 overflow-hidden sm:h-72">
+                    @if ($office->cover_path)
+                        <img
+                            src="{{ asset('storage/' . $office->cover_path) }}"
+                            alt="{{ $office->name }}"
+                            class="object-cover w-full h-full"
+                        >
+                    @else
+                        <div class="flex items-center justify-center w-full h-full text-7xl bg-gradient-to-br from-cyan-500/20 via-slate-900 to-slate-950">
+                            🏢
+                        </div>
                     @endif
-                @endauth
-            </nav>
 
-            @auth
-                <form method="POST" action="{{ route('logout') }}" class="pt-6 mt-auto border-t border-[#434655]/10">
-                    @csrf
-                    <button type="submit" class="w-full px-4 py-3 text-right text-[#c3c6d7] transition hover:text-red-300">
-                        تسجيل الخروج
-                    </button>
-                </form>
-            @endauth
-        </aside>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+                </div>
 
-        <header class="office-profile-topbar fixed top-0 left-0 right-64 z-40 flex h-16 items-center justify-between border-b border-[#434655]/10 bg-[#060e20]/60 px-6 backdrop-blur-md">
-            <a href="{{ route('engineering-offices.index') }}" class="text-sm font-bold text-[#b4c5ff]">
-                العودة إلى دليل المكاتب
-            </a>
-
-            @auth
-                <div class="text-sm text-[#c3c6d7]">{{ $currentUser->name }}</div>
-            @else
-                <a href="{{ route('login') }}" class="rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white">
-                    تسجيل الدخول
-                </a>
-            @endauth
-        </header>
-
-        <main class="min-h-screen px-6 pt-24 pb-12 office-profile-main lg:mr-64">
-            <div class="mx-auto max-w-[1450px] space-y-8">
-                @if ($office->status === 'suspended')
-                    <div class="p-4 border rounded-2xl border-amber-500/20 bg-amber-500/10 text-amber-100">
-                        هذا المكتب موقوف حاليًا، ويمكن الاطلاع على ملفه فقط دون تقديم طلب انضمام جديد.
-                    </div>
-                @endif
-
-                <section class="overflow-hidden office-profile-glass rounded-3xl">
-                    <div class="relative h-64 overflow-hidden bg-gradient-to-br from-[#17213a] to-[#0f1729]">
-                        @if ($office->cover_path)
-                            <img
-                                src="{{ asset('storage/' . $office->cover_path) }}"
-                                alt="{{ $office->name }}"
-                                class="object-cover w-full h-full"
-                            >
-                        @endif
-
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#0b1326] via-[#0b1326]/30 to-transparent"></div>
-                    </div>
-
-                    <div class="relative px-6 pb-8 md:px-10">
-                        <div class="flex flex-col gap-5 -mt-16 md:flex-row md:items-end md:justify-between">
-                            <div class="flex flex-col gap-5 md:flex-row md:items-end">
-                                <div class="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-3xl border-4 border-[#131b2e] bg-[#1f2940] text-4xl font-black text-[#b4c5ff] shadow-2xl">
-                                    @if ($office->logo_path)
-                                        <img
-                                            src="{{ asset('storage/' . $office->logo_path) }}"
-                                            alt="{{ $office->name }}"
-                                            class="object-cover w-full h-full"
-                                        >
-                                    @else
-                                        {{ mb_substr($office->name, 0, 1) }}
-                                    @endif
-                                </div>
-
-                                <div class="pb-2">
-                                    <div class="flex flex-wrap items-center gap-3">
-                                        <h1 class="text-3xl font-black text-white">{{ $office->name }}</h1>
-                                        <span class="rounded-full border px-3 py-1 text-xs font-black {{ $statusClass }}">
-                                            {{ $statusLabel }}
-                                        </span>
-                                    </div>
-
-                                    <p class="mt-3 text-sm text-[#c3c6d7]">
-                                        {{ $office->city ?: 'مدينة غير محددة' }}
-                                        @if ($office->country)
-                                            — {{ $office->country }}
-                                        @endif
-                                    </p>
-                                </div>
+                <div class="relative px-6 pb-8 -mt-16 sm:px-8">
+                    <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="flex flex-col gap-5 sm:flex-row sm:items-end">
+                            <div class="flex items-center justify-center flex-shrink-0 w-32 h-32 overflow-hidden text-5xl border-4 rounded-3xl border-slate-900 bg-[#222a3d]">
+                                @if ($office->logo_path)
+                                    <img
+                                        src="{{ asset('storage/' . $office->logo_path) }}"
+                                        alt="{{ $office->name }}"
+                                        class="object-cover w-full h-full"
+                                    >
+                                @else
+                                    🏢
+                                @endif
                             </div>
 
-                            <div class="flex flex-wrap gap-3">
-                                @guest
-                                    <a href="{{ route('login') }}" class="rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white">
-                                        تسجيل الدخول للتقديم
-                                    </a>
-                                @else
-                                    @if ($currentUser->role === 'engineer')
-                                        @if ($membership && $membership->status === 'active')
-                                            <span class="px-5 py-3 font-bold text-green-300 border rounded-xl border-green-500/20 bg-green-500/10">
-                                                أنت عضو فعال في المكتب
-                                            </span>
-                                        @elseif ($pendingApplication)
-                                            <span class="px-5 py-3 font-bold border rounded-xl border-amber-500/20 bg-amber-500/10 text-amber-300">
-                                                طلبك قيد المراجعة
-                                            </span>
-                                        @elseif ($canApply)
-                                            <a
-                                                href="{{ route('office-membership-applications.create', $office) }}"
-                                                class="rounded-xl bg-[#2563eb] px-5 py-3 font-bold text-white transition hover:brightness-110"
-                                            >
-                                                طلب الانضمام للمكتب
-                                            </a>
-                                        @else
-                                            <span class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-bold text-[#8d90a0]">
-                                                التقديم غير متاح حاليًا
-                                            </span>
-                                        @endif
+                            <div class="pb-2">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <h1 class="text-3xl font-black text-white sm:text-4xl">
+                                        {{ $office->name }}
+                                    </h1>
+
+                                    <span class="px-3 py-1 text-xs font-black border rounded-full text-[#adc6ff] border-[#4d8eff]/30 bg-[#4d8eff]/10">
+                                        مكتب هندسي
+                                    </span>
+                                </div>
+
+                                <p class="mt-3 text-[#c2c6d6]">
+                                    {{ $office->city ?: 'مدينة غير محددة' }}
+
+                                    @if ($office->country)
+                                        —
+                                        {{ $office->country }}
+                                    @endif
+                                </p>
+
+                                <div class="flex flex-wrap gap-3 mt-4">
+                                    <span class="inline-flex px-4 py-2 text-sm font-black border rounded-full {{ $officeStatus['class'] }}">
+                                        {{ $officeStatus['label'] }}
+                                    </span>
+
+                                    @if ($isSubscriptionActive)
+                                        <span class="inline-flex px-4 py-2 text-sm font-black text-green-200 border rounded-full border-green-500/20 bg-green-500/10">
+                                            اشتراك فعال
+                                        </span>
                                     @else
-                                        <span class="rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-bold text-[#8d90a0]">
-                                            الملف متاح للعرض فقط
+                                        <span class="inline-flex px-4 py-2 text-sm font-black text-yellow-200 border rounded-full border-yellow-500/20 bg-yellow-500/10">
+                                            اشتراك غير فعال
                                         </span>
                                     @endif
-                                @endguest
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pb-2">
+                            @guest
+                                <a
+                                    href="{{ route('login') }}"
+                                    class="inline-flex items-center justify-center px-6 py-3 font-black text-white transition rounded-xl bg-[#4d8eff] text-[#00285d] hover:brightness-110"
+                                >
+                                    تسجيل الدخول لطلب الانضمام
+                                </a>
+                            @else
+                                @if (auth()->user()->role === 'engineer')
+                                    @if (
+                                        $membership
+                                        && $membership->status === 'active'
+                                    )
+                                        <div class="px-5 py-3 font-black text-green-100 border rounded-2xl border-green-500/20 bg-green-500/10">
+                                            أنت عضو فعال في هذا المكتب
+                                        </div>
+                                    @elseif ($pendingApplication)
+                                        <div class="px-5 py-3 font-black text-yellow-100 border rounded-2xl border-yellow-500/20 bg-yellow-500/10">
+                                            طلب انضمامك قيد المراجعة
+                                        </div>
+                                    @elseif ($canApply)
+                                        <a
+                                            href="{{ route(
+                                                'office-membership-applications.create',
+                                                $office
+                                            ) }}"
+                                            class="inline-flex items-center justify-center px-6 py-3 font-black text-white transition rounded-xl bg-[#4d8eff] text-[#00285d] hover:brightness-110"
+                                        >
+                                            طلب الانضمام إلى المكتب
+                                        </a>
+                                    @elseif ($office->status === 'suspended')
+                                        <div class="px-5 py-3 font-black text-red-200 border rounded-2xl border-red-500/20 bg-red-500/10">
+                                            المكتب موقوف ولا يستقبل طلبات انضمام
+                                        </div>
+                                    @elseif (! $isSubscriptionActive)
+                                        <div class="px-5 py-3 font-black text-yellow-200 border rounded-2xl border-yellow-500/20 bg-yellow-500/10">
+                                            اشتراك المكتب غير فعال حاليًا
+                                        </div>
+                                    @else
+                                        <div class="px-5 py-3 font-black border text-[#c2c6d6] rounded-2xl border-[#424754]/60 bg-[#171f33]">
+                                            طلب الانضمام غير متاح حاليًا
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="px-5 py-3 font-black border text-cyan-100 rounded-2xl border-cyan-500/20 bg-cyan-500/10">
+                                        هذه الصفحة متاحة للاطلاع، وطلبات الانضمام مخصصة للمهندسين
+                                    </div>
+                                @endif
+                            @endguest
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if ($isSuspended)
+                <div class="p-6 mt-8 border rounded-3xl border-red-500/30 bg-red-500/10">
+                    <h2 class="text-xl font-black text-red-200">
+                        مكتب موقوف عن العمل
+                    </h2>
+
+                    <p class="mt-3 leading-8 text-red-100">
+                        أوقف مدير النظام هذا المكتب مؤقتًا. لا يستطيع
+                        المكتب استقبال استشارات أو طلبات انضمام جديدة.
+                    </p>
+
+                    @if ($office->suspension_reason)
+                        <div class="p-4 mt-4 border rounded-2xl border-red-500/20 bg-red-950/20">
+                            <p class="text-sm font-black text-red-200">
+                                سبب الإيقاف
+                            </p>
+
+                            <p class="mt-2 leading-7 text-red-100">
+                                {{ $office->suspension_reason }}
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            @elseif (! $isSubscriptionActive)
+                <div class="p-6 mt-8 border rounded-3xl border-yellow-500/20 bg-yellow-500/10">
+                    <h2 class="text-xl font-black text-yellow-200">
+                        اشتراك المكتب غير فعال
+                    </h2>
+
+                    <p class="mt-3 leading-8 text-yellow-100">
+                        يمكن مشاهدة الملف الشخصي للمكتب، لكن تقديم طلب
+                        الانضمام غير متاح حتى يتم تفعيل الاشتراك.
+                    </p>
+                </div>
+            @endif
+
+            <div class="grid gap-6 mt-8 lg:grid-cols-3">
+                <div class="space-y-6 lg:col-span-2">
+                    <div class="p-6 border rounded-3xl border-[#424754]/60 bg-[#131b2e]/90 sm:p-8">
+                        <h2 class="text-2xl font-black text-white">
+                            نبذة عن المكتب
+                        </h2>
+
+                        <p class="mt-5 leading-9 text-[#c2c6d6]">
+                            {{ $office->description
+                                ?: 'لم يضف المكتب نبذة تعريفية حتى الآن.' }}
+                        </p>
+                    </div>
+
+                    <div class="p-6 border rounded-3xl border-[#424754]/60 bg-[#131b2e]/90 sm:p-8">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 class="text-2xl font-black text-white">
+                                    فريق المكتب
+                                </h2>
+
+                                <p class="mt-2 text-[#8c909f]">
+                                    يظهر هنا المهندسون المقبولون والفعالون داخل المكتب.
+                                </p>
+                            </div>
+
+                            <span class="px-4 py-2 text-sm font-black border rounded-full text-[#adc6ff] border-[#4d8eff]/30 bg-[#4d8eff]/10">
+                                {{ $office->active_members_count ?? 0 }}
+                                عضو
+                            </span>
+                        </div>
+
+                        <div class="grid gap-4 mt-7 sm:grid-cols-2">
+                            @forelse ($office->activeMembers as $member)
+                                <a
+                                    href="{{ route(
+                                        'engineers.show',
+                                        $member->user
+                                    ) }}"
+                                    class="flex items-center gap-4 p-4 transition border rounded-2xl border-[#424754]/60 bg-[#171f33] hover:bg-[#222a3d]"
+                                >
+                                    <div class="flex items-center justify-center flex-shrink-0 w-16 h-16 overflow-hidden text-xl border rounded-2xl border-[#424754]/60 bg-[#222a3d]">
+                                        @if ($member->user?->profile_photo)
+                                            <img
+                                                src="{{ asset(
+                                                    'storage/'
+                                                    . $member->user->profile_photo
+                                                ) }}"
+                                                alt="{{ $member->user->name }}"
+                                                class="object-cover w-full h-full"
+                                            >
+                                        @else
+                                            👤
+                                        @endif
+                                    </div>
+
+                                    <div class="min-w-0">
+                                        <p class="font-black text-white truncate">
+                                            {{ $member->user?->name
+                                                ?? 'مهندس غير متاح' }}
+                                        </p>
+
+                                        <p class="mt-1 text-sm text-[#8c909f]">
+                                            {{ $member->position
+                                                ?: 'مهندس' }}
+                                        </p>
+
+                                        <p class="mt-1 text-xs text-[#adc6ff]">
+                                            {{ $member->specialty?->name
+                                                ?: 'تخصص غير محدد' }}
+                                        </p>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="p-8 text-center border rounded-2xl border-[#424754]/60 bg-[#171f33] sm:col-span-2">
+                                    <p class="text-[#8c909f]">
+                                        لا يوجد مهندسون ظاهرون في فريق المكتب حاليًا.
+                                    </p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="p-6 border rounded-3xl border-[#424754]/60 bg-[#131b2e]/90">
+                        <h2 class="text-xl font-black text-white">
+                            معلومات المكتب
+                        </h2>
+
+                        <div class="mt-6 space-y-4">
+                            <div class="p-4 rounded-2xl bg-[#171f33]">
+                                <p class="text-xs text-[#8c909f]">
+                                    البريد الإلكتروني
+                                </p>
+
+                                <p class="mt-2 font-bold text-white break-all">
+                                    {{ $office->email }}
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-[#171f33]">
+                                <p class="text-xs text-[#8c909f]">
+                                    رقم الهاتف
+                                </p>
+
+                                <p class="mt-2 font-bold text-white">
+                                    {{ $office->phone ?: 'غير محدد' }}
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-[#171f33]">
+                                <p class="text-xs text-[#8c909f]">
+                                    العنوان
+                                </p>
+
+                                <p class="mt-2 leading-7 text-white">
+                                    {{ $office->address ?: 'غير محدد' }}
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-[#171f33]">
+                                <p class="text-xs text-[#8c909f]">
+                                    رقم الترخيص
+                                </p>
+
+                                <p class="mt-2 font-bold text-white">
+                                    {{ $office->license_number
+                                        ?: 'غير محدد' }}
+                                </p>
                             </div>
                         </div>
                     </div>
-                </section>
 
-                <section class="grid gap-6 lg:grid-cols-[1fr_360px]">
-                    <div class="space-y-6">
-                        <article class="office-profile-glass rounded-3xl p-7">
-                            <h2 class="text-2xl font-black text-white">عن المكتب</h2>
-                            <p class="mt-4 whitespace-pre-line leading-8 text-[#c3c6d7]">
-                                {{ $office->description ?: 'لا يوجد وصف مضاف لهذا المكتب حتى الآن.' }}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-5 text-center border rounded-2xl border-[#424754]/60 bg-[#131b2e]/90">
+                            <p class="text-3xl font-black text-white">
+                                {{ $office->active_members_count ?? 0 }}
                             </p>
-                        </article>
 
-                        <article class="office-profile-glass rounded-3xl p-7">
-                            <div class="flex items-center justify-between gap-4">
-                                <div>
-                                    <h2 class="text-2xl font-black text-white">فريق المكتب</h2>
-                                    <p class="mt-2 text-sm text-[#8d90a0]">
-                                        الأعضاء الفعالون المسجلون في المكتب
-                                    </p>
-                                </div>
+                            <p class="mt-2 text-xs text-[#8c909f]">
+                                أعضاء المكتب
+                            </p>
+                        </div>
 
-                                <span class="rounded-full bg-[#b4c5ff]/10 px-3 py-1 text-sm font-black text-[#b4c5ff]">
-                                    {{ $office->active_members_count ?? 0 }}
-                                </span>
-                            </div>
+                        <div class="p-5 text-center border rounded-2xl border-[#424754]/60 bg-[#131b2e]/90">
+                            <p class="text-3xl font-black text-white">
+                                {{ $office->consultations_count ?? 0 }}
+                            </p>
 
-                            <div class="grid gap-4 mt-6 md:grid-cols-2">
-                                @forelse ($office->activeMembers as $member)
-                                    <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#2563eb] to-[#7c3aed] font-black text-white">
-                                                @if ($member->user?->profile_photo)
-                                                    <img
-                                                        src="{{ asset('storage/' . $member->user->profile_photo) }}"
-                                                        alt="{{ $member->user?->name }}"
-                                                        class="object-cover w-full h-full"
-                                                    >
-                                                @else
-                                                    {{ mb_substr($member->user?->name ?? 'م', 0, 1) }}
-                                                @endif
-                                            </div>
-
-                                            <div class="min-w-0">
-                                                <p class="font-black text-white truncate">
-                                                    {{ $member->user?->name ?? 'عضو غير معروف' }}
-                                                </p>
-
-                                                <p class="mt-1 text-xs text-[#8d90a0]">
-                                                    {{ $member->specialty?->name ?? 'تخصص غير محدد' }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-span-full rounded-2xl border border-white/5 bg-white/[0.03] p-8 text-center text-[#8d90a0]">
-                                        لا يوجد أعضاء فعالون ظاهرون حاليًا.
-                                    </div>
-                                @endforelse
-                            </div>
-                        </article>
+                            <p class="mt-2 text-xs text-[#8c909f]">
+                                استشارات محولة
+                            </p>
+                        </div>
                     </div>
 
-                    <aside class="space-y-6">
-                        <article class="p-6 office-profile-glass rounded-3xl">
-                            <h3 class="text-xl font-black text-white">معلومات المكتب</h3>
+                    @if ($latestApplication)
+                        <div class="p-5 border rounded-3xl border-[#424754]/60 bg-[#131b2e]/90">
+                            <p class="text-sm text-[#8c909f]">
+                                آخر طلب انضمام لك
+                            </p>
 
-                            <div class="mt-5 space-y-4 text-sm">
-                                <div>
-                                    <p class="text-[#8d90a0]">مالك المكتب</p>
-                                    <p class="mt-1 font-bold text-[#dae2fd]">{{ $office->owner?->name ?? 'غير معروف' }}</p>
+                            <p class="mt-3 font-black text-white">
+                                {{ match ($latestApplication->status) {
+                                    'approved' => 'تم قبول الطلب',
+                                    'rejected' => 'تم رفض الطلب',
+                                    'cancelled' => 'تم إلغاء الطلب',
+                                    default => 'قيد المراجعة',
+                                } }}
+                            </p>
+
+                            @if (
+                                $latestApplication->status === 'rejected'
+                                && $latestApplication->rejection_reason
+                            )
+                                <div class="p-4 mt-4 border rounded-2xl border-red-500/20 bg-red-500/10">
+                                    <p class="text-xs font-black text-red-200">
+                                        سبب الرفض
+                                    </p>
+
+                                    <p class="mt-2 text-sm leading-7 text-red-100">
+                                        {{ $latestApplication->rejection_reason }}
+                                    </p>
                                 </div>
+                            @endif
+                        </div>
+                    @endif
 
-                                <div>
-                                    <p class="text-[#8d90a0]">البريد الإلكتروني</p>
-                                    <p class="mt-1 break-all font-bold text-[#dae2fd]">{{ $office->email ?: 'غير متوفر' }}</p>
-                                </div>
-
-                                <div>
-                                    <p class="text-[#8d90a0]">رقم الهاتف</p>
-                                    <p class="mt-1 font-bold text-[#dae2fd]">{{ $office->phone ?: 'غير متوفر' }}</p>
-                                </div>
-
-                                <div>
-                                    <p class="text-[#8d90a0]">العنوان</p>
-                                    <p class="mt-1 leading-6 font-bold text-[#dae2fd]">{{ $office->address ?: 'غير متوفر' }}</p>
-                                </div>
-                            </div>
-                        </article>
-
-                        <article class="p-6 office-profile-glass rounded-3xl">
-                            <h3 class="text-xl font-black text-white">إحصائيات</h3>
-
-                            <div class="grid grid-cols-2 gap-3 mt-5">
-                                <div class="rounded-2xl bg-white/[0.03] p-4 text-center">
-                                    <p class="text-2xl font-black text-white">{{ $office->active_members_count ?? 0 }}</p>
-                                    <p class="mt-1 text-xs text-[#8d90a0]">أعضاء فعالون</p>
-                                </div>
-
-                                <div class="rounded-2xl bg-white/[0.03] p-4 text-center">
-                                    <p class="text-2xl font-black text-white">{{ $office->consultations_count ?? 0 }}</p>
-                                    <p class="mt-1 text-xs text-[#8d90a0]">استشارات</p>
-                                </div>
-                            </div>
-                        </article>
-
-                        @if ($latestApplication && $latestApplication->status === 'rejected')
-                            <article class="p-6 border rounded-3xl border-red-500/20 bg-red-500/10">
-                                <h3 class="font-black text-red-200">آخر طلب انضمام</h3>
-                                <p class="mt-3 text-sm leading-7 text-red-100">
-                                    تم رفض طلبك السابق.
-                                    @if ($latestApplication->rejection_reason)
-                                        السبب: {{ $latestApplication->rejection_reason }}
-                                    @endif
-                                </p>
-                            </article>
-                        @endif
-                    </aside>
-                </section>
+                    <a
+                        href="{{ route('engineering-offices.index') }}"
+                        class="inline-flex items-center justify-center w-full px-5 py-3 font-bold text-white transition border rounded-xl border-[#424754]/60 bg-[#171f33] hover:bg-[#222a3d]"
+                    >
+                        العودة إلى جميع المكاتب
+                    </a>
+                </div>
             </div>
-        </main>
+        </div>
     </div>
 </x-app-layout>
