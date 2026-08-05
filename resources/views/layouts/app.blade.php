@@ -11,7 +11,7 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
     >
 
     <meta
@@ -44,6 +44,13 @@
         [x-cloak] {
             display: none !important;
         }
+
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
     </style>
 
 </head>
@@ -55,6 +62,9 @@
     @php
         $isConsultationChat =
             request()->routeIs('consultations.messages.*');
+
+        $isSupportCenter =
+            request()->routeIs('support.center');
     @endphp
 
     <div class="relative min-h-screen overflow-x-hidden">
@@ -105,7 +115,12 @@
 
     </div>
 
-    @unless ($isConsultationChat)
+    {{--
+        البوت العائم يظهر في جميع الصفحات،
+        لكنه لا يظهر داخل صفحة الدعم المستقلة لأن الصفحة نفسها
+        تحتوي على نفس مكوّن البوت ونفس المحادثة.
+    --}}
+    @unless ($isConsultationChat || $isSupportCenter)
         <x-support-bot />
     @endunless
 

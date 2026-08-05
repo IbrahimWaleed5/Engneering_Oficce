@@ -315,6 +315,19 @@
                                 <span>إعدادات الحساب</span>
                             </a>
 
+                            @if ($role !== 'admin')
+                                <a
+                                    href="{{ route('support.center') }}"
+                                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
+                                >
+                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-sky-500/10 text-sky-300">
+                                        🎧
+                                    </span>
+
+                                    <span>التواصل مع الدعم الفني</span>
+                                </a>
+                            @endif
+
                             @if ($role === 'engineer')
                                 <a
                                     href="{{ route('engineers.show', $user) }}"
@@ -352,17 +365,6 @@
                                     <span>لوحة المكتب</span>
                                 </a>
 
-                                <button
-                                    type="button"
-                                    data-open-support-bot
-                                    class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-right text-sm font-bold text-slate-200 transition hover:bg-white/[0.06] hover:text-white"
-                                >
-                                    <span class="flex items-center justify-center h-9 w-9 rounded-xl bg-sky-500/10 text-sky-300">
-                                        🎧
-                                    </span>
-
-                                    <span>التواصل مع الدعم الفني</span>
-                                </button>
                             @endif
 
                             @if ($role === 'admin')
@@ -591,6 +593,19 @@
                         </a>
 
 
+                        @if ($role !== 'admin')
+                            <a
+                                href="{{ route('support.center') }}"
+                                class="{{ $mobileItemBase }} {{ request()->routeIs('support.center') ? $mobileItemActive : $mobileItemIdle }}"
+                            >
+                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-sky-500/10 text-sky-300">
+                                    🎧
+                                </span>
+
+                                <span>التواصل مع الدعم الفني</span>
+                            </a>
+                        @endif
+
                         <a
                             href="{{ route('privacy-policy') }}"
                             class="{{ $mobileItemBase }} {{ request()->routeIs('privacy-policy') ? $mobileItemActive : $mobileItemIdle }}"
@@ -719,17 +734,6 @@
                                 <span>اشتراك المكتب</span>
                             </a>
 
-                            <button
-                                type="button"
-                                data-open-support-bot
-                                class="{{ $mobileItemBase }} {{ $mobileItemIdle }}"
-                            >
-                                <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-sky-500/10 text-sky-300">
-                                    🎧
-                                </span>
-
-                                <span>التواصل مع الدعم الفني</span>
-                            </button>
                         </div>
                     </div>
                 @endif
@@ -848,7 +852,6 @@
             const mobileCloseButton = document.getElementById('mobile-menu-close');
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileBackdrop = document.getElementById('mobile-menu-backdrop');
-            const supportOpenButtons = document.querySelectorAll('[data-open-support-bot]');
 
             function openAccountMenu() {
                 if (!accountMenu || !accountButton) return;
@@ -925,40 +928,6 @@
             }
 
             accountButton?.addEventListener('click', toggleAccountMenu);
-
-            supportOpenButtons.forEach(function (button) {
-                button.addEventListener('click', function () {
-                    closeAccountMenu();
-                    closeMobileMenu();
-
-                    window.setTimeout(function () {
-                        if (typeof window.openSupportBot === 'function') {
-                            window.openSupportBot();
-                            return;
-                        }
-
-                        const supportPanel =
-                            document.getElementById('supportBotPanel');
-
-                        const supportToggle =
-                            document.getElementById('supportBotToggle');
-
-                        if (supportPanel) {
-                            supportPanel.classList.add('is-open');
-                            supportPanel.setAttribute(
-                                'aria-hidden',
-                                'false'
-                            );
-                        }
-
-                        supportToggle?.click();
-
-                        window.dispatchEvent(
-                            new CustomEvent('open-support-bot')
-                        );
-                    }, 350);
-                });
-            });
 
             document.addEventListener('click', function (event) {
                 if (

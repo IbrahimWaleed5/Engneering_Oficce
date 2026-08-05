@@ -1367,4 +1367,10 @@ Route::view(
     '/terms-and-conditions',
     'terms-and-conditions'
 )->name('terms-and-conditions');
+Route::middleware(['auth'])->group(function () {
+    Route::view(
+        '/support-center',
+        'support-center'
+    )->name('support.center');
+});
 require __DIR__.'/auth.php';
