@@ -114,6 +114,14 @@
         .office-profile-page::-webkit-scrollbar-thumb:hover {
             background: #424754;
         }
+
+        /* تثبيت أحجام SVG ومنع الحجم الافتراضي الضخم للمتصفح */
+        svg[aria-hidden="true"] {
+            display: inline-block;
+            max-width: 100%;
+            vertical-align: middle;
+        }
+
     </style>
 
     <div class="office-profile-page" dir="rtl">
@@ -122,7 +130,7 @@
             <div class="mx-auto flex min-h-[72px] max-w-[1200px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
                 <a href="{{ $backRoute }}" class="flex min-w-0 items-center gap-3">
                     <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#424754] bg-[#171f33] text-[#adc6ff]">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
+                        <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
                     </div>
 
                     <div class="min-w-0">
@@ -163,7 +171,7 @@
                             class="flex h-10 w-10 items-center justify-center rounded-full border border-[#424754] bg-[#171f33] text-[#c2c6d6] transition hover:border-[#adc6ff] hover:text-[#adc6ff]"
                             title="إعدادات الحساب"
                         >
-                            <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                            <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
                         </a>
                     @endif
                 </div>
@@ -245,7 +253,7 @@
 
                             <div class="mt-3 flex flex-wrap justify-center gap-5 text-[#c2c6d6] md:justify-start">
                                 <div class="flex items-center gap-2">
-                                    <svg class="text-[#8c909f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                                    <svg class="text-[#8c909f] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
                                     <span class="text-sm font-bold">
                                         {{ $office->city ?: 'مدينة غير محددة' }}
                                         @if ($office->country)
@@ -256,7 +264,7 @@
 
                                 @if ($office->email)
                                     <a href="mailto:{{ $office->email }}" class="flex items-center gap-2 transition hover:text-[#adc6ff]">
-                                        <svg class="text-[#8c909f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                                        <svg class="text-[#8c909f] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                                         <span class="tech-font text-sm">{{ $office->email }}</span>
                                     </a>
                                 @endif
@@ -268,19 +276,19 @@
                                         href="{{ route('login') }}"
                                         class="inline-flex items-center gap-2 rounded bg-[#adc6ff] px-5 py-3 font-bold text-[#002e6a] transition hover:brightness-110"
                                     >
-                                        <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+                                        <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
                                         تسجيل الدخول لطلب الانضمام
                                     </a>
                                 @else
                                     @if ($currentUser?->role === 'engineer')
                                         @if ($membership && $membership->status === 'active')
                                             <div class="inline-flex items-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-5 py-3 font-bold text-green-100">
-                                                <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 12 2 2 4-4"/><path d="M12 3l2.2 1.4 2.6-.1 1.1 2.4 2.2 1.4-.6 2.5.6 2.5-2.2 1.4-1.1 2.4-2.6-.1L12 21l-2.2-1.4-2.6.1-1.1-2.4-2.2-1.4.6-2.5-.6-2.5 2.2-1.4 1.1-2.4 2.6.1L12 3Z"/></svg>
+                                                <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 12 2 2 4-4"/><path d="M12 3l2.2 1.4 2.6-.1 1.1 2.4 2.2 1.4-.6 2.5.6 2.5-2.2 1.4-1.1 2.4-2.6-.1L12 21l-2.2-1.4-2.6.1-1.1-2.4-2.2-1.4.6-2.5-.6-2.5 2.2-1.4 1.1-2.4 2.6.1L12 3Z"/></svg>
                                                 أنت عضو فعال في هذا المكتب
                                             </div>
                                         @elseif ($pendingApplication)
                                             <div class="inline-flex items-center gap-2 rounded border border-yellow-500/30 bg-yellow-500/10 px-5 py-3 font-bold text-yellow-100">
-                                                <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12M6 22h12M7 2c0 5 5 5 5 10s-5 5-5 10M17 2c0 5-5 5-5 10s5 5 5 10"/></svg>
+                                                <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12M6 22h12M7 2c0 5 5 5 5 10s-5 5-5 10M17 2c0 5-5 5-5 10s5 5 5 10"/></svg>
                                                 طلب انضمامك قيد المراجعة
                                             </div>
                                         @elseif ($canApply)
@@ -288,7 +296,7 @@
                                                 href="{{ route('office-membership-applications.create', $office) }}"
                                                 class="inline-flex items-center gap-2 rounded bg-[#adc6ff] px-5 py-3 font-bold text-[#002e6a] transition hover:brightness-110"
                                             >
-                                                <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg>
+                                                <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg>
                                                 طلب الانضمام إلى المكتب
                                             </a>
                                         @elseif ($isSuspended)
@@ -315,7 +323,7 @@
                                     href="{{ $backRoute }}"
                                     class="inline-flex items-center gap-2 rounded border border-[#424754] bg-[#171f33] px-5 py-3 font-bold text-[#dae2fd] transition hover:border-[#adc6ff] hover:text-[#adc6ff]"
                                 >
-                                    <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                    <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                     جميع المكاتب
                                 </a>
                             </div>
@@ -357,7 +365,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <article class="glass-card glow-hover flex items-center gap-4 rounded-lg p-5">
                         <div class="flex h-12 w-12 items-center justify-center rounded bg-[#4d8eff]/10 text-[#adc6ff]">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20a7 7 0 0 1 14 0M14 16a6 6 0 0 1 8 4"/></svg>
+                            <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20a7 7 0 0 1 14 0M14 16a6 6 0 0 1 8 4"/></svg>
                         </div>
                         <div>
                             <p class="text-3xl font-bold">{{ $office->active_members_count ?? 0 }}</p>
@@ -367,7 +375,7 @@
 
                     <article class="glass-card glow-hover flex items-center gap-4 rounded-lg p-5">
                         <div class="flex h-12 w-12 items-center justify-center rounded bg-[#00a572]/10 text-[#4edea3]">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
+                            <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
                         </div>
                         <div>
                             <p class="text-3xl font-bold">{{ $office->consultations_count ?? 0 }}</p>
@@ -377,7 +385,7 @@
 
                     <article class="glass-card glow-hover flex items-center gap-4 rounded-lg p-5">
                         <div class="flex h-12 w-12 items-center justify-center rounded bg-[#ca8100]/10 text-[#ffb95f]">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 12 2 2 4-4"/><path d="M12 3l2.2 1.4 2.6-.1 1.1 2.4 2.2 1.4-.6 2.5.6 2.5-2.2 1.4-1.1 2.4-2.6-.1L12 21l-2.2-1.4-2.6.1-1.1-2.4-2.2-1.4.6-2.5-.6-2.5 2.2-1.4 1.1-2.4 2.6.1L12 3Z"/></svg>
+                            <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 12 2 2 4-4"/><path d="M12 3l2.2 1.4 2.6-.1 1.1 2.4 2.2 1.4-.6 2.5.6 2.5-2.2 1.4-1.1 2.4-2.6-.1L12 21l-2.2-1.4-2.6.1-1.1-2.4-2.2-1.4.6-2.5-.6-2.5 2.2-1.4 1.1-2.4 2.6.1L12 3Z"/></svg>
                         </div>
                         <div>
                             <p class="text-2xl font-bold">
@@ -392,7 +400,7 @@
             {{-- About --}}
             <section id="about" class="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
                 <div class="mb-6 flex items-center gap-2">
-                    <svg class="text-[#adc6ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <svg class="text-[#adc6ff] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                     <h2 class="text-2xl font-bold text-[#dae2fd]">نبذة عن المكتب</h2>
                 </div>
 
@@ -408,7 +416,7 @@
             <section id="team" class="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
                 <div class="mb-6 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
-                        <svg class="text-[#adc6ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18v3h3l6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-3-3 2.4-2.4Z"/><path d="m15 15 6 6"/></svg>
+                        <svg class="text-[#adc6ff] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18v3h3l6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-3-3 2.4-2.4Z"/><path d="m15 15 6 6"/></svg>
                         <h2 class="text-2xl font-bold text-[#dae2fd]">فريق المكتب</h2>
                     </div>
 
@@ -438,7 +446,7 @@
                                         class="h-full w-full object-cover"
                                     >
                                 @else
-                                    <svg class="text-3xl text-[#adc6ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                                    <svg class="text-3xl text-[#adc6ff] shrink-0" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
                                 @endif
                             </div>
 
@@ -454,11 +462,11 @@
                                 </p>
                             </div>
 
-                            <svg class="text-[#8c909f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <svg class="text-[#8c909f] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         </a>
                     @empty
                         <div class="glass-card col-span-full rounded-lg p-10 text-center">
-                            <svg class="text-5xl text-[#8c909f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M2 20a7 7 0 0 1 11-5.7M17 9a2.5 2.5 0 0 1 2.2 3.7M16 16a6 6 0 0 1 6 4M3 3l18 18"/></svg>
+                            <svg class="text-5xl text-[#8c909f] shrink-0" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M2 20a7 7 0 0 1 11-5.7M17 9a2.5 2.5 0 0 1 2.2 3.7M16 16a6 6 0 0 1 6 4M3 3l18 18"/></svg>
                             <p class="mt-3 text-[#c2c6d6]">
                                 لا يوجد مهندسون ظاهرون في فريق المكتب حاليًا.
                             </p>
@@ -472,7 +480,7 @@
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <div class="glass-card rounded-lg p-6 lg:col-span-2">
                         <div class="mb-6 flex items-center gap-2">
-                            <svg class="text-[#adc6ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17a3.5 3.5 0 0 1 7 0M14 8h4M14 12h4"/></svg>
+                            <svg class="text-[#adc6ff] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17a3.5 3.5 0 0 1 7 0M14 8h4M14 12h4"/></svg>
                             <h2 class="text-2xl font-bold">معلومات المكتب</h2>
                         </div>
 
@@ -531,7 +539,7 @@
                             href="{{ $backRoute }}"
                             class="flex w-full items-center justify-center gap-2 rounded border border-[#424754] bg-[#171f33] px-5 py-3 font-bold transition hover:border-[#adc6ff] hover:text-[#adc6ff]"
                         >
-                            <svg class="text-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5h9v16M14 9h5v12M8 8h2M8 12h2M8 16h2M16 12h1M16 16h1"/></svg>
+                            <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5h9v16M14 9h5v12M8 8h2M8 12h2M8 16h2M16 12h1M16 16h1"/></svg>
                             العودة إلى جميع المكاتب
                         </a>
                     </div>
