@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OfficeMembershipApplicationController extends Controller
 {
@@ -365,6 +366,73 @@ class OfficeMembershipApplicationController extends Controller
                 'application' =>
                     $officeMembershipApplication,
             ]
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | تحميل ملفات طلب الانضمام
+    |--------------------------------------------------------------------------
+    */
+
+    public function file(
+        Request $request,
+        OfficeMembershipApplication $officeMembershipApplication,
+        string $type
+    ): StreamedResponse {
+        abort_unless(
+            in_array($type, ['cv', 'certificate'], true),
+            404
+        );
+
+        $user = $request->user();
+
+        $canManageOffice = $user
+            ->managedOfficeMemberships()
+            ->where(
+                'office_id',
+                $officeMembershipApplication->office_id
+            )
+            ->exists();
+
+        abort_unless(
+            $canManageOffice || $user->role === 'admin',
+            403,
+            'لا يمكنك الوصول إلى ملفات هذا الطلب.'
+        );
+
+        $path = match ($type) {
+            'cv' => $officeMembershipApplication->cv_path,
+            'certificate' =>
+                $officeMembershipApplication->certificate_path,
+        };
+
+        abort_if(
+            blank($path) || ! Storage::exists($path),
+            404,
+            'الملف غير موجود.'
+        );
+
+        $extension = pathinfo(
+            $path,
+            PATHINFO_EXTENSION
+        );
+
+        $baseName = match ($type) {
+            'cv' => 'CV',
+            'certificate' => 'Certificate',
+        };
+
+        $downloadName =
+            $baseName
+            . '-Application-'
+            . $officeMembershipApplication->id
+            . ($extension ? '.' . $extension : '');
+
+        return Storage::download(
+            $path,
+            $downloadName
         );
     }
 

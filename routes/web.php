@@ -1084,6 +1084,18 @@ Route::middleware([
         ]
     )->name('office-membership-applications.show');
 
+
+    Route::get(
+        '/office/membership-applications/{officeMembershipApplication}/file/{type}',
+        [
+            OfficeMembershipApplicationController::class,
+            'file',
+        ]
+    )
+        ->whereIn('type', ['cv', 'certificate'])
+        ->name('office-membership-applications.file');
+
+
     /*
     | قبول أو رفض الطلب يحتاج مكتبًا فعالًا واشتراكًا ساريًا.
     */
