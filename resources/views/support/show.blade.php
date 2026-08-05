@@ -15,6 +15,25 @@
             'high' => 'مرتفعة',
             'urgent' => 'عاجلة',
         ];
+
+        /*
+         * رسائل البوت والنظام يكون sender_id فيها null،
+         * لذلك لا يجوز استخدام $message->sender->name مباشرة.
+         */
+        $senderName = function ($message): string {
+            if ($message->sender) {
+                return $message->sender->name;
+            }
+
+            return match ($message->sender_type) {
+                'bot' => 'مساعد الوليد الهندسي',
+                'system' => 'النظام',
+                'admin' => 'إدارة المنصة',
+                'employee' => 'موظف الدعم',
+                'customer' => 'المستخدم',
+                default => 'الدعم الفني',
+            };
+        };
     @endphp
 
     <style>
@@ -484,11 +503,11 @@
                         </h3>
 
                         <p class="text-sm text-white">
-                            {{ $supportTicket->user->name }}
+                            {{ $supportTicket->user?->name ?? 'مستخدم غير متاح' }}
                         </p>
 
                         <p class="mt-1 text-xs text-[#c3c6d7]">
-                            {{ $supportTicket->user->email }}
+                            {{ $supportTicket->user?->email ?? 'لا يوجد بريد إلكتروني' }}
                         </p>
                     </section>
                 </aside>
@@ -569,7 +588,7 @@
                                             ? 'text-[#b4c5ff]'
                                             : 'text-pink-300'
                                     }}">
-                                        {{ $message->sender->name }}
+                                        {{ $senderName($message) }}
                                     </p>
 
                                     <div class="rounded-2xl p-4 shadow-md {{
