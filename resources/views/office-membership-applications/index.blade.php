@@ -98,10 +98,251 @@
                 display: grid !important;
             }
         }
+
+        .apex-office-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            overflow-x: hidden;
+            background: #0b1326;
+        }
+
+        .apex-side-nav {
+            width: 16rem;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #424754;
+            background: #171f33;
+            transition: transform .25s ease;
+        }
+
+        .apex-main-area {
+            min-height: 100vh;
+            width: 100%;
+            margin-right: 16rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .apex-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #424754;
+            background: rgba(11, 19, 38, .96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .apex-side-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-radius: .5rem;
+            padding: 1rem;
+            color: #c2c6d6;
+            font-weight: 700;
+            transition: background .2s ease, color .2s ease, transform .2s ease;
+        }
+
+        .apex-side-link:hover {
+            background: #222a3d;
+            color: #adc6ff;
+        }
+
+        .apex-side-link:active {
+            transform: scale(.98);
+        }
+
+        .apex-side-link.active {
+            background: #00a572;
+            color: #00311f;
+        }
+
+        .apex-mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 55;
+            background: rgba(2, 6, 23, .72);
+            backdrop-filter: blur(3px);
+        }
+
+        @media (max-width: 767px) {
+            .apex-side-nav {
+                transform: translateX(100%);
+            }
+
+            .apex-side-nav.open {
+                transform: translateX(0);
+            }
+
+            .apex-mobile-overlay.open {
+                display: block;
+            }
+
+            .apex-main-area {
+                margin-right: 0;
+            }
+        }
+
     </style>
 
     <div class="office-team-page" dir="rtl">
-        <main class="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
+        <div class="apex-office-shell">
+            <div id="apexMobileOverlay" class="apex-mobile-overlay"></div>
+
+            <aside id="apexSideNav" class="apex-side-nav">
+                <div class="flex items-center gap-4 border-b border-[#424754] p-6">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#4d8eff] font-black text-[#00285d]">
+                        {{ mb_substr($office->name, 0, 1) }}
+                    </div>
+
+                    <div class="min-w-0">
+                        <h2 class="truncate text-lg font-black text-[#adc6ff]">
+                            {{ $office->name }}
+                        </h2>
+                        <p class="truncate text-xs text-[#c2c6d6]">
+                            إدارة المكتب الهندسي
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    @if (Route::has('office.members.index'))
+                        <a
+                            href="{{ route('office.members.index') }}"
+                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-[#adc6ff] px-4 py-3 font-black text-[#002e6a] transition hover:brightness-110"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="9" cy="8" r="3"/>
+                                <path d="M2 20a7 7 0 0 1 14 0M19 8v6M16 11h6"/>
+                            </svg>
+                            أعضاء المكتب
+                        </a>
+                    @endif
+                </div>
+
+                <nav class="flex-1 space-y-2 overflow-y-auto px-3 py-2">
+                    <a href="{{ route('office.dashboard') }}" class="apex-side-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        نظرة عامة
+                    </a>
+
+                    <a href="{{ route('office-membership-applications.index') }}" class="apex-side-link active">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="10" cy="8" r="3"/>
+                            <path d="M3 20a7 7 0 0 1 14 0M16 8h5M18.5 5.5v5"/>
+                        </svg>
+                        طلبات الانضمام
+                    </a>
+
+                    @if (Route::has('office.members.index'))
+                        <a href="{{ route('office.members.index') }}" class="apex-side-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="9" cy="8" r="3"/>
+                                <circle cx="17" cy="9" r="2.5"/>
+                                <path d="M2 20a7 7 0 0 1 14 0M14 16a6 6 0 0 1 8 4"/>
+                            </svg>
+                            فريق المكتب
+                        </a>
+                    @endif
+
+                    @if (Route::has('office.consultations.index'))
+                        <a href="{{ route('office.consultations.index') }}" class="apex-side-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16v12H7l-3 3V4Z"/>
+                                <path d="M8 8h8M8 12h5"/>
+                            </svg>
+                            استشارات المكتب
+                        </a>
+                    @endif
+
+                    @if (Route::has('office.profile'))
+                        <a href="{{ route('office.profile') }}" class="apex-side-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6"/>
+                            </svg>
+                            ملف المكتب
+                        </a>
+                    @endif
+                </nav>
+
+                <div class="space-y-2 border-t border-[#424754] p-3">
+                    @if (Route::has('support.index'))
+                        <a href="{{ route('support.index') }}" class="apex-side-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .7-1.5 1.2-1.5 2.5M12 17h.01"/>
+                            </svg>
+                            الدعم الفني
+                        </a>
+                    @endif
+                </div>
+            </aside>
+
+            <div class="apex-main-area">
+                <header class="apex-topbar px-4 sm:px-6">
+                    <div class="flex items-center gap-3 md:hidden">
+                        <button
+                            type="button"
+                            id="apexMenuButton"
+                            class="flex h-10 w-10 items-center justify-center rounded-lg border border-[#424754] bg-[#171f33] text-[#dae2fd]"
+                            aria-label="فتح القائمة"
+                        >
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <path d="M4 7h16M4 12h16M4 17h16"/>
+                            </svg>
+                        </button>
+
+                        <span class="font-black text-[#dae2fd]">إدارة فريق المكتب</span>
+                    </div>
+
+                    <div class="hidden md:block"></div>
+
+                    <div class="flex items-center gap-3">
+                        @if (Route::has('notifications.index'))
+                            <a
+                                href="{{ route('notifications.index') }}"
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-[#171f33] text-[#dae2fd] transition hover:bg-[#222a3d] hover:text-[#adc6ff]"
+                                aria-label="الإشعارات"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>
+                                </svg>
+                            </a>
+                        @endif
+
+                        @if (Route::has('office.profile'))
+                            <a
+                                href="{{ route('office.profile') }}"
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-[#171f33] text-[#dae2fd] transition hover:bg-[#222a3d] hover:text-[#adc6ff]"
+                                aria-label="إعدادات المكتب"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>
+                                </svg>
+                            </a>
+                        @endif
+                    </div>
+                </header>
+
+                <main class="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
             @if (session('success'))
                 <div class="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-green-100">
                     {{ session('success') }}
@@ -525,7 +766,9 @@
                     </div>
                 @endforelse
             </section>
-        </main>
+                </main>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -536,6 +779,17 @@
             const tableSearch = document.getElementById('officeTeamTableSearch');
             const statusSelect = document.getElementById('officeTeamStatus');
             const rows = Array.from(document.querySelectorAll('[data-office-team-row]'));
+            const menuButton = document.getElementById('apexMenuButton');
+            const sideNav = document.getElementById('apexSideNav');
+            const mobileOverlay = document.getElementById('apexMobileOverlay');
+
+            const toggleSideNav = () => {
+                sideNav?.classList.toggle('open');
+                mobileOverlay?.classList.toggle('open');
+            };
+
+            menuButton?.addEventListener('click', toggleSideNav);
+            mobileOverlay?.addEventListener('click', toggleSideNav);
 
             filterButton?.addEventListener('click', function () {
                 filterPanel?.classList.toggle('hidden');
