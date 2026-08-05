@@ -1,14 +1,5 @@
 <x-app-layout>
-    @php
-        $currentUser = auth()->user();
-
-        $profilePhoto =
-            $currentUser?->profile_photo_path
-            ?? $currentUser?->profile_photo
-            ?? null;
-    @endphp
-
-    @push('styles')
+@push('styles')
 @endpush
 
     <style>
@@ -72,91 +63,7 @@
     </style>
 
     <div class="join-office-page" dir="rtl">
-        {{-- Top navigation --}}
-        <header class="sticky top-0 z-50 w-full border-b border-[#334155] bg-[#0b1326]/95 backdrop-blur-xl">
-            <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-[#334155] bg-[#1a243a]">
-                        <svg class="text-xl text-[#3b82f6] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
-                    </div>
-
-                    <div class="hidden sm:block">
-                        <h1 class="text-lg font-bold text-[#f8fafc]">مكتب الوليد الهندسي</h1>
-                        <p class="text-xs text-[#cbd5e1]">منصة الاستشارات الهندسية</p>
-                    </div>
-                </div>
-
-                <nav class="hidden items-center gap-6 md:flex">
-                    @if (Route::has('home'))
-                        <a href="{{ route('home') }}" class="flex items-center gap-1 font-medium text-[#cbd5e1] transition hover:text-[#3b82f6]">
-                            <svg class="text-sm shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v11h14V10M9 21v-6h6v6"/></svg>
-                            الصفحة الرئيسية
-                        </a>
-                    @endif
-
-                    @if (Route::has('dashboard'))
-                        <a href="{{ route('dashboard') }}" class="flex items-center gap-1 font-medium text-[#cbd5e1] transition hover:text-[#3b82f6]">
-                            <svg class="text-sm shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                            لوحة التحكم
-                        </a>
-                    @endif
-
-                    @if (Route::has('engineer.works.public'))
-                        <a href="{{ route('engineer.works.public') }}" class="flex items-center gap-1 font-medium text-[#cbd5e1] transition hover:text-[#3b82f6]">
-                            <svg class="text-sm shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
-                            مكتبة المهندسين
-                        </a>
-                    @endif
-
-                    @if (Route::has('consultations.mine'))
-                        <a href="{{ route('consultations.mine') }}" class="flex items-center gap-1 font-medium text-[#cbd5e1] transition hover:text-[#3b82f6]">
-                            <svg class="text-sm shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 9h6M9 13h6M9 17h4"/></svg>
-                            طلباتي
-                        </a>
-                    @endif
-
-                    @if (Route::has('engineering-offices.index'))
-                        <a href="{{ route('engineering-offices.index') }}" class="flex items-center gap-1 border-b-2 border-[#3b82f6] pb-1 font-bold text-[#3b82f6]">
-                            <svg class="text-sm shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h12M5 21V5h8v16M8 8h2M8 12h2M8 16h2M19 8v6M16 11h6"/></svg>
-                            المكاتب الهندسية
-                        </a>
-                    @endif
-                </nav>
-
-                <div class="flex items-center gap-3">
-                    @if (Route::has('notifications.index'))
-                        <a href="{{ route('notifications.index') }}" class="relative rounded-full p-2 text-[#cbd5e1] transition hover:bg-[#131b2e] hover:text-[#3b82f6]">
-                            <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-                        </a>
-                    @endif
-
-                    @if (Route::has('profile.edit'))
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 rounded-lg border-l border-[#334155] p-1 pl-2 transition hover:bg-[#131b2e]">
-                            <div class="hidden text-left sm:block">
-                                <p class="text-sm font-semibold text-[#f8fafc]">{{ $currentUser?->name }}</p>
-                                <p class="text-xs text-[#cbd5e1]">مهندس</p>
-                            </div>
-
-                            <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#475569] bg-[#1a243a]">
-                                @if ($profilePhoto)
-                                    <img
-                                        src="{{ asset('storage/' . $profilePhoto) }}"
-                                        alt="{{ $currentUser?->name }}"
-                                        class="h-full w-full object-cover"
-                                    >
-                                @else
-                                    <span class="font-black text-[#3b82f6]">
-                                        {{ mb_substr($currentUser?->name ?? 'م', 0, 1) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </a>
-                    @endif
-                </div>
-            </div>
-        </header>
-
-        <main class="flex flex-grow justify-center px-4 py-10 sm:px-6 lg:px-8">
+<main class="flex flex-grow justify-center px-4 py-10 sm:px-6 lg:px-8">
             <div class="w-full max-w-3xl">
 
                 @if (session('error'))
@@ -396,8 +303,3 @@
                             </button>
                         </div>
                     </form>
-                </section>
-            </div>
-        </main>
-    </div>
-</x-app-layout>

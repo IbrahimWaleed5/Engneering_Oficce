@@ -125,60 +125,7 @@
     </style>
 
     <div class="office-profile-page" dir="rtl">
-        {{-- شريط علوي مطابق للتصميم المرجعي --}}
-        <header class="fixed top-0 z-50 w-full border-b border-[#424754] bg-[#0b1326]/95 backdrop-blur-xl">
-            <div class="mx-auto flex min-h-[72px] max-w-[1200px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
-                <a href="{{ $backRoute }}" class="flex min-w-0 items-center gap-3">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#424754] bg-[#171f33] text-[#adc6ff]">
-                        <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V9l6-5 6 5v12M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01"/></svg>
-                    </div>
-
-                    <div class="min-w-0">
-                        <p class="truncate text-xl font-bold tracking-tight text-[#adc6ff]">
-                            {{ $office->name }}
-                        </p>
-                        <p class="tech-font truncate text-xs text-[#c2c6d6]">
-                            ملف المكتب الهندسي
-                        </p>
-                    </div>
-                </a>
-
-                <nav class="hidden items-center gap-6 md:flex">
-                    <a href="#about" class="border-b-2 border-[#adc6ff] pb-1 text-sm font-bold text-[#adc6ff] transition hover:bg-[#222a3d]">
-                        نبذة
-                    </a>
-                    <a href="#team" class="text-sm font-bold text-[#c2c6d6] transition hover:text-[#adc6ff]">
-                        المهندسون
-                    </a>
-                    <a href="#contact" class="text-sm font-bold text-[#c2c6d6] transition hover:text-[#adc6ff]">
-                        التواصل
-                    </a>
-                </nav>
-
-                <div class="flex items-center gap-3">
-                    @if ($canRequestConsultation)
-                        <a
-                            href="{{ route('consultations.create') }}"
-                            class="hidden rounded bg-[#adc6ff] px-4 py-2 text-sm font-bold text-[#002e6a] transition hover:brightness-110 sm:inline-flex"
-                        >
-                            طلب استشارة
-                        </a>
-                    @endif
-
-                    @if (Route::has('profile.edit'))
-                        <a
-                            href="{{ route('profile.edit') }}"
-                            class="flex h-10 w-10 items-center justify-center rounded-full border border-[#424754] bg-[#171f33] text-[#c2c6d6] transition hover:border-[#adc6ff] hover:text-[#adc6ff]"
-                            title="إعدادات الحساب"
-                        >
-                            <svg class="text-[20px] shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-                        </a>
-                    @endif
-                </div>
-            </div>
-        </header>
-
-        <main class="pb-12 pt-[72px]">
+<main class="pb-12 pt-8">
             {{-- رسائل النظام --}}
             <div class="mx-auto max-w-[1200px] px-4 pt-6 sm:px-6">
                 @if (session('success'))
