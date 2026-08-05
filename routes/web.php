@@ -1015,9 +1015,7 @@ Route::middleware([
             EngineeringOfficeController::class,
             'show',
         ]
-    )
-        ->whereNumber('office')
-        ->name('engineering-offices.show');
+    )->name('engineering-offices.show');
 });
 
 /*
@@ -1037,9 +1035,7 @@ Route::middleware([
             OfficeMembershipApplicationController::class,
             'create',
         ]
-    )
-        ->whereNumber('office')
-        ->name('office-membership-applications.create');
+    )->name('office-membership-applications.create');
 
     Route::post(
         '/engineering-offices/{office}/join',
@@ -1047,9 +1043,7 @@ Route::middleware([
             OfficeMembershipApplicationController::class,
             'store',
         ]
-    )
-        ->whereNumber('office')
-        ->name('office-membership-applications.store');
+    )->name('office-membership-applications.store');
 
     Route::get(
         '/my-office-applications',
