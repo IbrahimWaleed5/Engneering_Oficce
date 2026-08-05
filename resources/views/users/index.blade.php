@@ -595,6 +595,14 @@
                                                         <p class="mt-1 text-[11px] text-[#b4c5ff]">
                                                             {{ $user->employeeProfile->specialty->name }}
                                                         </p>
+                                                    @elseif ($user->employeeProfile?->job_title)
+                                                        <p class="mt-1 text-[11px] font-bold text-cyan-300">
+                                                            {{ $user->employeeProfile->job_title }}
+                                                        </p>
+
+                                                        <p class="mt-1 text-[10px] text-[#c3c6d7]">
+                                                            {{ $user->email }}
+                                                        </p>
                                                     @else
                                                         <p class="mt-1 text-[11px] text-[#c3c6d7]">
                                                             {{ $user->email }}
@@ -609,9 +617,21 @@
                                         </td>
 
                                         <td class="px-6 py-4 text-center">
-                                            <span class="inline-flex px-3 py-1 text-[11px] font-bold border rounded-full {{ $role['class'] }}">
-                                                {{ $role['label'] }}
-                                            </span>
+                                            <div class="flex flex-col items-center gap-2">
+                                                <span class="inline-flex px-3 py-1 text-[11px] font-bold border rounded-full {{ $role['class'] }}">
+                                                    {{ $role['label'] }}
+                                                </span>
+
+                                                @if ($user->employeeProfile?->job_title)
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[10px] font-black text-cyan-300">
+                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a4 4 0 0 1 8 0v2M5 8h14v11H5V8Zm4 4h6"/>
+                                                        </svg>
+
+                                                        {{ $user->employeeProfile->job_title }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         <td class="px-6 py-4 text-center">
