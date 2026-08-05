@@ -39,6 +39,22 @@
             ? route('engineering-offices.index')
             : (Route::has('dashboard') ? route('dashboard') : url('/'));
 
+        $canEditOffice =
+            auth()->check()
+            && (
+                (int) auth()->id() === (int) $office->owner_user_id
+                || (
+                    isset($membership)
+                    && $membership
+                    && in_array(
+                        $membership->office_role,
+                        ['owner', 'manager'],
+                        true
+                    )
+                )
+            )
+            && Route::has('office.profile');
+
         $footerYear = now()->year;
     @endphp
 
@@ -265,6 +281,19 @@
                                         </div>
                                     @endif
                                 @endguest
+
+                                @if ($canEditOffice)
+                                    <a
+                                        href="{{ route('office.profile') }}"
+                                        class="inline-flex items-center gap-2 rounded bg-[#4edea3] px-5 py-3 font-bold text-[#003824] transition hover:brightness-110"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+                                        </svg>
+                                        تعديل الملف الشخصي
+                                    </a>
+                                @endif
 
                                 <a
                                     href="{{ $backRoute }}"

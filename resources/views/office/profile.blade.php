@@ -196,6 +196,50 @@
                 backdrop-filter: blur(18px);
             }
         }
+
+        .office-avatar-editor {
+            position: relative;
+            width: min(78vw, 520px);
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 50%;
+            background:
+                linear-gradient(45deg, #172033 25%, transparent 25%),
+                linear-gradient(-45deg, #172033 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #172033 75%),
+                linear-gradient(-45deg, transparent 75%, #172033 75%),
+                #0b1326;
+            background-size: 24px 24px;
+            background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+            border: 4px solid rgba(180,197,255,.35);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,.42);
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .office-avatar-editor:active {
+            cursor: grabbing;
+        }
+
+        .office-avatar-editor img {
+            position: absolute;
+            max-width: none;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+        }
+
+        .office-avatar-modal {
+            background: rgba(2,6,23,.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .office-avatar-range {
+            accent-color: #4d8eff;
+        }
+
     </style>
 
     <div
@@ -205,6 +249,7 @@
             mobileMenuOpen: false,
             logoName: '',
             coverName: '',
+            avatarEditorOpen: false,
             submitting: false
         }"
         x-init="$watch('mobileMenuOpen', value => document.body.classList.toggle('office-profile-menu-open', value))"
@@ -520,26 +565,58 @@
 
                         <div class="grid gap-8 md:grid-cols-3">
                             <div>
-                                <label class="mb-4 block text-sm font-black text-[#c3c6d7]">شعار المكتب</label>
+                                <label class="mb-4 block text-sm font-black text-[#c3c6d7]">
+                                    صورة الملف الشخصي للمكتب
+                                </label>
 
-                                <label
-                                    for="logo"
-                                    class="relative flex flex-col items-center justify-center h-56 p-6 overflow-hidden text-center cursor-pointer office-profile-upload rounded-2xl"
-                                >
-                                    @if ($office->logo_path)
-                                        <img src="{{ asset('storage/' . $office->logo_path) }}" alt="{{ $office->name }}" class="absolute inset-0 object-contain w-full h-full p-6 opacity-55">
-                                    @endif
-
-                                    <div class="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-[#222a3d] text-[#b4c5ff] shadow-lg">
-                                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                            <path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>
-                                        </svg>
+                                <div class="relative mx-auto flex h-56 w-56 items-center justify-center">
+                                    <div class="h-56 w-56 overflow-hidden rounded-full border-4 border-[#b4c5ff]/30 bg-[#171f33] shadow-[0_0_35px_rgba(37,99,235,.20)]">
+                                        @if ($office->logo_path)
+                                            <img
+                                                id="officeAvatarCurrentPreview"
+                                                src="{{ asset('storage/' . $office->logo_path) }}"
+                                                alt="{{ $office->name }}"
+                                                class="h-full w-full object-cover"
+                                            >
+                                        @else
+                                            <div id="officeAvatarEmptyPreview" class="flex h-full w-full items-center justify-center text-[#b4c5ff]">
+                                                <svg class="h-20 w-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                    <path d="M4 21h16M6 21V8l6-4 6 4v13M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
+                                                </svg>
+                                            </div>
+                                            <img
+                                                id="officeAvatarCurrentPreview"
+                                                src=""
+                                                alt=""
+                                                class="hidden h-full w-full object-cover"
+                                            >
+                                        @endif
                                     </div>
 
-                                    <span class="relative z-10 mt-4 font-black text-white">تحديث الشعار</span>
-                                    <span class="relative z-10 mt-2 text-xs text-[#8d90a0]">JPG أو PNG أو WEBP</span>
-                                    <span x-cloak x-show="logoName" x-text="logoName" class="relative z-10 mt-3 rounded-lg bg-[#b4c5ff]/10 px-3 py-2 text-xs font-black text-[#b4c5ff]"></span>
-                                </label>
+                                    <button
+                                        type="button"
+                                        id="openOfficeAvatarEditor"
+                                        class="absolute bottom-2 left-2 flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#131b2e] bg-[#4d8eff] text-[#00285d] shadow-xl transition hover:scale-105 hover:brightness-110"
+                                        aria-label="تعديل صورة المكتب"
+                                        title="تعديل صورة المكتب"
+                                    >
+                                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <p class="mt-4 text-center text-sm leading-7 text-[#8d90a0]">
+                                    اختر الصورة ثم حرّكها وكبّرها وحدد الجزء الذي سيظهر، مثل نظام فيسبوك.
+                                </p>
+
+                                <input
+                                    id="logoSourceInput"
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    class="hidden"
+                                >
 
                                 <input
                                     id="logo"
@@ -547,13 +624,12 @@
                                     type="file"
                                     accept=".jpg,.jpeg,.png,.webp"
                                     class="hidden"
-                                    @change="logoName = $event.target.files[0]?.name || ''"
                                 >
 
                                 @if ($office->logo_path)
-                                    <label class="flex items-center gap-2 mt-3 text-sm text-red-200">
+                                    <label class="mt-4 flex items-center justify-center gap-2 text-sm text-red-200">
                                         <input type="checkbox" name="remove_logo" value="1" class="rounded border-[#434655] bg-[#0b1326] text-red-500 focus:ring-red-500">
-                                        حذف الشعار الحالي
+                                        حذف الصورة الحالية
                                     </label>
                                 @endif
                             </div>
@@ -705,5 +781,353 @@
                 </form>
             </div>
         </main>
+
+        {{-- محرر صورة الملف الشخصي مثل فيسبوك --}}
+        <div
+            id="officeAvatarEditorModal"
+            class="office-avatar-modal fixed inset-0 z-[120] hidden items-center justify-center overflow-y-auto p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="officeAvatarEditorTitle"
+        >
+            <div class="w-full max-w-2xl rounded-3xl border border-[#b4c5ff]/20 bg-[#131b2e] p-5 shadow-2xl sm:p-7">
+                <div class="mb-6 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
+                    <div>
+                        <h2 id="officeAvatarEditorTitle" class="text-2xl font-black text-white">
+                            تعديل صورة الملف الشخصي
+                        </h2>
+                        <p class="mt-2 text-sm text-[#8d90a0]">
+                            اسحب الصورة لتغيير مكانها، واستخدم شريط التكبير لتحديد الجزء الظاهر.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="closeOfficeAvatarEditor"
+                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+                        aria-label="إغلاق"
+                    >
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 6l12 12M18 6 6 18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex justify-center overflow-hidden py-3">
+                    <div id="officeAvatarEditor" class="office-avatar-editor">
+                        <img id="officeAvatarEditorImage" src="" alt="معاينة صورة المكتب">
+                    </div>
+                </div>
+
+                <div class="mt-7">
+                    <div class="mb-2 flex items-center justify-between text-sm font-bold text-[#c3c6d7]">
+                        <span>تصغير</span>
+                        <span>تكبير</span>
+                    </div>
+
+                    <input
+                        id="officeAvatarZoom"
+                        type="range"
+                        min="1"
+                        max="3"
+                        step="0.01"
+                        value="1"
+                        class="office-avatar-range h-2 w-full cursor-pointer"
+                    >
+                </div>
+
+                <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button
+                        type="button"
+                        id="cancelOfficeAvatarEditor"
+                        class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-black text-white transition hover:bg-white/10"
+                    >
+                        إلغاء
+                    </button>
+
+                    <button
+                        type="button"
+                        id="saveOfficeAvatarCrop"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-[#b4c5ff] to-[#4d8eff] px-6 py-3 font-black text-[#00174b] shadow-[0_0_20px_rgba(37,99,235,.35)] transition hover:-translate-y-0.5"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 4h11l3 3v13H5V4Z"/>
+                            <path d="M8 4v6h8V4M9 20v-6h6v6"/>
+                        </svg>
+                        حفظ موضع الصورة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById('officeAvatarEditorModal');
+                const openButton = document.getElementById('openOfficeAvatarEditor');
+                const closeButton = document.getElementById('closeOfficeAvatarEditor');
+                const cancelButton = document.getElementById('cancelOfficeAvatarEditor');
+                const saveButton = document.getElementById('saveOfficeAvatarCrop');
+                const sourceInput = document.getElementById('logoSourceInput');
+                const finalInput = document.getElementById('logo');
+                const editor = document.getElementById('officeAvatarEditor');
+                const image = document.getElementById('officeAvatarEditorImage');
+                const zoomInput = document.getElementById('officeAvatarZoom');
+                const preview = document.getElementById('officeAvatarCurrentPreview');
+                const emptyPreview = document.getElementById('officeAvatarEmptyPreview');
+
+                if (
+                    !modal || !openButton || !sourceInput || !finalInput
+                    || !editor || !image || !zoomInput || !saveButton
+                ) {
+                    return;
+                }
+
+                let sourceUrl = null;
+                let naturalWidth = 0;
+                let naturalHeight = 0;
+                let baseScale = 1;
+                let zoom = 1;
+                let offsetX = 0;
+                let offsetY = 0;
+                let dragging = false;
+                let startX = 0;
+                let startY = 0;
+                let startOffsetX = 0;
+                let startOffsetY = 0;
+
+                const editorSize = () => editor.clientWidth;
+
+                const clampOffsets = () => {
+                    const size = editorSize();
+                    const renderedWidth = naturalWidth * baseScale * zoom;
+                    const renderedHeight = naturalHeight * baseScale * zoom;
+                    const minX = Math.min(0, size - renderedWidth);
+                    const minY = Math.min(0, size - renderedHeight);
+
+                    offsetX = Math.min(0, Math.max(minX, offsetX));
+                    offsetY = Math.min(0, Math.max(minY, offsetY));
+                };
+
+                const render = () => {
+                    clampOffsets();
+
+                    image.style.width =
+                        (naturalWidth * baseScale * zoom) + 'px';
+                    image.style.height =
+                        (naturalHeight * baseScale * zoom) + 'px';
+                    image.style.left = offsetX + 'px';
+                    image.style.top = offsetY + 'px';
+                };
+
+                const centerImage = () => {
+                    const size = editorSize();
+                    const renderedWidth = naturalWidth * baseScale * zoom;
+                    const renderedHeight = naturalHeight * baseScale * zoom;
+
+                    offsetX = (size - renderedWidth) / 2;
+                    offsetY = (size - renderedHeight) / 2;
+
+                    render();
+                };
+
+                const openModal = () => {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+                };
+
+                const closeModal = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                };
+
+                openButton.addEventListener('click', function () {
+                    sourceInput.click();
+                });
+
+                sourceInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+
+                    if (!file) {
+                        return;
+                    }
+
+                    if (!file.type.startsWith('image/')) {
+                        alert('يرجى اختيار ملف صورة صالح.');
+                        this.value = '';
+                        return;
+                    }
+
+                    if (sourceUrl) {
+                        URL.revokeObjectURL(sourceUrl);
+                    }
+
+                    sourceUrl = URL.createObjectURL(file);
+                    image.onload = function () {
+                        naturalWidth = image.naturalWidth;
+                        naturalHeight = image.naturalHeight;
+
+                        const size = editorSize();
+                        baseScale = Math.max(
+                            size / naturalWidth,
+                            size / naturalHeight
+                        );
+
+                        zoom = 1;
+                        zoomInput.value = '1';
+                        centerImage();
+                        openModal();
+                    };
+
+                    image.src = sourceUrl;
+                });
+
+                zoomInput.addEventListener('input', function () {
+                    const size = editorSize();
+                    const previousRenderedWidth =
+                        naturalWidth * baseScale * zoom;
+                    const previousRenderedHeight =
+                        naturalHeight * baseScale * zoom;
+                    const centerRatioX =
+                        (size / 2 - offsetX) / previousRenderedWidth;
+                    const centerRatioY =
+                        (size / 2 - offsetY) / previousRenderedHeight;
+
+                    zoom = Number(this.value);
+
+                    const newRenderedWidth =
+                        naturalWidth * baseScale * zoom;
+                    const newRenderedHeight =
+                        naturalHeight * baseScale * zoom;
+
+                    offsetX = size / 2 - centerRatioX * newRenderedWidth;
+                    offsetY = size / 2 - centerRatioY * newRenderedHeight;
+
+                    render();
+                });
+
+                const pointerDown = (event) => {
+                    dragging = true;
+                    editor.setPointerCapture(event.pointerId);
+                    startX = event.clientX;
+                    startY = event.clientY;
+                    startOffsetX = offsetX;
+                    startOffsetY = offsetY;
+                };
+
+                const pointerMove = (event) => {
+                    if (!dragging) {
+                        return;
+                    }
+
+                    offsetX = startOffsetX + event.clientX - startX;
+                    offsetY = startOffsetY + event.clientY - startY;
+                    render();
+                };
+
+                const pointerUp = (event) => {
+                    dragging = false;
+
+                    if (editor.hasPointerCapture(event.pointerId)) {
+                        editor.releasePointerCapture(event.pointerId);
+                    }
+                };
+
+                editor.addEventListener('pointerdown', pointerDown);
+                editor.addEventListener('pointermove', pointerMove);
+                editor.addEventListener('pointerup', pointerUp);
+                editor.addEventListener('pointercancel', pointerUp);
+
+                const createCroppedFile = async () => {
+                    const outputSize = 900;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = outputSize;
+                    canvas.height = outputSize;
+
+                    const context = canvas.getContext('2d');
+                    const size = editorSize();
+                    const scaleToCanvas = outputSize / size;
+
+                    context.imageSmoothingEnabled = true;
+                    context.imageSmoothingQuality = 'high';
+
+                    context.drawImage(
+                        image,
+                        offsetX * scaleToCanvas,
+                        offsetY * scaleToCanvas,
+                        naturalWidth * baseScale * zoom * scaleToCanvas,
+                        naturalHeight * baseScale * zoom * scaleToCanvas
+                    );
+
+                    const blob = await new Promise((resolve) => {
+                        canvas.toBlob(resolve, 'image/jpeg', 0.92);
+                    });
+
+                    if (!blob) {
+                        throw new Error('تعذر تجهيز الصورة.');
+                    }
+
+                    return new File(
+                        [blob],
+                        'office-profile-' + Date.now() + '.jpg',
+                        { type: 'image/jpeg' }
+                    );
+                };
+
+                saveButton.addEventListener('click', async function () {
+                    try {
+                        saveButton.disabled = true;
+                        saveButton.classList.add('opacity-60');
+
+                        const croppedFile = await createCroppedFile();
+                        const transfer = new DataTransfer();
+                        transfer.items.add(croppedFile);
+                        finalInput.files = transfer.files;
+
+                        const previewUrl = URL.createObjectURL(croppedFile);
+                        preview.src = previewUrl;
+                        preview.classList.remove('hidden');
+
+                        if (emptyPreview) {
+                            emptyPreview.classList.add('hidden');
+                        }
+
+                        closeModal();
+                    } catch (error) {
+                        alert(error.message || 'حدث خطأ أثناء تجهيز الصورة.');
+                    } finally {
+                        saveButton.disabled = false;
+                        saveButton.classList.remove('opacity-60');
+                    }
+                });
+
+                closeButton?.addEventListener('click', closeModal);
+                cancelButton?.addEventListener('click', closeModal);
+
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                        closeModal();
+                    }
+                });
+
+                window.addEventListener('resize', function () {
+                    if (!modal.classList.contains('hidden') && naturalWidth) {
+                        baseScale = Math.max(
+                            editorSize() / naturalWidth,
+                            editorSize() / naturalHeight
+                        );
+                        centerImage();
+                    }
+                });
+            });
+        </script>
+
     </div>
 </x-app-layout>
