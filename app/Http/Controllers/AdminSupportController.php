@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class AdminSupportController extends Controller
 {
@@ -103,59 +104,79 @@ class AdminSupportController extends Controller
         );
     }
 
-    public function settings(Request $request): View
-    {
-        $this->authorizeAdmin($request);
-
-        $setting = SupportSetting::current();
-
-        $employees = User::query()
-            ->where('role', 'employee')
-            ->where('status', 'active')
-            ->whereHas(
-                'employeeProfile',
-                fn (Builder $query) =>
-                    $query->where('job_title', 'دعم فني')
-            )
-            ->orderBy('name')
-            ->get([
-                'id',
-                'name',
-                'email',
-                'role',
-                'status',
-            ]);
-
-        return view(
-            'admin.support.settings',
-            compact('setting', 'employees')
-        );
-    }
-
+   public function settings(Request $request): View
+{
+    $this->authorizeAdmin($request);
+    $setting = SupportSetting::current();
+    $employees = User::query()
+        ->where('status', 'active')
+        ->whereKeyNot($request->user()->id)
+        ->orderBy('name')
+        ->get([
+            'id',
+            'name',
+            'email',
+            'role',
+            'status',
+        ]);
+    return view(
+        'admin.support.settings',
+        compact('setting', 'employees')
+    );
+}
     public function updateSettings(
-        Request $request
-    ): RedirectResponse {
-        $this->authorizeAdmin($request);
+    Request $request
+): RedirectResponse {
+    $this->authorizeAdmin($request);
 
-        $validated = $request->validate([
-            'support_employee_id' => [
-                'required',
-                'exists:users,id',
-            ],
+    $validated = $request->validate([
+        'support_employee_id' => [
+            'required',
+            'exists:users,id',
+        ],
+    ]);
+
+    $employee = User::query()
+        ->with('employeeProfile')
+        ->whereKey(
+            $validated['support_employee_id']
+        )
+        ->firstOrFail();
+
+    DB::transaction(function () use (
+        $request,
+        $employee
+    ) {
+        /*
+        |--------------------------------------------------------------------------
+        | تحويل الحساب المختار إلى موظف دعم فني
+        |--------------------------------------------------------------------------
+        */
+
+        $employee->update([
+            'role' => 'employee',
+            'status' => 'active',
         ]);
 
-        $employee = User::query()
-            ->whereKey(
-                $validated['support_employee_id']
-            )
-            ->where('role', 'employee')
-            ->where('status', 'active')
-            ->whereHas(
-                'employeeProfile',
-                fn (Builder $query) =>
-                    $query->where('job_title', 'دعم فني')
-            )
-            ->firstOrFail();
+        $employee->employeeProfile()->updateOrCreate(
+            [
+                'user_id' => $employee->id,
+            ],
+            [
+                'employee_number' => sprintf(
+                    'EMP-%06d',
+                    $employee->id
+                ),
+                'job_title' => 'دعم فني',
+                'salary' =>
+                    $employee->employeeProfile?->salary ?? 0,
+                'hire_date' =>
+                    $employee->employeeProfile?->hire_date
+                    ?? now()->toDateString(),
+                'specialty_id' =>
+                    $employee->employeeProfile?->specialty_id,
+            ]
+        );
 
         $setting = SupportSetting::current();
 
@@ -166,6 +187,12 @@ class AdminSupportController extends Controller
             'support_employee_id' => $employee->id,
             'updated_by' => $request->user()->id,
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | نقل التذاكر المفتوحة من موظف الدعم السابق
+        |--------------------------------------------------------------------------
+        */
 
         if (
             $oldEmployeeId
@@ -189,12 +216,13 @@ class AdminSupportController extends Controller
                         $employee->id,
                 ]);
         }
+    });
 
-        return back()->with(
-            'success',
-            'تم تعيين موظف الدعم الفني بنجاح.'
-        );
-    }
+    return back()->with(
+        'success',
+        'تم تعيين الحساب كموظف دعم فني وتحديث صلاحياته بنجاح.'
+    );
+}
 
     private function authorizeAdmin(
         Request $request
