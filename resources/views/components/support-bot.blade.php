@@ -493,6 +493,14 @@ document.addEventListener('DOMContentLoaded', function () {
         panel.setAttribute('aria-hidden', 'true');
     }
 
+    window.openSupportBot = openPanel;
+    window.closeSupportBot = closePanel;
+
+    window.addEventListener(
+        'open-support-bot',
+        openPanel
+    );
+
     function clearMessages() {
         messagesContainer.innerHTML = '';
     }

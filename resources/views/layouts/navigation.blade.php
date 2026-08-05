@@ -932,17 +932,31 @@
                     closeMobileMenu();
 
                     window.setTimeout(function () {
-                        const supportToggle = document.getElementById('supportBotToggle');
-
-                        if (supportToggle) {
-                            supportToggle.click();
+                        if (typeof window.openSupportBot === 'function') {
+                            window.openSupportBot();
                             return;
                         }
+
+                        const supportPanel =
+                            document.getElementById('supportBotPanel');
+
+                        const supportToggle =
+                            document.getElementById('supportBotToggle');
+
+                        if (supportPanel) {
+                            supportPanel.classList.add('is-open');
+                            supportPanel.setAttribute(
+                                'aria-hidden',
+                                'false'
+                            );
+                        }
+
+                        supportToggle?.click();
 
                         window.dispatchEvent(
                             new CustomEvent('open-support-bot')
                         );
-                    }, 200);
+                    }, 350);
                 });
             });
 
