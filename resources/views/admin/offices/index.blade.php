@@ -475,12 +475,46 @@
                                     </div>
                                 </div>
 
-                                <a
-                                    href="{{ route('admin.offices.show', $office) }}"
-                                    class="inline-flex items-center justify-center w-full px-5 py-3 mt-6 font-black text-[#00174b] transition rounded-xl bg-[#b4c5ff] hover:bg-[#dbe1ff]"
-                                >
-                                    إدارة المكتب
-                                </a>
+                                <div class="grid grid-cols-1 gap-3 mt-6 sm:grid-cols-2">
+                                    @if ($office->owner_user_id && Route::has('engineers.show'))
+                                        <a
+                                            href="{{ route('engineers.show', $office->owner_user_id) }}"
+                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition rounded-xl bg-gradient-to-l from-violet-600 to-blue-600 hover:brightness-110"
+                                        >
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                <circle cx="12" cy="8" r="4"/>
+                                                <path d="M4 21a8 8 0 0 1 16 0"/>
+                                            </svg>
+
+                                            عرض الملف الشخصي
+                                        </a>
+                                    @else
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black border cursor-not-allowed text-slate-400 rounded-xl border-white/10 bg-white/5"
+                                            title="لا يوجد مالك مرتبط بهذا المكتب"
+                                        >
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                                <circle cx="12" cy="8" r="4"/>
+                                                <path d="M4 21a8 8 0 0 1 16 0"/>
+                                            </svg>
+
+                                            لا يوجد ملف شخصي
+                                        </button>
+                                    @endif
+
+                                    <a
+                                        href="{{ route('admin.offices.show', $office) }}"
+                                        class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-[#00174b] transition rounded-xl bg-[#b4c5ff] hover:bg-[#dbe1ff]"
+                                    >
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                            <path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-6h6v6"/>
+                                        </svg>
+
+                                        معلومات المكتب
+                                    </a>
+                                </div>
                             </div>
                         </article>
                     @empty
