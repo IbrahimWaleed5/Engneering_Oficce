@@ -1,8 +1,5 @@
 <x-app-layout>
-@push('styles')
-@endpush
-
-    <style>
+<style>
         .join-office-page {
             --primary: #3b82f6;
             --surface: #0b1326;
@@ -63,7 +60,7 @@
     </style>
 
     <div class="join-office-page" dir="rtl">
-<main class="flex flex-grow justify-center px-4 py-10 sm:px-6 lg:px-8">
+        <main class="flex flex-grow justify-center px-4 py-10 sm:px-6 lg:px-8">
             <div class="w-full max-w-3xl">
 
                 @if (session('error'))
@@ -303,3 +300,8 @@
                             </button>
                         </div>
                     </form>
+                </section>
+            </div>
+        </main>
+    </div>
+</x-app-layout>
