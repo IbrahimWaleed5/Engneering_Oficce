@@ -549,16 +549,32 @@ class PaymentController extends Controller
     }
 
     /**
-     * العميل وحده يستطيع رفع دفعة لاستشارته.
+     * يسمح لصاحب الاستشارة برفع الدفعة سواء كان
+     * عميلًا أو مهندسًا، ويسمح للمدير بالدخول لأي استشارة.
      */
     private function authorizeCustomerConsultation(
         Request $request,
         Consultation $consultation
     ): void {
+        $user = $request->user();
+
         abort_unless(
-            $request->user()->role === 'customer'
-            && (int) $consultation->customer_id
-                === (int) $request->user()->id,
+            $user !== null
+            && (
+                $user->role === 'admin'
+                || (
+                    in_array(
+                        $user->role,
+                        [
+                            'customer',
+                            'engineer',
+                        ],
+                        true
+                    )
+                    && (int) $consultation->customer_id
+                        === (int) $user->id
+                )
+            ),
             403
         );
     }
