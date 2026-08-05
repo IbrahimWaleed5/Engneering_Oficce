@@ -475,45 +475,46 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 gap-3 mt-6 sm:grid-cols-2">
-                                    @if ($office->owner_user_id && Route::has('engineers.show'))
-                                        <a
-                                            href="{{ route('engineers.show', $office->owner_user_id) }}"
-                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-white transition rounded-xl bg-gradient-to-l from-violet-600 to-blue-600 hover:brightness-110"
-                                        >
-                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                                                <circle cx="12" cy="8" r="4"/>
-                                                <path d="M4 21a8 8 0 0 1 16 0"/>
-                                            </svg>
+                                @php
+                                    $currentUser = auth()->user();
 
-                                            عرض الملف الشخصي للمكتب
-                                        </a>
-                                    @else
-                                        <button
-                                            type="button"
-                                            disabled
-                                            class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black border cursor-not-allowed text-slate-400 rounded-xl border-white/10 bg-white/5"
-                                            title="لا يوجد مالك مرتبط بهذا المكتب"
-                                        >
-                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                                                <circle cx="12" cy="8" r="4"/>
-                                                <path d="M4 21a8 8 0 0 1 16 0"/>
-                                            </svg>
+                                    $isOfficeOwner =
+                                        $currentUser
+                                        && $currentUser->role === 'office_owner'
+                                        && (int) $currentUser->id === (int) $office->owner_user_id;
 
-                                            لا يوجد ملف شخصي
-                                        </button>
-                                    @endif
+                                    $canViewOfficeProfile =
+                                        $currentUser
+                                        && in_array(
+                                            $currentUser->role,
+                                            ['admin', 'engineer'],
+                                            true
+                                        );
+                                @endphp
 
+                                @if ($isOfficeOwner)
                                     <a
-                                        href="{{ route('admin.offices.show', $office) }}"
-                                        class="inline-flex items-center justify-center gap-2 px-5 py-3 font-black text-[#00174b] transition rounded-xl bg-[#b4c5ff] hover:bg-[#dbe1ff]"
+                                        href="{{ route('office.profile') }}"
+                                        class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-6 font-black text-[#00174b] transition rounded-xl bg-[#b4c5ff] hover:bg-[#dbe1ff]"
                                     >
                                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
                                             <path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-6h6v6"/>
                                         </svg>
-                                        معلومات المكتب
+
+                                        إدارة المكتب
                                     </a>
-                                </div>
+                                @elseif ($canViewOfficeProfile)
+                                    <a
+                                        href="{{ route('engineering-offices.show', $office) }}"
+                                        class="inline-flex items-center justify-center w-full gap-2 px-5 py-3 mt-6 font-black text-white transition rounded-xl bg-gradient-to-l from-violet-600 to-blue-600 hover:brightness-110"
+                                    >
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                                            <path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-6h6v6"/>
+                                        </svg>
+
+                                        عرض الملف الشخصي
+                                    </a>
+                                @endif
                             </div>
                         </article>
                     @empty

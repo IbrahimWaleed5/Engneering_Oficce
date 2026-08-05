@@ -990,10 +990,16 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| عرض الملفات الشخصية للمكاتب — المدير والمهندسون
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware([
     'auth',
     'verified',
-    'role:engineer',
+    'role:admin,engineer',
 ])->group(function () {
     Route::get(
         '/engineering-offices',
@@ -1009,15 +1015,31 @@ Route::middleware([
             EngineeringOfficeController::class,
             'show',
         ]
-    )->name('engineering-offices.show');
+    )
+        ->whereNumber('office')
+        ->name('engineering-offices.show');
+});
 
+/*
+|--------------------------------------------------------------------------
+| طلبات انضمام المهندسين إلى المكاتب — المهندس فقط
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:engineer',
+])->group(function () {
     Route::get(
         '/engineering-offices/{office}/join',
         [
             OfficeMembershipApplicationController::class,
             'create',
         ]
-    )->name('office-membership-applications.create');
+    )
+        ->whereNumber('office')
+        ->name('office-membership-applications.create');
 
     Route::post(
         '/engineering-offices/{office}/join',
@@ -1025,7 +1047,9 @@ Route::middleware([
             OfficeMembershipApplicationController::class,
             'store',
         ]
-    )->name('office-membership-applications.store');
+    )
+        ->whereNumber('office')
+        ->name('office-membership-applications.store');
 
     Route::get(
         '/my-office-applications',
