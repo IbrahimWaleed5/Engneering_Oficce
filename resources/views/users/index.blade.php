@@ -7,6 +7,10 @@
                 'label' => 'مدير',
                 'class' => 'bg-[#d2bbff]/10 text-[#d2bbff] border-[#d2bbff]/20',
             ],
+            'office_owner' => [
+                'label' => 'مالك مكتب',
+                'class' => 'bg-cyan-500/10 text-cyan-300 border-cyan-400/20',
+            ],
             'engineer' => [
                 'label' => 'مهندس',
                 'class' => 'bg-[#b4c5ff]/10 text-[#b4c5ff] border-[#b4c5ff]/20',
@@ -478,6 +482,7 @@
                                 <option value="engineer" @selected(request('role') === 'engineer')>مهندس</option>
                                 <option value="customer" @selected(request('role') === 'customer')>عميل</option>
                                 <option value="employee" @selected(request('role') === 'employee')>موظف</option>
+                                <option value="office_owner" @selected(request('role') === 'office_owner')>مالك مكتب</option>
                                 <option value="admin" @selected(request('role') === 'admin')>مدير</option>
                             </select>
                         </div>
@@ -630,12 +635,8 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center justify-center gap-2">
                                                 @if (
-                                                    $user->id !== auth()->id()
-                                                    && in_array(
-                                                        $user->role,
-                                                        ['engineer', 'customer', 'employee'],
-                                                        true
-                                                    )
+                                                    auth()->user()->role === 'admin'
+                                                    && $user->id !== auth()->id()
                                                 )
                                                     <form
                                                         method="POST"
@@ -647,7 +648,7 @@
                                                         <button
                                                             type="submit"
                                                             class="flex items-center justify-center w-8 h-8 text-green-400 transition rounded-lg bg-green-500/10 hover:bg-green-500/20"
-                                                            title="محادثة"
+                                                            title="بدء محادثة فورية مع {{ $user->name }}"
                                                         >
                                                             <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
                                                                 <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
