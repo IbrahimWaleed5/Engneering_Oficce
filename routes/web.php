@@ -265,7 +265,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
-    'role:customer,admin',
+    'role:customer,engineer,admin',
 ])->group(function () {
     Route::get('/consultations/{consultation}/payment', [
         PaymentController::class,
