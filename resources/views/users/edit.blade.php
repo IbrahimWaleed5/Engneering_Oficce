@@ -127,9 +127,22 @@
         x-data="{
             mobileMenuOpen: false,
             role: @js(old('role', $user->role)),
+            jobTitle: @js(old('job_title', $user->employeeProfile?->job_title)),
             ownerAction: @js(old('office_owner_action', 'keep'))
         }"
-        x-init="$watch('mobileMenuOpen', value => document.body.classList.toggle('users-edit-menu-open', value))"
+        x-init="
+            $watch('mobileMenuOpen', value => document.body.classList.toggle('users-edit-menu-open', value));
+
+            $watch('jobTitle', value => {
+                if (
+                    value
+                    && value.trim() !== ''
+                    && role === 'customer'
+                ) {
+                    role = 'employee';
+                }
+            });
+        "
         @keydown.escape.window="mobileMenuOpen = false"
     >
         {{-- شريط الجوال --}}
@@ -370,7 +383,19 @@
                                     <div class="grid gap-5 md:grid-cols-3">
                                         <div>
                                             <label for="job_title" class="block mb-2 text-sm font-bold text-slate-200">المسمى الوظيفي</label>
-                                            <input id="job_title" name="job_title" type="text" value="{{ old('job_title', $user->employeeProfile?->job_title) }}" class="users-edit-input">
+                                            <input
+                                                id="job_title"
+                                                name="job_title"
+                                                type="text"
+                                                value="{{ old('job_title', $user->employeeProfile?->job_title) }}"
+                                                x-model="jobTitle"
+                                                placeholder="مثال: دعم فني"
+                                                class="users-edit-input"
+                                            >
+
+                                            <p class="mt-2 text-[11px] leading-6 text-cyan-200/80">
+                                                عند كتابة مسمى وظيفي لمستخدم دوره عميل، سيتم تحويل دوره تلقائيًا إلى موظف.
+                                            </p>
                                         </div>
 
                                         <div>
@@ -522,7 +547,16 @@
                                 <div class="mt-5 space-y-4">
                                     <div class="p-4 rounded-2xl users-edit-panel">
                                         <p class="text-xs text-[#8d90a0]">الدور الحالي</p>
-                                        <p class="mt-2 font-black text-white">{{ $user->role }}</p>
+                                        <p
+                                            class="mt-2 font-black text-white"
+                                            x-text="{
+                                                admin: 'مدير النظام',
+                                                office_owner: 'مالك مكتب',
+                                                engineer: 'مهندس',
+                                                employee: 'موظف',
+                                                customer: 'عميل'
+                                            }[role] ?? role"
+                                        ></p>
                                     </div>
 
                                     <div class="p-4 rounded-2xl users-edit-panel">
