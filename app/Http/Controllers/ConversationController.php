@@ -157,127 +157,108 @@ class ConversationController extends Controller
     |
     */
 
-    public function startDirect(
-        Request $request,
-        User $user
-    ): RedirectResponse {
-        $admin = $request->user();
+public function startDirect(
+    Request $request,
+    User $user
+): RedirectResponse {
+    $admin = $request->user();
 
-        $this->authorize(
-            'createDirect',
-            Conversation::class
-        );
+    $this->authorize(
+        'createDirect',
+        Conversation::class
+    );
 
-        abort_if(
-            (int) $admin->id === (int) $user->id,
-            422,
-            'لا يمكنك بدء محادثة مع نفسك.'
-        );
+    abort_if(
+        (int) $admin->id === (int) $user->id,
+        422,
+        'لا يمكنك بدء محادثة مع نفسك.'
+    );
 
-        abort_if(
-            $user->role === 'admin',
-            422,
-            'لا يمكن بدء هذه المحادثة من هنا.'
-        );
+    abort_unless(
+        in_array(
+            $user->role,
+            [
+                'admin',
+                'office_owner',
+                'engineer',
+                'customer',
+                'employee',
+            ],
+            true
+        ),
+        422,
+        'نوع المستخدم غير مسموح به.'
+    );
 
-        abort_unless(
-            in_array(
-                $user->role,
-                [
-                    'engineer',
-                    'customer',
-                    'employee',
-                ],
-                true
-            ),
-            422,
-            'نوع المستخدم غير مسموح به.'
-        );
+    $conversation = DB::transaction(
+        function () use ($admin, $user) {
+            $existingConversation = Conversation::query()
+                ->where('type', 'direct')
+                ->whereNull('consultation_id')
+                ->whereHas(
+                    'participants',
+                    fn ($query) =>
+                        $query->where(
+                            'users.id',
+                            $admin->id
+                        )
+                )
+                ->whereHas(
+                    'participants',
+                    fn ($query) =>
+                        $query->where(
+                            'users.id',
+                            $user->id
+                        )
+                )
+                ->withCount('participants')
+                ->get()
+                ->first(
+                    fn (Conversation $conversation) =>
+                        (int) $conversation->participants_count === 2
+                );
 
-        $conversation = DB::transaction(
-            function () use ($admin, $user) {
-                /*
-                |--------------------------------------------------------------------------
-                | البحث عن محادثة مباشرة موجودة
-                |--------------------------------------------------------------------------
-                |
-                | نتحقق أن المحادثة تحتوي المدير والمستخدم المطلوب فقط.
-                |
-                */
+            if ($existingConversation) {
+                return $existingConversation;
+            }
 
-                $existingConversation = Conversation::query()
-                    ->where('type', 'direct')
-                    ->whereNull('consultation_id')
-                    ->whereHas(
-                        'participants',
-                        fn ($query) =>
-                            $query->where(
-                                'users.id',
-                                $admin->id
-                            )
-                    )
-                    ->whereHas(
-                        'participants',
-                        fn ($query) =>
-                            $query->where(
-                                'users.id',
-                                $user->id
-                            )
-                    )
-                    ->withCount('participants')
-                    ->get()
-                    ->first(
-                        fn (Conversation $conversation) =>
-                            (int) $conversation->participants_count === 2
-                    );
+            $conversation = Conversation::create([
+                'type' => 'direct',
+                'consultation_id' => null,
+                'created_by' => $admin->id,
+                'last_message_at' => null,
+            ]);
 
-                if ($existingConversation) {
-                    return $existingConversation;
-                }
+            $conversation
+                ->participants()
+                ->attach([
+                    $admin->id => [
+                        'last_read_at' => now(),
+                        'is_muted' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
 
-                /*
-                |--------------------------------------------------------------------------
-                | إنشاء محادثة جديدة
-                |--------------------------------------------------------------------------
-                */
-
-                $conversation = Conversation::create([
-                    'type' => 'direct',
-                    'consultation_id' => null,
-                    'created_by' => $admin->id,
-                    'last_message_at' => null,
+                    $user->id => [
+                        'last_read_at' => null,
+                        'is_muted' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
                 ]);
 
-                $conversation
-                    ->participants()
-                    ->attach([
-                        $admin->id => [
-                            'last_read_at' => now(),
-                            'is_muted' => false,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ],
+            return $conversation;
+        }
+    );
 
-                        $user->id => [
-                            'last_read_at' => null,
-                            'is_muted' => false,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ],
-                    ]);
-
-                return $conversation;
-            }
+    return redirect()
+        ->route(
+            'conversations.show',
+            $conversation
+        )
+        ->with(
+            'success',
+            'تم فتح المحادثة بنجاح.'
         );
-
-        return redirect()
-            ->route(
-                'conversations.show',
-                $conversation
-            )
-            ->with(
-                'success',
-                'تم فتح المحادثة بنجاح.'
-            );
-    }
+}
 }
