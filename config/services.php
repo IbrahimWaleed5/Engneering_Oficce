@@ -52,27 +52,35 @@ return [
     */
 
     'gemini' => [
-        'api_key' => env('GEMINI_API_KEY'),
+    'api_key' => env('GEMINI_API_KEY'),
 
-        'enabled' => filter_var(
-            env('GEMINI_ENABLED', false),
-            FILTER_VALIDATE_BOOL
-        ),
+    'enabled' => filter_var(
+        env('GEMINI_ENABLED', false),
+        FILTER_VALIDATE_BOOL
+    ),
 
-        'model' => env(
+    'model' => env(
+        'GEMINI_MODEL',
+        'gemini-3.1-flash-lite'
+    ),
+
+    'moderation_model' => env(
+        'GEMINI_MODERATION_MODEL',
+        env(
             'GEMINI_MODEL',
-            'gemini-2.5-flash'
-        ),
+            'gemini-3.1-flash-lite'
+        )
+    ),
 
-        'timeout' => (int) env(
-            'GEMINI_TIMEOUT',
-            45
-        ),
+    'timeout' => (int) env(
+        'GEMINI_TIMEOUT',
+        45
+    ),
 
-        'max_output_tokens' => (int) env(
-            'GEMINI_MAX_OUTPUT_TOKENS',
-            500
-        ),
-    ],
+    'max_output_tokens' => (int) env(
+        'GEMINI_MAX_OUTPUT_TOKENS',
+        500
+    ),
+],
 
 ];

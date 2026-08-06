@@ -10,9 +10,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use App\Services\UniversalContentModerationService;
 
 class ConversationMessageController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | إرسال رسالة
@@ -113,6 +119,53 @@ class ConversationMessageController extends Controller
                     'conversation' =>
                         'لا يمكن إرسال رسائل قبل تأكيد دفع الاستشارة.',
                 ]);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص النص قبل حفظ الرسالة
+        |--------------------------------------------------------------------------
+        |
+        | في هذه المرحلة نفحص النصوص فقط. فحص الصور والملفات والصوت
+        | سيُربط لاحقًا بخدمة منفصلة للمرفقات.
+        |
+        */
+
+        $messageText = trim(
+            (string) ($validated['message'] ?? '')
+        );
+
+        if ($messageText !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $messageText,
+                    sourceType: 'conversation_message',
+                    sourceId: null,
+                    context: [
+                        'conversation_type' =>
+                            $conversation->type,
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'blocked' => true,
+                    'decision' =>
+                        $moderationResult['decision'],
+                    'risk_level' =>
+                        $moderationResult['risk_level'],
+                    'category' =>
+                        $moderationResult['category'],
+                    'warning_issued' =>
+                        $moderationResult['warning_issued'],
+                    'account_suspended' =>
+                        $moderationResult['account_suspended'],
+                    'message' =>
+                        $moderationResult['user_message'],
+                ], 422);
             }
         }
 
