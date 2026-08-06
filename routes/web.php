@@ -1458,7 +1458,12 @@ Route::middleware([
             ]
         )->name('appeal.cancel');
     });
-    Route::prefix('admin/moderation-appeals')
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin/moderation-appeals')
     ->name('admin.moderation-appeals.')
     ->group(function () {
         Route::get(
