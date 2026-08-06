@@ -157,7 +157,7 @@
             @endif
 
             {{-- بطاقات الوصول السريع --}}
-            <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
                 <a
                     href="{{ route('office.consultations.index') }}"
                     class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-blue-500"
@@ -246,6 +246,42 @@
 
                     <p class="mt-2 text-sm leading-6 text-slate-400">
                         تعديل معلومات المكتب وبيانات التواصل.
+                    </p>
+                </a>
+
+                {{-- تذاكر الدعم الفني --}}
+                <a
+                    href="{{ route('support.index') }}"
+                    class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-rose-500"
+                >
+                    <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-rose-600/20">
+                        🎧
+                    </div>
+
+                    <h2 class="text-lg font-bold text-white">
+                        الدعم الفني
+                    </h2>
+
+                    <p class="mt-2 text-sm leading-6 text-slate-400">
+                        افتح تذكرة دعم وتابع الرد مع موظف الدعم.
+                    </p>
+                </a>
+
+                {{-- المساعد الذكي --}}
+                <a
+                    href="{{ route('support.center') }}"
+                    class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-violet-500"
+                >
+                    <div class="flex items-center justify-center w-12 h-12 mb-5 text-2xl rounded-xl bg-violet-600/20">
+                        🤖
+                    </div>
+
+                    <h2 class="text-lg font-bold text-white">
+                        المساعد الذكي
+                    </h2>
+
+                    <p class="mt-2 text-sm leading-6 text-slate-400">
+                        اسأل مساعد الوليد الهندسي أو اطلب التحويل لموظف الدعم.
                     </p>
                 </a>
 

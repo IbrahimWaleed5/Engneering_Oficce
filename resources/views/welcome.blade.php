@@ -1475,5 +1475,15 @@ $services = [
             );
         });
     </script>
+
+    {{-- مساعد الوليد الهندسي للزائر فقط --}}
+    @guest
+        <x-support-bot mode="guest" />
+    @endguest
+
+    {{-- لأن welcome صفحة مستقلة ولا تستخدم app-layout --}}
+    @stack('styles')
+    @stack('scripts')
+
 </body>
 </html>
