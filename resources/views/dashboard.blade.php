@@ -826,20 +826,12 @@
                             </a>
                         @endif
 
-                        {{-- رقابة المحتوى والتحذيرات الذكية --}}
+                        {{-- رقابة المحتوى الذكية --}}
                         @if (Route::has('admin.moderation.index'))
                             <a
                                 href="{{ route('admin.moderation.index') }}"
-                                class="relative p-6 overflow-hidden transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-red-500"
+                                class="p-6 transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-red-500"
                             >
-                                @if ($moderationStats['active_warnings'] > 0)
-                                    <span
-                                        class="absolute inline-flex items-center justify-center h-8 px-2 text-xs font-black text-white bg-red-600 rounded-full min-w-8 top-4 left-4"
-                                    >
-                                        {{ $moderationStats['active_warnings'] }}
-                                    </span>
-                                @endif
-
                                 <div class="mb-3 text-3xl">
                                     🛡️
                                 </div>
@@ -851,44 +843,6 @@
                                 <p class="mt-2 text-sm leading-6 text-slate-400">
                                     مراجعة تحذيرات البوت والمحتوى المخالف والحسابات المعلقة.
                                 </p>
-
-                                <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
-                                    <div class="p-2 border rounded-lg border-red-500/20 bg-red-500/10">
-                                        <span class="block text-slate-400">
-                                            التحذيرات الفعالة
-                                        </span>
-                                        <strong class="text-red-300">
-                                            {{ $moderationStats['active_warnings'] }}
-                                        </strong>
-                                    </div>
-
-                                    <div class="p-2 border rounded-lg border-amber-500/20 bg-amber-500/10">
-                                        <span class="block text-slate-400">
-                                            بانتظار المراجعة
-                                        </span>
-                                        <strong class="text-amber-300">
-                                            {{ $moderationStats['pending_reviews'] }}
-                                        </strong>
-                                    </div>
-
-                                    <div class="p-2 border rounded-lg border-orange-500/20 bg-orange-500/10">
-                                        <span class="block text-slate-400">
-                                            محتوى مرفوض
-                                        </span>
-                                        <strong class="text-orange-300">
-                                            {{ $moderationStats['rejected_content'] }}
-                                        </strong>
-                                    </div>
-
-                                    <div class="p-2 border rounded-lg border-purple-500/20 bg-purple-500/10">
-                                        <span class="block text-slate-400">
-                                            حسابات معلقة
-                                        </span>
-                                        <strong class="text-purple-300">
-                                            {{ $moderationStats['suspended_accounts'] }}
-                                        </strong>
-                                    </div>
-                                </div>
                             </a>
                         @endif
 
