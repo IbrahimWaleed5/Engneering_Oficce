@@ -6,33 +6,38 @@ use App\Events\ConsultationMessageSent;
 use App\Models\Consultation;
 use App\Models\ConsultationMessage;
 use App\Notifications\SystemNotification;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 
 class ConsultationMessageController extends Controller
 {
-   public function index(
-    Request $request,
-    Consultation $consultation
-) {
-    $conversation = $consultation->conversation;
-
-    if (! $conversation) {
-        return back()->with(
-            'error',
-            'لم يتم إنشاء محادثة لهذه الاستشارة بعد.'
-        );
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
     }
 
-    return redirect()->route(
-        'conversations.show',
-        $conversation
-    );
-}
+    public function index(
+        Request $request,
+        Consultation $consultation
+    ) {
+        $conversation = $consultation->conversation;
+
+        if (! $conversation) {
+            return back()->with(
+                'error',
+                'لم يتم إنشاء محادثة لهذه الاستشارة بعد.'
+            );
+        }
+
+        return redirect()->route(
+            'conversations.show',
+            $conversation
+        );
+    }
 
     public function store(
         Request $request,
@@ -71,6 +76,66 @@ class ConsultationMessageController extends Controller
             'attachment.mimes' =>
                 'نوع الملف المرفق غير مسموح.',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص النص قبل رفع الملف أو حفظ الرسالة
+        |--------------------------------------------------------------------------
+        */
+
+        $messageText = trim(
+            (string) ($validated['message'] ?? '')
+        );
+
+        if ($messageText !== '') {
+            $recipient = $this->getRecipient(
+                $request,
+                $consultation
+            );
+
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $messageText,
+                    sourceType: 'consultation_message',
+                    sourceId: null,
+                    context: [
+                        'conversation_type' =>
+                            'consultation',
+
+                        'recipient_role' =>
+                            $recipient?->role,
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'blocked' => true,
+                        'decision' =>
+                            $moderationResult['decision'],
+                        'risk_level' =>
+                            $moderationResult['risk_level'],
+                        'category' =>
+                            $moderationResult['category'],
+                        'warning_issued' =>
+                            $moderationResult['warning_issued'],
+                        'account_suspended' =>
+                            $moderationResult['account_suspended'],
+                        'message' =>
+                            $moderationResult['user_message'],
+                    ], 422);
+                }
+
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult['user_message']
+                    );
+            }
+        }
 
         $attachmentPath = null;
 
