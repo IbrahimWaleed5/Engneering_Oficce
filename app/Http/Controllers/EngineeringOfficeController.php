@@ -7,13 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Requests\UpdateOfficeProfileRequest;
 use App\Services\UniversalContentModerationService;
+use App\Services\AttachmentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 
 class EngineeringOfficeController extends Controller
 {
     public function __construct(
-        private readonly UniversalContentModerationService $moderationService
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
     ) {
     }
 
@@ -375,6 +377,48 @@ public function updateProfile(
                 ->with(
                     'error',
                     $moderationResult['user_message']
+                );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | فحص شعار المكتب وصورة الغلاف قبل التخزين
+    |--------------------------------------------------------------------------
+    */
+
+    foreach ([
+        'logo' => 'office_logo',
+        'cover' => 'office_cover',
+    ] as $field => $sourceType) {
+        if (! $request->hasFile($field)) {
+            continue;
+        }
+
+        $attachmentModeration =
+            $this->attachmentModerationService
+                ->moderate(
+                    user: $request->user(),
+                    file: $request->file($field),
+                    sourceType: $sourceType,
+                    sourceId: $office->id,
+                    context: [
+                        'content_section' =>
+                            'office_profile',
+
+                        'recipient_role' =>
+                            'public',
+                    ]
+                );
+
+        if (! $attachmentModeration['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $attachmentModeration[
+                        'user_message'
+                    ]
                 );
         }
     }
