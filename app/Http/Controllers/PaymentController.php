@@ -8,6 +8,8 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\AttachmentModerationService;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,12 @@ use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
+    ) {
+    }
+
     /**
      * عرض جميع الدفعات للمدير فقط.
      */
@@ -131,6 +139,43 @@ class PaymentController extends Controller
             'receipt_image.max' =>
                 'حجم الإيصال يجب ألا يتجاوز 20 ميجابايت.',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص إيصال الدفع قبل التخزين
+        |--------------------------------------------------------------------------
+        */
+
+        $attachmentModeration =
+            $this->attachmentModerationService
+                ->moderate(
+                    user: $request->user(),
+                    file: $request->file(
+                        'receipt_image'
+                    ),
+                    sourceType:
+                        'payment_receipt',
+                    sourceId:
+                        $consultation->id,
+                    context: [
+                        'content_section' =>
+                            'payment_verification',
+
+                        'recipient_role' =>
+                            'admin',
+                    ]
+                );
+
+        if (! $attachmentModeration['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $attachmentModeration[
+                        'user_message'
+                    ]
+                );
+        }
 
         $receiptPath = $request
             ->file('receipt_image')
@@ -379,6 +424,43 @@ class PaymentController extends Controller
                 );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص سبب رفض الدفعة قبل حفظه وإرساله للعميل
+        |--------------------------------------------------------------------------
+        */
+
+        $rejectionReason = trim(
+            $validated['rejection_reason']
+        );
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $rejectionReason,
+                sourceType:
+                    'payment_rejection_reason',
+                sourceId: $payment->id,
+                context: [
+                    'content_section' =>
+                        'payment_review',
+
+                    'recipient_role' =>
+                        'customer',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult[
+                        'user_message'
+                    ]
+                );
+        }
+
         $payment->load([
             'consultation.customer',
             'customer',
@@ -387,13 +469,13 @@ class PaymentController extends Controller
         DB::transaction(
             function () use (
                 $payment,
-                $validated
+                $rejectionReason
             ): void {
                 $payment->update([
                     'status' => 'rejected',
                     'paid_at' => null,
                     'rejection_reason' =>
-                        $validated['rejection_reason'],
+                        $rejectionReason,
                 ]);
 
                 $payment->consultation->update([
@@ -413,7 +495,7 @@ class PaymentController extends Controller
                     message: 'راجع المدير إيصال دفع الاستشارة رقم '
                         . $payment->consultation->consultation_number
                         . ' ورفضه. السبب: '
-                        . $validated['rejection_reason'],
+                        . $rejectionReason,
                     url: route(
                         'payments.create',
                         $payment->consultation
