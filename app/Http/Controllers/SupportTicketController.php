@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SupportMessage;
 use App\Models\SupportSetting;
 use App\Models\SupportTicket;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,11 @@ use Illuminate\View\View;
 
 class SupportTicketController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     public function index(Request $request): View
     {
         $user = $request->user();
@@ -84,6 +90,42 @@ class SupportTicketController extends Controller
                 'max:10240',
             ],
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص عنوان التذكرة والرسالة قبل إنشاء التذكرة
+        |--------------------------------------------------------------------------
+        */
+
+        $contentToModerate = trim(
+            $validated['subject']
+            . "\n"
+            . (string) ($validated['message'] ?? '')
+        );
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $contentToModerate,
+                sourceType: 'support_ticket',
+                sourceId: null,
+                context: [
+                    'conversation_type' =>
+                        'support_ticket',
+
+                    'recipient_role' =>
+                        'employee',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
 
         $setting = SupportSetting::query()
             ->with('supportEmployee')
@@ -284,6 +326,32 @@ class SupportTicketController extends Controller
             'escalation_reason.required' =>
                 'يرجى كتابة سبب تحويل المشكلة إلى المدير.',
         ]);
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $user,
+                text: trim(
+                    $validated['escalation_reason']
+                ),
+                sourceType: 'support_escalation_reason',
+                sourceId: $supportTicket->id,
+                context: [
+                    'conversation_type' =>
+                        'support_ticket',
+
+                    'recipient_role' =>
+                        'admin',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
 
         $supportTicket->update([
             'is_escalated' => true,
