@@ -171,6 +171,15 @@
                 <a class="nav-link hover:text-white" href="#how-it-works">
                     كيف نعمل
                 </a>
+
+                <button
+                    type="button"
+                    data-open-welcome-assistant
+                    class="inline-flex items-center gap-2 px-4 py-2 transition border rounded-full border-violet-400/20 bg-violet-500/10 text-violet-200 hover:border-violet-300/40 hover:bg-violet-500/20 hover:text-white"
+                >
+                    <span aria-hidden="true">🤖</span>
+                    <span>المساعد الذكي</span>
+                </button>
             </nav>
 
             <div class="items-center hidden gap-3 md:flex">
@@ -255,6 +264,38 @@
             <a data-welcome-mobile-link href="#how-it-works" class="block px-4 py-3 rounded-xl hover:bg-white/5">
                 كيف نعمل
             </a>
+
+            <button
+                type="button"
+                data-open-welcome-assistant
+                class="flex items-center w-full gap-3 px-4 py-3 text-right transition rounded-xl text-violet-200 hover:bg-violet-500/10 hover:text-white"
+            >
+                <span aria-hidden="true">🤖</span>
+                <span>المساعد الذكي</span>
+            </button>
+
+            <div class="grid grid-cols-1 gap-2 border-t border-white/10 pt-3 text-sm text-[#c3c6d7]">
+                <a
+                    href="{{ route('privacy-policy') }}"
+                    class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white"
+                >
+                    سياسة الخصوصية
+                </a>
+
+                <a
+                    href="{{ Route::has('usage-policy') ? route('usage-policy') : route('terms-and-conditions') }}"
+                    class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white"
+                >
+                    سياسة الاستخدام
+                </a>
+
+                <a
+                    href="{{ route('terms-and-conditions') }}"
+                    class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white"
+                >
+                    الشروط والأحكام
+                </a>
+            </div>
 
             <div class="pt-3 border-t border-white/10">
                 @auth
@@ -1046,7 +1087,7 @@ $services = [
 
     {{-- Footer --}}
     <footer class="px-6 py-16 border-t bg-[#060e20] border-white/10">
-        <div class="grid gap-12 mx-auto max-w-7xl md:grid-cols-4">
+        <div class="grid gap-12 mx-auto max-w-7xl sm:grid-cols-2 lg:grid-cols-5">
             <div class="md:col-span-2">
                 <div class="flex items-center gap-3">
                     <span class="flex items-center justify-center w-11 h-11 rounded-xl bg-blue-600/20 text-[#b4c5ff]">
@@ -1098,6 +1139,35 @@ $services = [
                             إنشاء حساب
                         </a>
                     @endauth
+                </div>
+            </div>
+
+            <div>
+                <h3 class="mb-5 font-bold">
+                    السياسات القانونية
+                </h3>
+
+                <div class="space-y-3 text-sm text-[#c3c6d7]">
+                    <a
+                        href="{{ route('privacy-policy') }}"
+                        class="block hover:text-white"
+                    >
+                        سياسة الخصوصية
+                    </a>
+
+                    <a
+                        href="{{ Route::has('usage-policy') ? route('usage-policy') : route('terms-and-conditions') }}"
+                        class="block hover:text-white"
+                    >
+                        سياسة الاستخدام
+                    </a>
+
+                    <a
+                        href="{{ route('terms-and-conditions') }}"
+                        class="block hover:text-white"
+                    >
+                        الشروط والأحكام
+                    </a>
                 </div>
             </div>
         </div>
@@ -1176,6 +1246,33 @@ $services = [
                     link.addEventListener(
                         'click',
                         closeMenu
+                    );
+                });
+
+            document
+                .querySelectorAll(
+                    '[data-open-welcome-assistant]'
+                )
+                .forEach((button) => {
+                    button.addEventListener(
+                        'click',
+                        function () {
+                            closeMenu();
+
+                            if (
+                                typeof window.openSupportBot
+                                === 'function'
+                            ) {
+                                window.openSupportBot();
+                                return;
+                            }
+
+                            window.dispatchEvent(
+                                new CustomEvent(
+                                    'open-support-bot'
+                                )
+                            );
+                        }
                     );
                 });
 
@@ -1481,9 +1578,8 @@ $services = [
         <x-support-bot mode="guest" />
     @endguest
 
-    {{-- لأن welcome صفحة مستقلة ولا تستخدم app-layout --}}
+    {{-- لأن صفحة welcome مستقلة ولا تستخدم x-app-layout --}}
     @stack('styles')
     @stack('scripts')
-
 </body>
 </html>
