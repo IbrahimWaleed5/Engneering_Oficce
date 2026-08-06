@@ -37,6 +37,8 @@ use App\Http\Controllers\ConsultationOfficeAssignmentController;
 use App\Http\Controllers\SupportBotController;
 use App\Http\Controllers\Employee\SupportTicketController as EmployeeSupportTicketController;
 use App\Http\Controllers\Admin\ModerationController;
+use App\Http\Controllers\ModerationAppealController;
+use App\Http\Controllers\Admin\ModerationAppealController as AdminModerationAppealController;
 /*
 |--------------------------------------------------------------------------
 | الصفحة الرئيسية والصفحات العامة
@@ -1423,5 +1425,80 @@ Route::middleware([
                 'keepSuspended',
             ]
         )->name('moderation.keep-suspended');
+    });
+    Route::middleware([
+    'auth',
+])
+    ->prefix('moderation')
+    ->name('moderation.')
+    ->group(function () {
+        Route::get(
+            '/appeal',
+            [
+                ModerationAppealController::class,
+                'create',
+            ]
+        )->name('appeal.create');
+
+        Route::post(
+            '/appeal',
+            [
+                ModerationAppealController::class,
+                'store',
+            ]
+        )
+            ->middleware('throttle:3,60')
+            ->name('appeal.store');
+
+        Route::delete(
+            '/appeal/{appeal}',
+            [
+                ModerationAppealController::class,
+                'cancel',
+            ]
+        )->name('appeal.cancel');
+    });
+    Route::prefix('admin/moderation-appeals')
+    ->name('admin.moderation-appeals.')
+    ->group(function () {
+        Route::get(
+            '/',
+            [
+                AdminModerationAppealController::class,
+                'index',
+            ]
+        )->name('index');
+
+        Route::get(
+            '/{appeal}',
+            [
+                AdminModerationAppealController::class,
+                'show',
+            ]
+        )->name('show');
+
+        Route::patch(
+            '/{appeal}/start-review',
+            [
+                AdminModerationAppealController::class,
+                'startReview',
+            ]
+        )->name('start-review');
+
+        Route::patch(
+            '/{appeal}/approve',
+            [
+                AdminModerationAppealController::class,
+                'approve',
+            ]
+        )->name('approve');
+
+        Route::patch(
+            '/{appeal}/reject',
+            [
+                AdminModerationAppealController::class,
+                'reject',
+            ]
+        )->name('reject');
     });
 require __DIR__.'/auth.php';

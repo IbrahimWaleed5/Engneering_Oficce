@@ -93,6 +93,36 @@
                             ->count(),
                 ];
             }
+
+            /*
+             * إحصائيات طلبات الطعن للمدير فقط.
+             */
+            $moderationAppealsStats = [
+                'all' => 0,
+                'pending' => 0,
+                'under_review' => 0,
+            ];
+
+            if (
+                $currentUser->role === 'admin'
+                && \Illuminate\Support\Facades\Schema::hasTable('moderation_appeals')
+            ) {
+                $moderationAppealsStats = [
+                    'all' =>
+                        \App\Models\ModerationAppeal::query()
+                            ->count(),
+
+                    'pending' =>
+                        \App\Models\ModerationAppeal::query()
+                            ->where('status', 'pending')
+                            ->count(),
+
+                    'under_review' =>
+                        \App\Models\ModerationAppeal::query()
+                            ->where('status', 'under_review')
+                            ->count(),
+                ];
+            }
         @endphp
 
         <div
@@ -842,6 +872,41 @@
 
                                 <p class="mt-2 text-sm leading-6 text-slate-400">
                                     مراجعة تحذيرات البوت والمحتوى المخالف والحسابات المعلقة.
+                                </p>
+                            </a>
+                        @endif
+
+
+                        {{-- طلبات الطعن على تعليق الحسابات --}}
+                        @if (Route::has('admin.moderation-appeals.index'))
+                            @php
+                                $openAppealsCount =
+                                    $moderationAppealsStats['pending']
+                                    + $moderationAppealsStats['under_review'];
+                            @endphp
+
+                            <a
+                                href="{{ route('admin.moderation-appeals.index') }}"
+                                class="relative p-6 overflow-hidden transition border shadow rounded-2xl bg-slate-900 border-slate-800 hover:-translate-y-1 hover:border-amber-500"
+                            >
+                                @if ($openAppealsCount > 0)
+                                    <span
+                                        class="absolute inline-flex items-center justify-center h-8 px-2 text-xs font-black text-white bg-red-600 rounded-full min-w-8 top-4 left-4"
+                                    >
+                                        {{ $openAppealsCount }}
+                                    </span>
+                                @endif
+
+                                <div class="mb-3 text-3xl">
+                                    ⚖️
+                                </div>
+
+                                <h2 class="font-bold text-white">
+                                    طلبات الطعن
+                                </h2>
+
+                                <p class="mt-2 text-sm leading-6 text-slate-400">
+                                    مراجعة رسائل المستخدمين المعلّقة حساباتهم وقبول الطعن أو رفضه.
                                 </p>
                             </a>
                         @endif

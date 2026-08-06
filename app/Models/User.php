@@ -386,4 +386,28 @@ public function createdKnowledgeBaseArticles(): HasMany
             true
         );
     }
+    public function moderationAppeals(): HasMany
+{
+    return $this->hasMany(
+        ModerationAppeal::class
+    );
+}
+
+public function reviewedModerationAppeals(): HasMany
+{
+    return $this->hasMany(
+        ModerationAppeal::class,
+        'reviewed_by'
+    );
+}
+
+public function hasPendingModerationAppeal(): bool
+{
+    return $this->moderationAppeals()
+        ->whereIn('status', [
+            'pending',
+            'under_review',
+        ])
+        ->exists();
+}
 }
