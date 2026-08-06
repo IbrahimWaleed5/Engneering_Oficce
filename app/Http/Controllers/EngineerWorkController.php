@@ -6,11 +6,18 @@ use App\Models\EngineerWork;
 use App\Models\EngineerWorkImage;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class EngineerWorkController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | عرض الأعمال المقبولة للعامة
@@ -169,58 +176,165 @@ class EngineerWorkController extends Controller
             ],
         ]);
 
-        $pdfPath = null;
-        $dwgPath = null;
+        /*
+        |--------------------------------------------------------------------------
+        | فحص البيانات النصية قبل رفع أي ملف
+        |--------------------------------------------------------------------------
+        */
 
-        if ($request->hasFile('pdf_file')) {
-            $pdfPath = $request
-                ->file('pdf_file')
-                ->store(
-                    'engineer-works/files',
-                    'public'
-                );
-        }
+        $contentToModerate = collect([
+            $validated['title'],
+            $validated['description'] ?? null,
+            $validated['location'] ?? null,
+            $validated['project_type'] ?? null,
+        ])
+            ->filter(
+                fn ($value) =>
+                    is_string($value)
+                    && trim($value) !== ''
+            )
+            ->implode("\n");
 
-        if ($request->hasFile('dwg_file')) {
-            $dwgPath = $request
-                ->file('dwg_file')
-                ->store(
-                    'engineer-works/files',
-                    'public'
-                );
-        }
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $contentToModerate,
+                sourceType: 'engineer_work',
+                sourceId: null,
+                context: [
+                    'content_section' =>
+                        'engineer_portfolio',
 
-        $work = EngineerWork::create([
-            'engineer_id' => $request->user()->id,
-            'title' => $validated['title'],
-            'description' =>
-                $validated['description'] ?? null,
-            'location' =>
-                $validated['location'] ?? null,
-            'completion_year' =>
-                $validated['completion_year'] ?? null,
-            'project_type' =>
-                $validated['project_type'] ?? null,
-            'pdf_file' => $pdfPath,
-            'dwg_file' => $dwgPath,
-            'status' => 'pending',
-            'is_featured' => false,
-            'admin_note' => null,
-        ]);
-
-        foreach (
-            $request->file('images') as $index => $image
-        ) {
-            $path = $image->store(
-                'engineer-works',
-                'public'
+                    'recipient_role' =>
+                        'public',
+                ]
             );
 
-            EngineerWorkImage::create([
-                'engineer_work_id' => $work->id,
-                'image_path' => $path,
-                'sort_order' => $index,
-            ]);
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
+
+        $pdfPath = null;
+        $dwgPath = null;
+        $imagePaths = [];
+
+        try {
+            if ($request->hasFile('pdf_file')) {
+                $pdfPath = $request
+                    ->file('pdf_file')
+                    ->store(
+                        'engineer-works/files',
+                        'public'
+                    );
+            }
+
+            if ($request->hasFile('dwg_file')) {
+                $dwgPath = $request
+                    ->file('dwg_file')
+                    ->store(
+                        'engineer-works/files',
+                        'public'
+                    );
+            }
+
+            $work = DB::transaction(
+                function () use (
+                    $request,
+                    $validated,
+                    $pdfPath,
+                    $dwgPath,
+                    &$imagePaths
+                ) {
+                    $work = EngineerWork::create([
+                        'engineer_id' =>
+                            $request->user()->id,
+
+                        'title' =>
+                            $validated['title'],
+
+                        'description' =>
+                            $validated['description']
+                                ?? null,
+
+                        'location' =>
+                            $validated['location']
+                                ?? null,
+
+                        'completion_year' =>
+                            $validated['completion_year']
+                                ?? null,
+
+                        'project_type' =>
+                            $validated['project_type']
+                                ?? null,
+
+                        'pdf_file' =>
+                            $pdfPath,
+
+                        'dwg_file' =>
+                            $dwgPath,
+
+                        'status' =>
+                            'pending',
+
+                        'is_featured' =>
+                            false,
+
+                        'admin_note' =>
+                            null,
+                    ]);
+
+                    foreach (
+                        $request->file('images')
+                            as $index => $image
+                    ) {
+                        $path = $image->store(
+                            'engineer-works',
+                            'public'
+                        );
+
+                        $imagePaths[] = $path;
+
+                        EngineerWorkImage::create([
+                            'engineer_work_id' =>
+                                $work->id,
+
+                            'image_path' =>
+                                $path,
+
+                            'sort_order' =>
+                                $index,
+                        ]);
+                    }
+
+                    return $work;
+                }
+            );
+        } catch (\Throwable $exception) {
+            if ($pdfPath) {
+                Storage::disk('public')->delete(
+                    $pdfPath
+                );
+            }
+
+            if ($dwgPath) {
+                Storage::disk('public')->delete(
+                    $dwgPath
+                );
+            }
+
+            if ($imagePaths !== []) {
+                Storage::disk('public')->delete(
+                    $imagePaths
+                );
+            }
+
+            throw $exception;
         }
 
         $admins = User::where('role', 'admin')
@@ -370,6 +484,32 @@ class EngineerWorkController extends Controller
             'admin_note.max' =>
                 'سبب الرفض يجب ألا يتجاوز 1000 حرف.',
         ]);
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: trim(
+                    $validated['admin_note']
+                ),
+                sourceType: 'engineer_work_admin_note',
+                sourceId: $engineerWork->id,
+                context: [
+                    'content_section' =>
+                        'admin_review',
+
+                    'recipient_role' =>
+                        'engineer',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
 
         $engineerWork->update([
             'status' => 'rejected',
