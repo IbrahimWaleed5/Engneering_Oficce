@@ -6,6 +6,7 @@ use App\Models\SupportMessage;
 use App\Models\SupportTicket;
 use App\Services\SupportAssignmentService;
 use App\Services\SupportBotService;
+use App\Services\GeminiSupportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,77 +17,128 @@ class SupportBotController extends Controller
     /**
      * إجابة المساعد للزائر دون إنشاء تذكرة دعم.
      */
-    public function guestAsk(
-        Request $request,
-        SupportBotService $botService
-    ): JsonResponse {
-        $data = $request->validate([
-            'message' => [
-                'required',
-                'string',
-                'max:2000',
-            ],
-        ]);
+   /**
+ * إجابة المساعد للزائر دون إنشاء تذكرة دعم.
+ */
+public function guestAsk(
+    Request $request,
+    SupportBotService $botService,
+    GeminiSupportService $geminiService
+): JsonResponse {
+    $data = $request->validate([
+        'message' => [
+            'required',
+            'string',
+            'max:2000',
+        ],
+    ]);
 
-        $message = trim($data['message']);
-        $normalized = Str::lower($message);
+    $message = trim($data['message']);
+    $normalized = Str::lower($message);
 
-        $employeePhrases = [
-            'موظف',
-            'الدعم الفني',
-            'خدمة العملاء',
-            'شخص حقيقي',
-            'حولني',
-            'تحويل لموظف',
-            'تواصل مع الدعم',
-            'اكلم الدعم',
-            'أكلم الدعم',
-        ];
+    /*
+     * الزائر يستطيع استخدام المساعد الذكي،
+     * لكن التحويل إلى موظف يتطلب تسجيل الدخول.
+     */
+    $employeePhrases = [
+        'موظف',
+        'الدعم الفني',
+        'خدمة العملاء',
+        'شخص حقيقي',
+        'حولني',
+        'حوّلني',
+        'تحويل لموظف',
+        'تواصل مع الدعم',
+        'اكلم الدعم',
+        'أكلم الدعم',
+    ];
 
-        if (Str::contains($normalized, $employeePhrases)) {
-            return response()->json([
-                'success' => true,
-                'handled_by' => 'login_required',
-                'requires_login' => true,
-                'login_url' => route('login'),
-                'register_url' => route('register'),
-                'message' => [
-                    'sender_type' => 'bot',
-                    'message' =>
-                        'لتحويلك إلى موظف الدعم، يجب تسجيل الدخول أولًا حتى نحفظ المحادثة ونربطها بحسابك.',
-                    'created_at' => now()->toISOString(),
-                ],
-            ]);
-        }
-
-        $result = $botService->findAnswer($message);
-
-        if ($result) {
-            return response()->json([
-                'success' => true,
-                'handled_by' => 'bot',
-                'message' => [
-                    'sender_type' => 'bot',
-                    'message' => $result['answer'],
-                    'created_at' => now()->toISOString(),
-                ],
-            ]);
-        }
-
+    if (Str::contains(
+        $normalized,
+        $employeePhrases
+    )) {
         return response()->json([
             'success' => true,
-            'handled_by' => 'bot',
-            'show_login_hint' => true,
+            'handled_by' => 'login_required',
+            'requires_login' => true,
             'login_url' => route('login'),
             'register_url' => route('register'),
+
             'message' => [
                 'sender_type' => 'bot',
+
                 'message' =>
-                    'لم أجد إجابة مؤكدة. أعد صياغة السؤال، أو سجّل الدخول للتواصل مع موظف الدعم.',
-                'created_at' => now()->toISOString(),
+                    'لتحويلك إلى موظف الدعم، يجب تسجيل الدخول أولًا حتى نحفظ المحادثة ونربطها بحسابك.',
+
+                'created_at' =>
+                    now()->toISOString(),
             ],
         ]);
     }
+
+    /*
+     * نبني سياقًا من قاعدة المعرفة.
+     */
+    $knowledgeContext =
+        $botService->buildKnowledgeContext(
+            $message
+        );
+
+    /*
+     * نرسل السؤال إلى Gemini.
+     * الزائر لا يملك محادثة محفوظة، لذلك نرسل مصفوفة فارغة.
+     */
+    $aiAnswer = $geminiService->answer(
+        $message,
+        $knowledgeContext,
+        []
+    );
+
+    /*
+     * حل احتياطي إذا تعطل Gemini.
+     */
+    if (! $aiAnswer) {
+        $fallbackResult =
+            $botService->findAnswer($message);
+
+        $aiAnswer =
+            $fallbackResult['answer']
+            ?? null;
+    }
+
+    if ($aiAnswer) {
+        return response()->json([
+            'success' => true,
+            'handled_by' => 'ai',
+
+            'message' => [
+                'sender_type' => 'bot',
+                'message' => $aiAnswer,
+
+                'created_at' =>
+                    now()->toISOString(),
+            ],
+        ]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'handled_by' => 'bot',
+        'show_login_hint' => true,
+        'login_url' => route('login'),
+        'register_url' => route('register'),
+
+        'message' => [
+            'sender_type' => 'bot',
+
+            'message' =>
+                'لم أجد إجابة مؤكدة. أعد صياغة السؤال، أو سجّل الدخول للتواصل مع موظف الدعم.',
+
+            'created_at' =>
+                now()->toISOString(),
+        ],
+    ]);
+}
 
     /**
      * فتح محادثة الدعم الحالية أو إنشاء محادثة جديدة.
@@ -189,98 +241,181 @@ class SupportBotController extends Controller
     /**
      * إرسال رسالة من العميل.
      */
-    public function send(
-        Request $request,
-        SupportBotService $botService
-    ): JsonResponse {
-        $data = $request->validate([
-            'ticket_id' => [
-                'required',
-                'integer',
-                'exists:support_tickets,id',
-            ],
+   /**
+ * إرسال رسالة من العميل.
+ */
+public function send(
+    Request $request,
+    SupportBotService $botService,
+    GeminiSupportService $geminiService
+): JsonResponse {
+    $data = $request->validate([
+        'ticket_id' => [
+            'required',
+            'integer',
+            'exists:support_tickets,id',
+        ],
 
-            'message' => [
-                'required',
-                'string',
-                'max:5000',
-            ],
+        'message' => [
+            'required',
+            'string',
+            'max:5000',
+        ],
+    ]);
+
+    $messageText = trim($data['message']);
+
+    $ticket = SupportTicket::query()
+        ->where('id', $data['ticket_id'])
+        ->where(
+            'user_id',
+            $request->user()->id
+        )
+        ->firstOrFail();
+
+    if (in_array(
+        $ticket->status,
+        ['resolved', 'closed'],
+        true
+    )) {
+        return response()->json([
+            'success' => false,
+            'message' =>
+                'هذه المحادثة مغلقة.',
+        ], 422);
+    }
+
+    /*
+     * حفظ رسالة العميل.
+     */
+    $customerMessage =
+        SupportMessage::create([
+            'support_ticket_id' =>
+                $ticket->id,
+
+            'sender_id' =>
+                $request->user()->id,
+
+            'sender_type' =>
+                'customer',
+
+            'message' =>
+                $messageText,
+
+            'message_type' =>
+                'text',
+
+            'is_internal' =>
+                false,
         ]);
 
-        $ticket = SupportTicket::query()
-            ->where('id', $data['ticket_id'])
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+    $ticket->update([
+        'last_message_at' => now(),
 
-        if (in_array(
-            $ticket->status,
-            ['resolved', 'closed'],
-            true
-        )) {
-            return response()->json([
-                'success' => false,
-                'message' => 'هذه المحادثة مغلقة.',
-            ], 422);
-        }
+        'status' =>
+            $ticket->support_mode === 'employee'
+                ? 'in_progress'
+                : $ticket->status,
+    ]);
 
-        $customerMessage = SupportMessage::create([
-            'support_ticket_id' => $ticket->id,
-            'sender_id' => $request->user()->id,
-            'sender_type' => 'customer',
-
-            'message' => $data['message'],
-            'message_type' => 'text',
-            'is_internal' => false,
-        ]);
-
-        $ticket->update([
-            'last_message_at' => now(),
+    /*
+     * إذا كانت المحادثة مع موظف،
+     * لا نسمح للمساعد الذكي بالرد.
+     */
+    if ($ticket->support_mode !== 'bot') {
+        return response()->json([
+            'success' => true,
+            'handled_by' => 'employee',
 
             /*
-             * بعد رد العميل على الموظف تصبح التذكرة
-             * قيد المعالجة بدل انتظار العميل.
+             * نرسل المعرّف فقط حتى لا تظهر
+             * رسالة العميل مرتين في الواجهة.
              */
-            'status' =>
-                $ticket->support_mode === 'employee'
-                    ? 'in_progress'
-                    : $ticket->status,
-        ]);
+            'customer_message_id' =>
+                $customerMessage->id,
 
-        /*
-         * إذا تحولت التذكرة إلى موظف،
-         * نحفظ الرسالة فقط ولا نجعل البوت يرد.
-         */
-        if ($ticket->support_mode !== 'bot') {
-            return response()->json([
-                'success' => true,
-                'handled_by' => 'employee',
+            'ticket' =>
+                $this->ticketPayload(
+                    $ticket->fresh()
+                ),
 
-                /*
-                 * لا نعيد كائن الرسالة حتى لا تظهر
-                 * مرتين في واجهة العميل.
-                 */
-                'customer_message_id' =>
-                    $customerMessage->id,
-
-                'ticket' =>
-                    $this->ticketPayload(
-                        $ticket->fresh()
-                    ),
-
-                'notice' =>
-                    $ticket->support_mode === 'waiting_employee'
+            'notice' =>
+                $ticket->support_mode
+                    === 'waiting_employee'
                         ? 'تم إرسال رسالتك، والتذكرة بانتظار موظف الدعم.'
                         : 'تم إرسال رسالتك إلى موظف الدعم.',
-            ]);
-        }
+        ]);
+    }
 
-        $result = $botService->findAnswer(
-            $data['message']
+    /*
+     * استخراج معلومات مرتبطة بالسؤال
+     * من قاعدة المعرفة.
+     */
+    $knowledgeContext =
+        $botService->buildKnowledgeContext(
+            $messageText
         );
 
-        if (! $result) {
-            $botMessage = SupportMessage::create([
-                'support_ticket_id' => $ticket->id,
+    /*
+     * جلب آخر رسائل المحادثة حتى يفهم
+     * Gemini سياق الحديث.
+     */
+    $conversation = $ticket
+        ->messages()
+        ->where('is_internal', false)
+        ->orderByDesc('id')
+        ->limit(12)
+        ->get()
+        ->reverse()
+        ->map(function (
+            SupportMessage $message
+        ): array {
+            return [
+                'sender_type' =>
+                    $message->sender_type,
+
+                'message' =>
+                    $message->message,
+            ];
+        })
+        ->values()
+        ->all();
+
+    /*
+     * إرسال السؤال والسياق إلى Gemini.
+     */
+    $aiAnswer = $geminiService->answer(
+        $messageText,
+        $knowledgeContext,
+        $conversation
+    );
+
+    /*
+     * البحث التقليدي يبقى حلًا احتياطيًا.
+     */
+    $fallbackResult = null;
+
+    if (! $aiAnswer) {
+        $fallbackResult =
+            $botService->findAnswer(
+                $messageText
+            );
+
+        $aiAnswer =
+            $fallbackResult['answer']
+            ?? null;
+    }
+
+    /*
+     * لم نحصل على رد من Gemini
+     * ولم توجد إجابة مؤكدة في قاعدة المعرفة.
+     */
+    if (! $aiAnswer) {
+        $botMessage =
+            SupportMessage::create([
+                'support_ticket_id' =>
+                    $ticket->id,
+
                 'sender_id' => null,
                 'sender_type' => 'bot',
 
@@ -291,42 +426,8 @@ class SupportBotController extends Controller
                 'is_internal' => false,
             ]);
 
-            $ticket->update([
-                'bot_confidence' => 0,
-                'last_message_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'handled_by' => 'bot',
-
-                'message' =>
-                    $botMessage->load('sender:id,name'),
-
-                'ticket' =>
-                    $this->ticketPayload(
-                        $ticket->fresh()
-                    ),
-
-                'show_transfer_button' => true,
-            ]);
-        }
-
-        $botMessage = SupportMessage::create([
-            'support_ticket_id' => $ticket->id,
-            'sender_id' => null,
-            'sender_type' => 'bot',
-
-            'message' => $result['answer'],
-
-            'message_type' => 'text',
-            'is_internal' => false,
-        ]);
-
         $ticket->update([
-            'bot_confidence' =>
-                $result['confidence'],
-
+            'bot_confidence' => 0,
             'last_message_at' => now(),
         ]);
 
@@ -334,20 +435,83 @@ class SupportBotController extends Controller
             'success' => true,
             'handled_by' => 'bot',
 
+            'customer_message_id' =>
+                $customerMessage->id,
+
             'message' =>
-                $botMessage->load('sender:id,name'),
+                $botMessage->load(
+                    'sender:id,name'
+                ),
 
             'ticket' =>
                 $this->ticketPayload(
                     $ticket->fresh()
                 ),
 
-            'confidence' =>
-                $result['confidence'],
-
-            'show_feedback_buttons' => true,
+            'show_transfer_button' => true,
         ]);
     }
+
+    /*
+     * حفظ رد المساعد الذكي.
+     */
+    $botMessage =
+        SupportMessage::create([
+            'support_ticket_id' =>
+                $ticket->id,
+
+            'sender_id' => null,
+            'sender_type' => 'bot',
+
+            'message' => $aiAnswer,
+
+            'message_type' => 'text',
+            'is_internal' => false,
+        ]);
+
+    /*
+     * لا نضع نسبة وهمية لـ Gemini.
+     * نضع نسبة البحث التقليدي فقط
+     * عندما يكون الرد الاحتياطي هو المستخدم.
+     */
+    $ticketUpdate = [
+        'last_message_at' => now(),
+    ];
+
+    if ($fallbackResult) {
+        $ticketUpdate['bot_confidence'] =
+            $fallbackResult['confidence'];
+    }
+
+    $ticket->update($ticketUpdate);
+
+    return response()->json([
+        'success' => true,
+        'handled_by' =>
+            $fallbackResult
+                ? 'knowledge_base'
+                : 'ai',
+
+        'customer_message_id' =>
+            $customerMessage->id,
+
+        'message' =>
+            $botMessage->load(
+                'sender:id,name'
+            ),
+
+        'ticket' =>
+            $this->ticketPayload(
+                $ticket->fresh()
+            ),
+
+        'confidence' =>
+            $fallbackResult['confidence']
+            ?? null,
+
+        'show_feedback_buttons' => true,
+    ]);
+}
 
     /**
      * جلب الرسائل الجديدة دون إعادة تحميل الصفحة.

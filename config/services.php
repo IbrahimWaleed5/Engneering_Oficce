@@ -25,14 +25,54 @@ return [
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        'region' => env(
+            'AWS_DEFAULT_REGION',
+            'us-east-1'
+        ),
     ],
 
     'slack' => [
         'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+            'bot_user_oauth_token' =>
+                env('SLACK_BOT_USER_OAUTH_TOKEN'),
+
+            'channel' =>
+                env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Gemini
+    |--------------------------------------------------------------------------
+    |
+    | إعدادات مساعد الوليد الهندسي الذكي.
+    | المفتاح الحقيقي يبقى داخل ملف .env فقط.
+    |
+    */
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+
+        'enabled' => filter_var(
+            env('GEMINI_ENABLED', false),
+            FILTER_VALIDATE_BOOL
+        ),
+
+        'model' => env(
+            'GEMINI_MODEL',
+            'gemini-2.5-flash'
+        ),
+
+        'timeout' => (int) env(
+            'GEMINI_TIMEOUT',
+            45
+        ),
+
+        'max_output_tokens' => (int) env(
+            'GEMINI_MAX_OUTPUT_TOKENS',
+            500
+        ),
     ],
 
 ];
