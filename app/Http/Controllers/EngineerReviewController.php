@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Consultation;
 use App\Models\EngineerReview;
 use App\Notifications\SystemNotification;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\Request;
 
 class EngineerReviewController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     public function create(
         Request $request,
         Consultation $consultation
@@ -76,6 +82,47 @@ class EngineerReviewController extends Controller
                 'التقييم يجب أن يكون بين نجمة وخمس نجوم.',
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص تعليق التقييم قبل الحفظ
+        |--------------------------------------------------------------------------
+        */
+
+        $comment = trim(
+            (string) ($validated['comment'] ?? '')
+        );
+
+        if ($comment !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $comment,
+                    sourceType: 'engineer_review',
+                    sourceId: $consultation->id,
+                    context: [
+                        'content_section' =>
+                            'engineer_review',
+
+                        'recipient_role' =>
+                            'engineer',
+
+                        'consultation_id' =>
+                            $consultation->id,
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
         EngineerReview::create([
             'consultation_id' =>
                 $consultation->id,
@@ -90,7 +137,7 @@ class EngineerReviewController extends Controller
                 $validated['rating'],
 
             'comment' =>
-                $validated['comment'] ?? null,
+                $comment !== '' ? $comment : null,
         ]);
 
         $consultation->engineer?->notify(

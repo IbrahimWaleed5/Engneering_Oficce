@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultation;
 use App\Models\Review;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ReviewController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /**
      * عرض جميع التقييمات للإدارة.
      */
@@ -41,7 +47,8 @@ class ReviewController extends Controller
         Consultation $consultation
     ): View|RedirectResponse {
         abort_unless(
-            $consultation->customer_id === $request->user()->id,
+            $consultation->customer_id
+                === $request->user()->id,
             403
         );
 
@@ -73,7 +80,8 @@ class ReviewController extends Controller
         Consultation $consultation
     ): RedirectResponse {
         abort_unless(
-            $consultation->customer_id === $request->user()->id,
+            $consultation->customer_id
+                === $request->user()->id,
             403
         );
 
@@ -97,6 +105,7 @@ class ReviewController extends Controller
                 'integer',
                 'between:1,5',
             ],
+
             'comment' => [
                 'required',
                 'string',
@@ -104,24 +113,81 @@ class ReviewController extends Controller
                 'max:2000',
             ],
         ], [
-            'rating.required' => 'يرجى اختيار عدد النجوم.',
-            'rating.between' => 'التقييم يجب أن يكون من نجمة إلى 5 نجوم.',
-            'comment.required' => 'يرجى كتابة رأيك أو ملاحظتك.',
-            'comment.min' => 'يجب ألا يقل التعليق عن 5 أحرف.',
-            'comment.max' => 'يجب ألا يزيد التعليق عن 2000 حرف.',
+            'rating.required' =>
+                'يرجى اختيار عدد النجوم.',
+
+            'rating.between' =>
+                'التقييم يجب أن يكون من نجمة إلى 5 نجوم.',
+
+            'comment.required' =>
+                'يرجى كتابة رأيك أو ملاحظتك.',
+
+            'comment.min' =>
+                'يجب ألا يقل التعليق عن 5 أحرف.',
+
+            'comment.max' =>
+                'يجب ألا يزيد التعليق عن 2000 حرف.',
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص نص التقييم قبل الحفظ
+        |--------------------------------------------------------------------------
+        */
+
+        $comment = trim($validated['comment']);
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $comment,
+                sourceType: 'customer_review',
+                sourceId: $consultation->id,
+                context: [
+                    'content_section' =>
+                        'public_review',
+
+                    'recipient_role' =>
+                        'public',
+
+                    'consultation_id' =>
+                        $consultation->id,
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult[
+                        'user_message'
+                    ]
+                );
+        }
+
         Review::create([
-            'consultation_id' => $consultation->id,
-            'customer_id' => $request->user()->id,
-            'rating' => $validated['rating'],
-            'comment' => $validated['comment'],
-            'status' => 'pending',
-            'is_featured' => false,
+            'consultation_id' =>
+                $consultation->id,
+
+            'customer_id' =>
+                $request->user()->id,
+
+            'rating' =>
+                $validated['rating'],
+
+            'comment' =>
+                $comment,
+
+            'status' =>
+                'pending',
+
+            'is_featured' =>
+                false,
         ]);
 
         return redirect()
-            ->route('consultations.my')
+            ->route('consultations.mine')
             ->with(
                 'success',
                 'شكرًا لك، تم إرسال تقييمك إلى الإدارة للمراجعة.'
@@ -193,7 +259,8 @@ class ReviewController extends Controller
         }
 
         $review->update([
-            'is_featured' => !$review->is_featured,
+            'is_featured' =>
+                ! $review->is_featured,
         ]);
 
         return back()->with(
