@@ -1306,16 +1306,35 @@ const scrollToBottom = () => {
                         );
                     }
                 } catch (error) {
-                    const errors =
-                        error.response?.data?.errors;
+                    const responseData =
+                        error.response?.data ?? {};
 
-                    const message = errors
-                        ? Object.values(errors)
+                    const errors =
+                        responseData.errors;
+
+                    let message =
+                        responseData.message
+                        ?? 'تعذر إرسال الرسالة. حاول مرة أخرى.';
+
+                    if (errors) {
+                        message = Object.values(errors)
                             .flat()
-                            .join('\n')
-                        : 'تعذر إرسال الرسالة. حاول مرة أخرى.';
+                            .join('\n');
+                    }
 
                     alert(message);
+
+                    if (
+                        responseData.account_suspended
+                        === true
+                    ) {
+                        window.location.href =
+                            @json(
+                                route(
+                                    'moderation.appeal.create'
+                                )
+                            );
+                    }
                 } finally {
                     sendButton.disabled = false;
                     sendButton.classList.remove(
