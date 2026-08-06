@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupportMessageController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     public function store(
         Request $request,
         SupportTicket $supportTicket
@@ -33,58 +39,140 @@ class SupportMessageController extends Controller
                 'string',
                 'max:5000',
             ],
+
             'attachment' => [
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,doc,docx,zip',
                 'max:10240',
             ],
+        ], [
+            'message.required_without' =>
+                'اكتب رسالة أو أرفق ملفًا.',
+
+            'attachment.max' =>
+                'حجم الملف يجب ألا يتجاوز 10 ميجابايت.',
+
+            'attachment.mimes' =>
+                'نوع الملف المرفق غير مسموح.',
         ]);
 
-        $data = [
-            'support_ticket_id' => $supportTicket->id,
-            'sender_id' => $request->user()->id,
-            'message' => $validated['message'] ?? null,
-            'message_type' => 'text',
-        ];
+        /*
+        |--------------------------------------------------------------------------
+        | فحص النص قبل رفع الملف أو حفظ الرسالة
+        |--------------------------------------------------------------------------
+        */
 
-        if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
+        $messageText = trim(
+            (string) ($validated['message'] ?? '')
+        );
 
-            $path = $file->store(
-                'support-attachments',
-                'local'
+        if ($messageText !== '') {
+            $recipientRole = $this->getRecipientRole(
+                $request,
+                $supportTicket
             );
 
-            $data = array_merge($data, [
-                'message_type' =>
-                    str_starts_with(
-                        (string) $file->getMimeType(),
-                        'image/'
-                    )
-                        ? 'image'
-                        : 'file',
-                'attachment_path' => $path,
-                'attachment_name' =>
-                    $file->getClientOriginalName(),
-                'attachment_mime' =>
-                    $file->getMimeType(),
-                'attachment_size' =>
-                    $file->getSize(),
-            ]);
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $messageText,
+                    sourceType: 'support_message',
+                    sourceId: null,
+                    context: [
+                        'conversation_type' =>
+                            'support_ticket',
+
+                        'recipient_role' =>
+                            $recipientRole,
+
+                        'enforce_off_platform_for_all' =>
+                            false,
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult['user_message']
+                    );
+            }
         }
 
-        SupportMessage::create($data);
+        $data = [
+            'support_ticket_id' =>
+                $supportTicket->id,
+
+            'sender_id' =>
+                $request->user()->id,
+
+            'message' =>
+                $validated['message'] ?? null,
+
+            'message_type' =>
+                'text',
+        ];
+
+        $uploadedPath = null;
+
+        try {
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+
+                $uploadedPath = $file->store(
+                    'support-attachments',
+                    'local'
+                );
+
+                $data = array_merge($data, [
+                    'message_type' =>
+                        str_starts_with(
+                            (string) $file->getMimeType(),
+                            'image/'
+                        )
+                            ? 'image'
+                            : 'file',
+
+                    'attachment_path' =>
+                        $uploadedPath,
+
+                    'attachment_name' =>
+                        $file->getClientOriginalName(),
+
+                    'attachment_mime' =>
+                        $file->getMimeType(),
+
+                    'attachment_size' =>
+                        $file->getSize(),
+                ]);
+            }
+
+            SupportMessage::create($data);
+        } catch (\Throwable $exception) {
+            if ($uploadedPath) {
+                Storage::disk('local')->delete(
+                    $uploadedPath
+                );
+            }
+
+            throw $exception;
+        }
 
         $supportTicket->update([
             'last_message_at' => now(),
+
             'status' =>
                 $supportTicket->status === 'open'
                     ? 'in_progress'
                     : $supportTicket->status,
         ]);
 
-        return back();
+        return back()->with(
+            'success',
+            'تم إرسال الرسالة.'
+        );
     }
 
     public function attachment(
@@ -125,5 +213,36 @@ class SupportMessageController extends Controller
             || $ticket->assigned_employee_id === $user->id,
             403
         );
+    }
+
+    private function getRecipientRole(
+        Request $request,
+        SupportTicket $ticket
+    ): ?string {
+        $user = $request->user();
+
+        if (
+            (int) $ticket->user_id
+            === (int) $user->id
+        ) {
+            return $ticket->assigned_employee_id
+                ? 'employee'
+                : 'admin';
+        }
+
+        if (
+            (int) $ticket->assigned_employee_id
+            === (int) $user->id
+        ) {
+            return $ticket->user?->role
+                ?? 'customer';
+        }
+
+        if ($user->role === 'admin') {
+            return $ticket->user?->role
+                ?? 'customer';
+        }
+
+        return null;
     }
 }
