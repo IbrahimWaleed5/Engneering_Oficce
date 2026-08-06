@@ -141,3 +141,4 @@ class UserWarning extends Model
         'user_warning_id'
     );
 }
+}
