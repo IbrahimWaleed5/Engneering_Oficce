@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use App\Services\UniversalContentModerationService;
+use App\Services\AttachmentModerationService;
 
 class ConversationMessageController extends Controller
 {
     public function __construct(
-        private readonly UniversalContentModerationService $moderationService
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
     ) {
     }
 
@@ -165,6 +167,71 @@ class ConversationMessageController extends Controller
                         $moderationResult['account_suspended'],
                     'message' =>
                         $moderationResult['user_message'],
+                ], 422);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص المرفق قبل التخزين
+        |--------------------------------------------------------------------------
+        */
+
+        $uploadedFile = null;
+
+        if ($request->hasFile('voice_message')) {
+            $uploadedFile = $request->file(
+                'voice_message'
+            );
+        } elseif ($request->hasFile('attachment')) {
+            $uploadedFile = $request->file(
+                'attachment'
+            );
+        }
+
+        if ($uploadedFile) {
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $request->user(),
+                        file: $uploadedFile,
+                        sourceType:
+                            'conversation_attachment',
+                        sourceId: null,
+                        context: [
+                            'conversation_type' =>
+                                $conversation->type,
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'blocked' => true,
+                    'decision' =>
+                        $attachmentModeration[
+                            'decision'
+                        ],
+                    'risk_level' =>
+                        $attachmentModeration[
+                            'risk_level'
+                        ],
+                    'category' =>
+                        $attachmentModeration[
+                            'category'
+                        ],
+                    'warning_issued' =>
+                        $attachmentModeration[
+                            'warning_issued'
+                        ],
+                    'account_suspended' =>
+                        $attachmentModeration[
+                            'account_suspended'
+                        ],
+                    'message' =>
+                        $attachmentModeration[
+                            'user_message'
+                        ],
                 ], 422);
             }
         }
