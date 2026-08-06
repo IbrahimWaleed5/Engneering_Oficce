@@ -7,6 +7,7 @@ use App\Models\EngineerWorkImage;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use App\Services\UniversalContentModerationService;
+use App\Services\AttachmentModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,8 @@ use Illuminate\Support\Facades\Storage;
 class EngineerWorkController extends Controller
 {
     public function __construct(
-        private readonly UniversalContentModerationService $moderationService
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
     ) {
     }
 
@@ -217,6 +219,79 @@ class EngineerWorkController extends Controller
                     'error',
                     $moderationResult['user_message']
                 );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص الصور وملف PDF قبل رفع أي ملف
+        |--------------------------------------------------------------------------
+        |
+        | ملفات DWG لا يدعمها الفحص الدلالي الحالي، لكنها تبقى خاضعة
+        | للتحقق من النوع والحجم الموجود في قواعد التحقق أعلاه.
+        |
+        */
+
+        foreach (
+            $request->file('images', [])
+            as $image
+        ) {
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $request->user(),
+                        file: $image,
+                        sourceType:
+                            'engineer_work_image',
+                        sourceId: null,
+                        context: [
+                            'content_section' =>
+                                'engineer_portfolio',
+
+                            'recipient_role' =>
+                                'public',
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $attachmentModeration[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
+        if ($request->hasFile('pdf_file')) {
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $request->user(),
+                        file: $request->file('pdf_file'),
+                        sourceType:
+                            'engineer_work_pdf',
+                        sourceId: null,
+                        context: [
+                            'content_section' =>
+                                'engineer_portfolio',
+
+                            'recipient_role' =>
+                                'public',
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $attachmentModeration[
+                            'user_message'
+                        ]
+                    );
+            }
         }
 
         $pdfPath = null;
