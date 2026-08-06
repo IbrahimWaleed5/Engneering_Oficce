@@ -18,20 +18,26 @@ class User extends Authenticatable implements MustVerifyEmail
     use Notifiable;
     use TwoFactorAuthenticatable;
 
-    protected $fillable = [
-        'name',
-        'country_code',
-        'dial_code',
-        'phone',
-        'phone_verified_at',
-        'email',
-        'password',
-        'profile_photo',
-        'role',
-        'status',
-        'engineer_membership_status',
-        'engineer_active_until',
-    ];
+   protected $fillable = [
+    'name',
+    'country_code',
+    'dial_code',
+    'phone',
+    'phone_verified_at',
+    'email',
+    'password',
+    'profile_photo',
+    'role',
+    'status',
+
+    'warnings_count',
+    'suspended_at',
+    'suspension_reason',
+    'suspension_source',
+
+    'engineer_membership_status',
+    'engineer_active_until',
+];
 
     protected $hidden = [
         'password',
@@ -41,15 +47,17 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'phone_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'engineer_active_until' => 'datetime',
-            'two_factor_confirmed_at' => 'datetime',
-        ];
-    }
+{
+    return [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'engineer_active_until' => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
+        'warnings_count' => 'integer',
+        'suspended_at' => 'datetime',
+    ];
+}
 
     public function employeeProfile()
     {
@@ -290,4 +298,92 @@ public function createdKnowledgeBaseArticles(): HasMany
         'created_by'
     );
 }
+    /*
+    |--------------------------------------------------------------------------
+    | فحص المحتوى والتحذيرات
+    |--------------------------------------------------------------------------
+    */
+
+    public function contentModerations(): HasMany
+    {
+        return $this->hasMany(
+            ContentModeration::class,
+            'user_id'
+        );
+    }
+
+    public function warnings(): HasMany
+    {
+        return $this->hasMany(
+            UserWarning::class,
+            'user_id'
+        );
+    }
+
+    public function activeWarnings(): HasMany
+    {
+        return $this->hasMany(
+            UserWarning::class,
+            'user_id'
+        )->whereIn(
+            'status',
+            [
+                'active',
+                'confirmed',
+            ]
+        );
+    }
+
+    public function issuedWarnings(): HasMany
+    {
+        return $this->hasMany(
+            UserWarning::class,
+            'issued_by'
+        );
+    }
+
+    public function reviewedWarnings(): HasMany
+    {
+        return $this->hasMany(
+            UserWarning::class,
+            'reviewed_by'
+        );
+    }
+
+    public function reviewedModerations(): HasMany
+    {
+        return $this->hasMany(
+            ContentModeration::class,
+            'reviewed_by'
+        );
+    }
+
+    public function activeWarningsCount(): int
+    {
+        return $this->activeWarnings()
+            ->count();
+    }
+
+    public function hasReachedWarningLimit(): bool
+    {
+        return $this->activeWarningsCount() >= 3;
+    }
+
+    public function isSuspendedForReview(): bool
+    {
+        return $this->status ===
+            'suspended_pending_review';
+    }
+
+    public function canUploadContent(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                'active',
+                'approved',
+            ],
+            true
+        );
+    }
 }

@@ -36,6 +36,7 @@ use App\Http\Controllers\OfficeMemberController;
 use App\Http\Controllers\ConsultationOfficeAssignmentController;
 use App\Http\Controllers\SupportBotController;
 use App\Http\Controllers\Employee\SupportTicketController as EmployeeSupportTicketController;
+use App\Http\Controllers\Admin\ModerationController;
 /*
 |--------------------------------------------------------------------------
 | الصفحة الرئيسية والصفحات العامة
@@ -1382,4 +1383,45 @@ Route::middleware(['auth'])->group(function () {
         'support-center'
     )->name('support.center');
 });
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/moderation',
+            [ModerationController::class, 'index']
+        )->name('moderation.index');
+
+        Route::get(
+            '/moderation/warnings/{warning}',
+            [ModerationController::class, 'show']
+        )->name('moderation.show');
+
+        Route::patch(
+            '/moderation/warnings/{warning}/confirm',
+            [ModerationController::class, 'confirm']
+        )->name('moderation.confirm');
+
+        Route::patch(
+            '/moderation/warnings/{warning}/cancel',
+            [ModerationController::class, 'cancel']
+        )->name('moderation.cancel');
+
+        Route::patch(
+            '/moderation/users/{user}/reactivate',
+            [ModerationController::class, 'reactivate']
+        )->name('moderation.reactivate');
+
+        Route::patch(
+            '/moderation/users/{user}/keep-suspended',
+            [
+                ModerationController::class,
+                'keepSuspended',
+            ]
+        )->name('moderation.keep-suspended');
+    });
 require __DIR__.'/auth.php';
