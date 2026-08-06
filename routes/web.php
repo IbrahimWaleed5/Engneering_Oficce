@@ -83,7 +83,7 @@ Route::get('/dashboard', [
     DashboardController::class,
     'index',
 ])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'not.suspended'])
     ->name('dashboard');
 
 /*
@@ -92,7 +92,7 @@ Route::get('/dashboard', [
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not.suspended'])->group(function () {
     Route::patch(
         '/support/{supportTicket}/escalate',
         [
@@ -139,6 +139,7 @@ Route::get('/my-consultations', [
     ->middleware([
         'auth',
         'verified',
+        'not.suspended',
         'role:customer,engineer,admin',
     ])
     ->name('consultations.mine');
@@ -146,6 +147,7 @@ Route::get('/my-consultations', [
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer,admin',
 ])->group(function () {
     Route::get('/consultations/create', [
@@ -177,6 +179,7 @@ Route::get('/consultations', [
     ->middleware([
         'auth',
         'verified',
+        'not.suspended',
         'role:admin,employee',
     ])
     ->name('consultations.index');
@@ -190,6 +193,7 @@ Route::get('/consultations', [
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])->group(function () {
     Route::get('/employees', [
@@ -217,6 +221,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])->group(function () {
     Route::get('/consultations/{consultation}/assign', [
@@ -239,6 +244,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:engineer',
     EnsureActiveEngineerMembership::class,
 ])->group(function () {
@@ -276,6 +282,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer,admin',
 ])->group(function () {
     Route::get('/consultations/{consultation}/payment', [
@@ -298,6 +305,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])->group(function () {
     Route::get('/payments', [
@@ -322,7 +330,7 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'not.suspended'])->group(function () {
     Route::get('/notifications', [
         NotificationController::class,
         'index',
@@ -353,6 +361,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:engineer',
     EnsureActiveEngineerMembership::class,
 ])->group(function () {
@@ -386,6 +395,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])->group(function () {
     Route::get('/admin/engineer-works', [
@@ -418,6 +428,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer,admin',
 ])->group(function () {
     Route::get('/consultations/{consultation}/messages', [
@@ -444,6 +455,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -461,6 +473,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer',
 ])->group(function () {
     Route::get('/become-engineer', [
@@ -483,6 +496,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -516,6 +530,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer',
 ])->group(function () {
     Route::get('/consultations/{consultation}/engineer-review', [
@@ -535,7 +550,7 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'not.suspended'])->group(function () {
     Route::get('/invoices/{invoice}', [
         InvoiceController::class,
         'show',
@@ -556,6 +571,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer',
 ])->group(function () {
     Route::get('/consultations/{consultation}/review', [
@@ -578,6 +594,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])->group(function () {
     Route::get('/admin/reviews', [
@@ -642,6 +659,7 @@ Route::get('/email/verification-status', [
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->group(function () {
     Route::get(
         '/consultations/{consultation}/files/customer',
@@ -689,6 +707,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->group(function () {
     Route::get('/conversations', [
         ConversationController::class,
@@ -752,7 +771,7 @@ Route::middleware([
         ->scopeBindings()
         ->name('conversations.messages.download');
 });
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not.suspended'])->group(function () {
     Route::get(
         '/support',
         [SupportTicketController::class, 'index']
@@ -810,7 +829,7 @@ Route::middleware('auth')->group(function () {
 Route::get(
     '/employee/support',
     [SupportTicketController::class, 'employeeIndex']
-)->middleware('auth')
+)->middleware(['auth', 'not.suspended'])
  ->name('employee.support.index');
  /*
 |--------------------------------------------------------------------------
@@ -821,6 +840,7 @@ Route::get(
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:customer,engineer',
 ])->group(function () {
     Route::get(
@@ -857,6 +877,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -900,6 +921,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:office_owner',
 ])->group(function () {
     Route::get(
@@ -927,6 +949,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -959,6 +982,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -1003,6 +1027,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin,engineer',
 ])->group(function () {
     Route::get(
@@ -1031,6 +1056,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:engineer',
 ])->group(function () {
     Route::get(
@@ -1067,6 +1093,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->group(function () {
     /*
     | يمكن للمالك أو المدير مشاهدة الطلبات حتى عند توقف المكتب،
@@ -1122,6 +1149,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->prefix('office')->name('office.')->group(function () {
     Route::get(
         '/consultations',
@@ -1150,6 +1178,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -1188,6 +1217,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->prefix('office')->name('office.')->group(function () {
     Route::get(
         '/profile',
@@ -1214,6 +1244,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->get(
     '/office/dashboard',
     [
@@ -1230,6 +1261,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])
     ->prefix('office')
     ->name('office.')
@@ -1283,6 +1315,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->get(
     '/office-subscriptions/{officeSubscription}/receipt',
     [
@@ -1306,6 +1339,7 @@ Route::post(
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->prefix('support-bot')
     ->name('support-bot.')
     ->group(function () {
@@ -1337,6 +1371,7 @@ Route::middleware([
     Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
 ])->prefix('employee')
     ->name('employee.')
     ->group(function () {
@@ -1379,7 +1414,7 @@ Route::view(
     '/terms-and-conditions',
     'terms-and-conditions'
 )->name('terms-and-conditions');
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'not.suspended'])->group(function () {
     Route::view(
         '/support-center',
         'support-center'
@@ -1388,6 +1423,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin')
@@ -1461,6 +1497,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'verified',
+        'not.suspended',
     'role:admin',
 ])
     ->prefix('admin/moderation-appeals')
