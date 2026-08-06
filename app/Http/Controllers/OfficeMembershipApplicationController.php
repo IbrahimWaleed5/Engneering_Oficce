@@ -8,6 +8,8 @@ use App\Models\EngineeringSpecialty;
 use App\Models\Office;
 use App\Models\OfficeMember;
 use App\Models\OfficeMembershipApplication;
+use App\Services\AttachmentModerationService;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OfficeMembershipApplicationController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
+    ) {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | نموذج طلب انضمام المهندس
@@ -153,46 +161,143 @@ class OfficeMembershipApplicationController extends Controller
                 );
         }
 
-        $cvPath = $request
-            ->file('cv')
-            ->store(
-                'office-membership-applications/'
-                . $office->id
-                . '/'
-                . $engineer->id
-                . '/cv'
-            );
+        $validated = $request->validated();
 
-        $certificatePath = $request
-            ->file('certificate')
-            ->store(
-                'office-membership-applications/'
-                . $office->id
-                . '/'
-                . $engineer->id
-                . '/certificates'
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | فحص البيانات النصية قبل رفع الملفات
+        |--------------------------------------------------------------------------
+        */
+
+        $contentToModerate = collect([
+            'requested_position' =>
+                $validated['requested_position'] ?? null,
+
+            'message' =>
+                $validated['message'] ?? null,
+        ])
+            ->filter(
+                fn ($value) =>
+                    is_string($value)
+                    && trim($value) !== ''
+            )
+            ->map(
+                fn ($value, $field) =>
+                    $field . ': ' . trim($value)
+            )
+            ->implode("\n");
+
+        if ($contentToModerate !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $engineer,
+                    text: $contentToModerate,
+                    sourceType:
+                        'office_membership_application',
+                    sourceId: null,
+                    context: [
+                        'content_section' =>
+                            'office_membership_application',
+
+                        'recipient_role' =>
+                            'office_manager',
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص السيرة الذاتية والشهادة قبل التخزين
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ([
+            'cv' =>
+                'office_membership_application_cv',
+
+            'certificate' =>
+                'office_membership_application_certificate',
+        ] as $field => $sourceType) {
+            if (! $request->hasFile($field)) {
+                continue;
+            }
+
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $engineer,
+                        file: $request->file($field),
+                        sourceType: $sourceType,
+                        sourceId: null,
+                        context: [
+                            'content_section' =>
+                                'office_membership_application',
+
+                            'recipient_role' =>
+                                'office_manager',
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $attachmentModeration[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
+        $cvPath = null;
+        $certificatePath = null;
 
         try {
+            $cvPath = $request
+                ->file('cv')
+                ->store(
+                    'office-membership-applications/'
+                    . $office->id
+                    . '/'
+                    . $engineer->id
+                    . '/cv'
+                );
+
+            $certificatePath = $request
+                ->file('certificate')
+                ->store(
+                    'office-membership-applications/'
+                    . $office->id
+                    . '/'
+                    . $engineer->id
+                    . '/certificates'
+                );
+
             OfficeMembershipApplication::create([
                 'office_id' => $office->id,
 
                 'engineer_id' => $engineer->id,
 
                 'specialty_id' =>
-                    $request->validated(
-                        'specialty_id'
-                    ),
+                    $validated['specialty_id'],
 
                 'requested_position' =>
-                    $request->validated(
-                        'requested_position'
-                    ),
+                    $validated['requested_position'],
 
                 'years_of_experience' =>
-                    $request->validated(
-                        'years_of_experience'
-                    ),
+                    $validated['years_of_experience'],
 
                 'cv_path' => $cvPath,
 
@@ -200,15 +305,17 @@ class OfficeMembershipApplicationController extends Controller
                     $certificatePath,
 
                 'message' =>
-                    $request->validated('message'),
+                    $validated['message'] ?? null,
 
                 'status' => 'pending',
             ]);
         } catch (\Throwable $exception) {
-            Storage::delete([
-                $cvPath,
-                $certificatePath,
-            ]);
+            Storage::delete(
+                array_filter([
+                    $cvPath,
+                    $certificatePath,
+                ])
+            );
 
             throw $exception;
         }
@@ -480,7 +587,60 @@ class OfficeMembershipApplicationController extends Controller
             );
         }
 
-        $decision = $request->validated('decision');
+        $validated = $request->validated();
+        $decision = $validated['decision'];
+
+        /*
+        |--------------------------------------------------------------------------
+        | فحص سبب الرفض أو المسمى الوظيفي قبل حفظ قرار المكتب
+        |--------------------------------------------------------------------------
+        */
+
+        $reviewText = $decision === 'reject'
+            ? trim(
+                (string) (
+                    $validated['rejection_reason']
+                    ?? ''
+                )
+            )
+            : trim(
+                (string) (
+                    $validated['position']
+                    ?? ''
+                )
+            );
+
+        if ($reviewText !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $reviewText,
+                    sourceType:
+                        $decision === 'reject'
+                            ? 'office_membership_rejection_reason'
+                            : 'office_member_position',
+                    sourceId:
+                        $officeMembershipApplication->id,
+                    context: [
+                        'content_section' =>
+                            'office_membership_review',
+
+                        'recipient_role' =>
+                            'engineer',
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
 
         if ($decision === 'reject') {
             $officeMembershipApplication->update([
@@ -492,9 +652,7 @@ class OfficeMembershipApplicationController extends Controller
                 'reviewed_at' => now(),
 
                 'rejection_reason' =>
-                    $request->validated(
-                        'rejection_reason'
-                    ),
+                    $validated['rejection_reason'],
             ]);
 
             return redirect()
@@ -509,7 +667,8 @@ class OfficeMembershipApplicationController extends Controller
 
         DB::transaction(function () use (
             $officeMembershipApplication,
-            $request
+            $request,
+            $validated
         ) {
             OfficeMember::updateOrCreate(
                 [
@@ -527,9 +686,7 @@ class OfficeMembershipApplicationController extends Controller
                             ->specialty_id,
 
                     'position' =>
-                        $request->validated(
-                            'position'
-                        ),
+                        $validated['position'],
 
                     'office_role' => 'engineer',
 
