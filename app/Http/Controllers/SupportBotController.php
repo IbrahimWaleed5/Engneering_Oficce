@@ -14,6 +14,81 @@ use Illuminate\Support\Str;
 class SupportBotController extends Controller
 {
     /**
+     * إجابة المساعد للزائر دون إنشاء تذكرة دعم.
+     */
+    public function guestAsk(
+        Request $request,
+        SupportBotService $botService
+    ): JsonResponse {
+        $data = $request->validate([
+            'message' => [
+                'required',
+                'string',
+                'max:2000',
+            ],
+        ]);
+
+        $message = trim($data['message']);
+        $normalized = Str::lower($message);
+
+        $employeePhrases = [
+            'موظف',
+            'الدعم الفني',
+            'خدمة العملاء',
+            'شخص حقيقي',
+            'حولني',
+            'تحويل لموظف',
+            'تواصل مع الدعم',
+            'اكلم الدعم',
+            'أكلم الدعم',
+        ];
+
+        if (Str::contains($normalized, $employeePhrases)) {
+            return response()->json([
+                'success' => true,
+                'handled_by' => 'login_required',
+                'requires_login' => true,
+                'login_url' => route('login'),
+                'register_url' => route('register'),
+                'message' => [
+                    'sender_type' => 'bot',
+                    'message' =>
+                        'لتحويلك إلى موظف الدعم، يجب تسجيل الدخول أولًا حتى نحفظ المحادثة ونربطها بحسابك.',
+                    'created_at' => now()->toISOString(),
+                ],
+            ]);
+        }
+
+        $result = $botService->findAnswer($message);
+
+        if ($result) {
+            return response()->json([
+                'success' => true,
+                'handled_by' => 'bot',
+                'message' => [
+                    'sender_type' => 'bot',
+                    'message' => $result['answer'],
+                    'created_at' => now()->toISOString(),
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'handled_by' => 'bot',
+            'show_login_hint' => true,
+            'login_url' => route('login'),
+            'register_url' => route('register'),
+            'message' => [
+                'sender_type' => 'bot',
+                'message' =>
+                    'لم أجد إجابة مؤكدة. أعد صياغة السؤال، أو سجّل الدخول للتواصل مع موظف الدعم.',
+                'created_at' => now()->toISOString(),
+            ],
+        ]);
+    }
+
+    /**
      * فتح محادثة الدعم الحالية أو إنشاء محادثة جديدة.
      */
     public function start(Request $request): JsonResponse
@@ -66,7 +141,7 @@ class SupportBotController extends Controller
                     'sender_type' => 'bot',
 
                     'message' =>
-                        'مرحبًا بك في دعم إبداع هوم. كيف يمكنني مساعدتك؟',
+                        'مرحبًا بك في دعم الوليد الهندسي. كيف يمكنني مساعدتك؟',
 
                     'message_type' => 'text',
                     'is_internal' => false,

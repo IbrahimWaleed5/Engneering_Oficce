@@ -1,4 +1,10 @@
-@auth
+@props([
+    'mode' => auth()->check() ? 'authenticated' : 'guest',
+])
+
+@php
+    $isGuestMode = $mode === 'guest' || auth()->guest();
+@endphp
 <div id="supportBotWidget" class="support-bot-widget">
     <button
         type="button"
@@ -537,6 +543,10 @@ document.addEventListener('DOMContentLoaded', function () {
         'meta[name="csrf-token"]'
     )?.getAttribute('content');
 
+    const isGuestMode = @json($isGuestMode);
+    const loginUrl = @json(route('login'));
+    const registerUrl = @json(route('register'));
+
     let ticketId = null;
     let ticketMode = 'bot';
     let initialized = false;
@@ -546,10 +556,22 @@ document.addEventListener('DOMContentLoaded', function () {
     let pollingRunning = false;
 
     const routes = {
-        start: @json(route('support-bot.start')),
-        send: @json(route('support-bot.send')),
+        guestAsk: @json(route('support-bot.guest.ask')),
+
+        start: @json(
+            auth()->check()
+                ? route('support-bot.start')
+                : null
+        ),
+
+        send: @json(
+            auth()->check()
+                ? route('support-bot.send')
+                : null
+        ),
 
         officialConversationTemplate: @json(
+            auth()->check() &&
             \Illuminate\Support\Facades\Route::has('support.show')
                 ? route(
                     'support.show',
@@ -559,22 +581,30 @@ document.addEventListener('DOMContentLoaded', function () {
         ),
 
         messagesTemplate: @json(
-            route(
-                'support-bot.messages',
-                ['ticket' => '__TICKET__']
-            )
+            auth()->check()
+                ? route(
+                    'support-bot.messages',
+                    ['ticket' => '__TICKET__']
+                )
+                : null
         ),
+
         resolveTemplate: @json(
-            route(
-                'support-bot.resolve',
-                ['ticket' => '__TICKET__']
-            )
+            auth()->check()
+                ? route(
+                    'support-bot.resolve',
+                    ['ticket' => '__TICKET__']
+                )
+                : null
         ),
+
         transferTemplate: @json(
-            route(
-                'support-bot.transfer',
-                ['ticket' => '__TICKET__']
-            )
+            auth()->check()
+                ? route(
+                    'support-bot.transfer',
+                    ['ticket' => '__TICKET__']
+                )
+                : null
         ),
     };
 
@@ -776,6 +806,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return link;
     }
 
+    function showGuestLoginActions(
+        resolvedLoginUrl = loginUrl,
+        resolvedRegisterUrl = registerUrl
+    ) {
+        clearActions();
+
+        createLinkAction(
+            'تسجيل الدخول',
+            resolvedLoginUrl,
+            'primary'
+        );
+
+        createLinkAction(
+            'إنشاء حساب',
+            resolvedRegisterUrl
+        );
+    }
+
     function showEmployeeConversationLink() {
         if (
             !ticketId ||
@@ -853,6 +901,24 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        if (isGuestMode) {
+            clearMessages();
+            clearActions();
+
+            addMessage({
+                sender_type: 'bot',
+                message:
+                    'مرحبًا بك، أنا مساعد الوليد الهندسي. اسألني عن خدمات المنصة أو طريقة استخدامها.',
+                created_at: new Date().toISOString(),
+            });
+
+            initialized = true;
+            statusText.textContent =
+                'المساعد الذكي للزوار';
+            input.focus();
+            return;
+        }
+
         requestRunning = true;
         clearMessages();
         clearActions();
@@ -906,6 +972,60 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
 
         const message = input.value.trim();
+
+        if (isGuestMode) {
+            if (!message || requestRunning) {
+                return;
+            }
+
+            clearActions();
+
+            addMessage({
+                sender_type: 'customer',
+                message: message,
+                created_at: new Date().toISOString(),
+            });
+
+            input.value = '';
+            resizeInput();
+            requestRunning = true;
+            sendButton.disabled = true;
+            input.disabled = true;
+
+            try {
+                const data = await apiRequest(
+                    routes.guestAsk,
+                    {
+                        body: {
+                            message: message,
+                        },
+                    }
+                );
+
+                if (data.message) {
+                    addMessage(data.message);
+                }
+
+                if (
+                    data.requires_login ||
+                    data.show_login_hint
+                ) {
+                    showGuestLoginActions(
+                        data.login_url ?? loginUrl,
+                        data.register_url ?? registerUrl
+                    );
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                requestRunning = false;
+                sendButton.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+
+            return;
+        }
 
         if (
             !message ||
@@ -1043,6 +1163,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startPolling() {
+        if (isGuestMode) {
+            return;
+        }
+
         stopPolling();
 
         pollingTimer = window.setInterval(
@@ -1189,4 +1313,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-@endauth

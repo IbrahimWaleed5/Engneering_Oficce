@@ -1287,6 +1287,19 @@ Route::middleware([
         'subscriptionReceipt',
     ]
 )->name('office-subscriptions.receipt');
+
+/*
+|--------------------------------------------------------------------------
+| المساعد الذكي للزوار
+|--------------------------------------------------------------------------
+*/
+Route::post(
+    '/smart-assistant/guest/ask',
+    [SupportBotController::class, 'guestAsk']
+)
+    ->middleware('throttle:20,1')
+    ->name('support-bot.guest.ask');
+
 Route::middleware([
     'auth',
     'verified',
@@ -1354,10 +1367,6 @@ Route::middleware([
             [EmployeeSupportTicketController::class, 'close']
         )->name('support-tickets.close');
     });
-    Route::view(
-    '/privacy-policy',
-    'privacy-policy'
-)->name('privacy-policy');
 Route::view(
     '/privacy-policy',
     'privacy-policy'
