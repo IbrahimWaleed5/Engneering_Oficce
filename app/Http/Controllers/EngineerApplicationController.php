@@ -7,11 +7,20 @@ use App\Models\EngineerApplication;
 use App\Models\EngineeringSpecialty;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\AttachmentModerationService;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class EngineerApplicationController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
+    ) {
+    }
+
     public function create(Request $request)
     {
         $user = $request->user();
@@ -151,59 +160,151 @@ class EngineerApplicationController extends Controller
                 ->withInput();
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص مرفقات طلب المهندس قبل التخزين
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ([
+            'certificate_file' =>
+                'engineer_application_certificate',
+
+            'cv_file' =>
+                'engineer_application_cv',
+
+            'payment_receipt' =>
+                'engineer_application_payment_receipt',
+        ] as $field => $sourceType) {
+            if (! $request->hasFile($field)) {
+                continue;
+            }
+
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $user,
+                        file: $request->file($field),
+                        sourceType: $sourceType,
+                        sourceId: null,
+                        context: [
+                            'content_section' =>
+                                'engineer_application',
+
+                            'recipient_role' =>
+                                'admin',
+
+                            'application_type' =>
+                                $isRenewal
+                                    ? 'renewal'
+                                    : 'new',
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $attachmentModeration[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
         $certificatePath =
             $lastApproved?->certificate_file;
 
-        if ($request->hasFile('certificate_file')) {
-            $certificatePath = $request
-                ->file('certificate_file')
+        $cvPath =
+            $lastApproved?->cv_file;
+
+        $receiptPath = null;
+
+        $newCertificatePath = null;
+        $newCvPath = null;
+
+        try {
+            if ($request->hasFile('certificate_file')) {
+                $newCertificatePath = $request
+                    ->file('certificate_file')
+                    ->store(
+                        'engineer-applications/certificates',
+                        'public'
+                    );
+
+                $certificatePath =
+                    $newCertificatePath;
+            }
+
+            if (! $certificatePath) {
+                return back()
+                    ->withErrors([
+                        'certificate_file' =>
+                            'يجب رفع الشهادة الهندسية.',
+                    ])
+                    ->withInput();
+            }
+
+            if ($request->hasFile('cv_file')) {
+                $newCvPath = $request
+                    ->file('cv_file')
+                    ->store(
+                        'engineer-applications/cv',
+                        'public'
+                    );
+
+                $cvPath = $newCvPath;
+            }
+
+            $receiptPath = $request
+                ->file('payment_receipt')
                 ->store(
-                    'engineer-applications/certificates',
+                    'engineer-applications/receipts',
                     'public'
                 );
-        }
 
-        if (! $certificatePath) {
-            return back()
-                ->withErrors([
-                    'certificate_file' =>
-                        'يجب رفع الشهادة الهندسية.',
+            EngineerApplication::create([
+                'user_id' =>
+                    $user->id,
+
+                'specialty_id' =>
+                    $specialtyId,
+
+                'certificate_file' =>
+                    $certificatePath,
+
+                'cv_file' =>
+                    $cvPath,
+
+                'payment_receipt' =>
+                    $receiptPath,
+
+                'amount' =>
+                    50,
+
+                'application_type' =>
+                    $isRenewal
+                        ? 'renewal'
+                        : 'new',
+
+                'payment_status' =>
+                    'pending',
+
+                'status' =>
+                    'pending',
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete(
+                array_filter([
+                    $newCertificatePath,
+                    $newCvPath,
+                    $receiptPath,
                 ])
-                ->withInput();
-        }
-
-        $cvPath = $lastApproved?->cv_file;
-
-        if ($request->hasFile('cv_file')) {
-            $cvPath = $request
-                ->file('cv_file')
-                ->store(
-                    'engineer-applications/cv',
-                    'public'
-                );
-        }
-
-        $receiptPath = $request
-            ->file('payment_receipt')
-            ->store(
-                'engineer-applications/receipts',
-                'public'
             );
 
-        EngineerApplication::create([
-            'user_id' => $user->id,
-            'specialty_id' => $specialtyId,
-            'certificate_file' => $certificatePath,
-            'cv_file' => $cvPath,
-            'payment_receipt' => $receiptPath,
-            'amount' => 50,
-
-            'application_type' =>
-                $isRenewal ? 'renewal' : 'new',
-
-            'payment_status' => 'pending',
-            'status' => 'pending',
-        ]);
+            throw $exception;
+        }
 
         return redirect()
             ->route('dashboard')
@@ -277,10 +378,45 @@ class EngineerApplicationController extends Controller
                 'الحد الأقصى لمدة الاشتراك هو 3650 يومًا.',
         ]);
 
+        $adminNote = trim(
+            (string) ($validated['admin_note'] ?? '')
+        );
+
+        if ($adminNote !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $request->user(),
+                    text: $adminNote,
+                    sourceType:
+                        'engineer_application_approval_note',
+                    sourceId:
+                        $engineerApplication->id,
+                    context: [
+                        'content_section' =>
+                            'engineer_application_review',
+
+                        'recipient_role' =>
+                            'engineer',
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
         $expiresAt = DB::transaction(
             function () use (
                 $validated,
-                $engineerApplication
+                $engineerApplication,
+                $adminNote
             ) {
                 $application =
                     EngineerApplication::query()
@@ -327,7 +463,9 @@ class EngineerApplicationController extends Controller
                     'approved_at' => now(),
 
                     'admin_note' =>
-                        $validated['admin_note'] ?? null,
+                        $adminNote !== ''
+                            ? $adminNote
+                            : null,
                 ]);
 
                 $user->update([
@@ -416,10 +554,42 @@ class EngineerApplicationController extends Controller
                 'يجب كتابة سبب رفض الطلب.',
         ]);
 
+        $adminNote = trim(
+            $validated['admin_note']
+        );
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $adminNote,
+                sourceType:
+                    'engineer_application_rejection_note',
+                sourceId:
+                    $engineerApplication->id,
+                context: [
+                    'content_section' =>
+                        'engineer_application_review',
+
+                    'recipient_role' =>
+                        'engineer',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult[
+                        'user_message'
+                    ]
+                );
+        }
+
         $engineerApplication->update([
             'payment_status' => 'rejected',
             'status' => 'rejected',
-            'admin_note' => $validated['admin_note'],
+            'admin_note' => $adminNote,
         ]);
 
         $engineerApplication
@@ -427,7 +597,7 @@ class EngineerApplicationController extends Controller
             ?->notify(
                 new SystemNotification(
                     'تم رفض دفعة اشتراك المهندس',
-                    $validated['admin_note'],
+                    $adminNote,
                     '/dashboard'
                 )
             );
