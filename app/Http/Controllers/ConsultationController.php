@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\OfficeMember;
 use App\Models\Office;
 use App\Notifications\SystemNotification;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,11 @@ use Illuminate\Support\Facades\Storage;
 
 class ConsultationController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | عرض جميع الاستشارات
@@ -277,6 +283,44 @@ class ConsultationController extends Controller
                 ->withInput();
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص عنوان ووصف الاستشارة قبل رفع الملف أو إنشاء الطلب
+        |--------------------------------------------------------------------------
+        */
+
+        $contentToModerate = trim(
+            $validated['title']
+            . "\n"
+            . $validated['description']
+        );
+
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $contentToModerate,
+                sourceType: 'consultation',
+                sourceId: null,
+                context: [
+                    'content_section' =>
+                        'consultation_request',
+
+                    'recipient_role' =>
+                        ! empty($validated['engineer_id'])
+                            ? 'engineer'
+                            : 'admin',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
+
         $type = ConsultationType::findOrFail(
             $validated['consultation_type_id']
         );
@@ -313,46 +357,56 @@ class ConsultationController extends Controller
 
         $filePath = null;
 
-        if ($request->hasFile('customer_file')) {
-            $filePath = $request
-                ->file('customer_file')
-                ->store(
-                    'consultations',
-                    'public'
+        try {
+            if ($request->hasFile('customer_file')) {
+                $filePath = $request
+                    ->file('customer_file')
+                    ->store(
+                        'consultations',
+                        'public'
+                    );
+            }
+
+            $consultation = Consultation::create([
+                'consultation_number' =>
+                    'CONS-' . time(),
+
+                'customer_id' =>
+                    $request->user()->id,
+
+                'consultation_type_id' =>
+                    $type->id,
+
+                'engineer_id' =>
+                    $engineer?->id,
+
+                'title' =>
+                    $validated['title'],
+
+                'description' =>
+                    $validated['description'],
+
+                'final_price' =>
+                    $type->price,
+
+                'status' =>
+                    'waiting_payment',
+
+                'payment_status' =>
+                    'unpaid',
+
+                'customer_file' =>
+                    $filePath,
+            ]);
+        } catch (\Throwable $exception) {
+            if ($filePath) {
+                Storage::disk('public')->delete(
+                    $filePath
                 );
+            }
+
+            throw $exception;
         }
-
-        $consultation = Consultation::create([
-            'consultation_number' =>
-                'CONS-' . time(),
-
-            'customer_id' =>
-                $request->user()->id,
-
-            'consultation_type_id' =>
-                $type->id,
-
-            'engineer_id' =>
-                $engineer?->id,
-
-            'title' =>
-                $validated['title'],
-
-            'description' =>
-                $validated['description'],
-
-            'final_price' =>
-                $type->price,
-
-            'status' =>
-                'waiting_payment',
-
-            'payment_status' =>
-                'unpaid',
-
-            'customer_file' =>
-                $filePath,
-        ]);
 
         return redirect()
             ->route(
