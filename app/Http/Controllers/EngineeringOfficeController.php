@@ -6,11 +6,17 @@ use App\Models\Office;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Requests\UpdateOfficeProfileRequest;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 
 class EngineeringOfficeController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /*
     |--------------------------------------------------------------------------
     | عرض جميع المكاتب للمهندسين
@@ -312,105 +318,17 @@ public function updateProfile(
 
     /*
     |--------------------------------------------------------------------------
-    | حذف الشعار الحالي
+    | فحص البيانات النصية العامة قبل رفع الصور أو الحفظ
     |--------------------------------------------------------------------------
+    |
+    | البريد والهاتف وأرقام السجل والترخيص حقول رسمية مخصصة،
+    | لذلك لا تدخل في فحص طلب التواصل خارج المنصة.
+    |
     */
 
-    if (
-        $request->boolean('remove_logo')
-        && $office->logo_path
-    ) {
-        Storage::disk('public')->delete(
-            $office->logo_path
-        );
-
-        $office->logo_path = null;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | حذف صورة الغلاف الحالية
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        $request->boolean('remove_cover')
-        && $office->cover_path
-    ) {
-        Storage::disk('public')->delete(
-            $office->cover_path
-        );
-
-        $office->cover_path = null;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | رفع شعار جديد
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->hasFile('logo')) {
-        if ($office->logo_path) {
-            Storage::disk('public')->delete(
-                $office->logo_path
-            );
-        }
-
-        $office->logo_path = $request
-            ->file('logo')
-            ->store(
-                'offices/'
-                . $office->id
-                . '/logo',
-                'public'
-            );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | رفع غلاف جديد
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->hasFile('cover')) {
-        if ($office->cover_path) {
-            Storage::disk('public')->delete(
-                $office->cover_path
-            );
-        }
-
-        $office->cover_path = $request
-            ->file('cover')
-            ->store(
-                'offices/'
-                . $office->id
-                . '/cover',
-                'public'
-            );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | تحديث البيانات النصية
-    |--------------------------------------------------------------------------
-    */
-
-    $office->fill([
-        'name' => $validated['name'],
-
-        'email' => $validated['email'],
-
-        'phone' =>
-            $validated['phone'] ?? null,
-
-        'commercial_registration' =>
-            $validated['commercial_registration']
-            ?? null,
-
-        'license_number' =>
-            $validated['license_number']
-            ?? null,
+    $contentToModerate = collect([
+        'name' =>
+            $validated['name'] ?? null,
 
         'country' =>
             $validated['country'] ?? null,
@@ -423,9 +341,168 @@ public function updateProfile(
 
         'description' =>
             $validated['description'] ?? null,
-    ]);
+    ])
+        ->filter(
+            fn ($value) =>
+                is_string($value)
+                && trim($value) !== ''
+        )
+        ->map(
+            fn ($value, $field) =>
+                $field . ': ' . trim($value)
+        )
+        ->implode("\n");
 
-    $office->save();
+    if ($contentToModerate !== '') {
+        $moderationResult =
+            $this->moderationService->moderateText(
+                user: $request->user(),
+                text: $contentToModerate,
+                sourceType: 'office_profile',
+                sourceId: $office->id,
+                context: [
+                    'content_section' =>
+                        'office_profile',
+
+                    'recipient_role' =>
+                        'public',
+                ]
+            );
+
+        if (! $moderationResult['allowed']) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    $moderationResult['user_message']
+                );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | تجهيز الصور الجديدة دون حذف الصور القديمة مبكرًا
+    |--------------------------------------------------------------------------
+    */
+
+    $oldLogoPath = $office->logo_path;
+    $oldCoverPath = $office->cover_path;
+
+    $newLogoPath = null;
+    $newCoverPath = null;
+
+    try {
+        if ($request->hasFile('logo')) {
+            $newLogoPath = $request
+                ->file('logo')
+                ->store(
+                    'offices/'
+                    . $office->id
+                    . '/logo',
+                    'public'
+                );
+        }
+
+        if ($request->hasFile('cover')) {
+            $newCoverPath = $request
+                ->file('cover')
+                ->store(
+                    'offices/'
+                    . $office->id
+                    . '/cover',
+                    'public'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | تحديث البيانات
+        |--------------------------------------------------------------------------
+        */
+
+        $office->fill([
+            'name' =>
+                $validated['name'],
+
+            'email' =>
+                $validated['email'],
+
+            'phone' =>
+                $validated['phone'] ?? null,
+
+            'commercial_registration' =>
+                $validated['commercial_registration']
+                    ?? null,
+
+            'license_number' =>
+                $validated['license_number']
+                    ?? null,
+
+            'country' =>
+                $validated['country'] ?? null,
+
+            'city' =>
+                $validated['city'] ?? null,
+
+            'address' =>
+                $validated['address'] ?? null,
+
+            'description' =>
+                $validated['description'] ?? null,
+        ]);
+
+        if ($newLogoPath) {
+            $office->logo_path = $newLogoPath;
+        } elseif ($request->boolean('remove_logo')) {
+            $office->logo_path = null;
+        }
+
+        if ($newCoverPath) {
+            $office->cover_path = $newCoverPath;
+        } elseif ($request->boolean('remove_cover')) {
+            $office->cover_path = null;
+        }
+
+        $office->save();
+    } catch (\Throwable $exception) {
+        if ($newLogoPath) {
+            Storage::disk('public')->delete(
+                $newLogoPath
+            );
+        }
+
+        if ($newCoverPath) {
+            Storage::disk('public')->delete(
+                $newCoverPath
+            );
+        }
+
+        throw $exception;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | حذف الصور القديمة بعد نجاح الحفظ
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $oldLogoPath
+        && $oldLogoPath !== $office->logo_path
+    ) {
+        Storage::disk('public')->delete(
+            $oldLogoPath
+        );
+    }
+
+    if (
+        $oldCoverPath
+        && $oldCoverPath !== $office->cover_path
+    ) {
+        Storage::disk('public')->delete(
+            $oldCoverPath
+        );
+    }
 
     return redirect()
         ->route('office.profile')
@@ -434,6 +511,7 @@ public function updateProfile(
             'تم تحديث الملف الشخصي للمكتب بنجاح.'
         );
 }
+
 /*
 |--------------------------------------------------------------------------
 | لوحة تحكم المكتب
