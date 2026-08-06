@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,11 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly UniversalContentModerationService $moderationService
+    ) {
+    }
+
     /**
      * عرض صفحة البيانات الشخصية.
      */
@@ -63,6 +69,59 @@ class ProfileController extends Controller
         // الصورة ملف وليست قيمة نصية.
         unset($validated['profile_photo']);
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص المحتوى النصي العام قبل رفع الصورة أو الحفظ
+        |--------------------------------------------------------------------------
+        */
+
+        $excludedModerationFields = [
+            'email',
+            'email_confirmation',
+            'password',
+            'password_confirmation',
+            'current_password',
+        ];
+
+        $contentToModerate = collect($validated)
+            ->except($excludedModerationFields)
+            ->filter(
+                fn ($value) =>
+                    is_string($value)
+                    && trim($value) !== ''
+            )
+            ->map(
+                fn ($value, $field) =>
+                    $field . ': ' . trim($value)
+            )
+            ->implode("\n");
+
+        if ($contentToModerate !== '') {
+            $moderationResult =
+                $this->moderationService->moderateText(
+                    user: $user,
+                    text: $contentToModerate,
+                    sourceType: 'user_profile',
+                    sourceId: $user->id,
+                    context: [
+                        'content_section' =>
+                            'profile',
+
+                        'recipient_role' =>
+                            'public',
+                    ]
+                );
+
+            if (! $moderationResult['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $moderationResult['user_message']
+                    );
+            }
+        }
+
         $user->fill($validated);
 
         /*
@@ -84,24 +143,35 @@ class ProfileController extends Controller
         $oldPhoto = $user->profile_photo;
         $newPhoto = null;
 
-        if ($request->hasFile('profile_photo')) {
-            $newPhoto = $request
-                ->file('profile_photo')
-                ->store(
-                    'profile-photos',
-                    'public'
-                );
+        try {
+            if ($request->hasFile('profile_photo')) {
+                $newPhoto = $request
+                    ->file('profile_photo')
+                    ->store(
+                        'profile-photos',
+                        'public'
+                    );
 
-            $user->profile_photo = $newPhoto;
+                $user->profile_photo = $newPhoto;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | حفظ البيانات
+            |--------------------------------------------------------------------------
+            */
+
+            $user->save();
+        } catch (\Throwable $exception) {
+            if (
+                $newPhoto
+                && Storage::disk('public')->exists($newPhoto)
+            ) {
+                Storage::disk('public')->delete($newPhoto);
+            }
+
+            throw $exception;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | حفظ البيانات
-        |--------------------------------------------------------------------------
-        */
-
-        $user->save();
 
         /*
         |--------------------------------------------------------------------------
