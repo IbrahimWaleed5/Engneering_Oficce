@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\AttachmentModerationService;
 use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     public function __construct(
-        private readonly UniversalContentModerationService $moderationService
+        private readonly UniversalContentModerationService $moderationService,
+        private readonly AttachmentModerationService $attachmentModerationService
     ) {
     }
 
@@ -122,6 +124,44 @@ class ProfileController extends Controller
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | فحص صورة الملف الشخصي قبل التخزين
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->hasFile('profile_photo')) {
+            $attachmentModeration =
+                $this->attachmentModerationService
+                    ->moderate(
+                        user: $user,
+                        file: $request->file(
+                            'profile_photo'
+                        ),
+                        sourceType:
+                            'user_profile_photo',
+                        sourceId: $user->id,
+                        context: [
+                            'content_section' =>
+                                'profile_photo',
+
+                            'recipient_role' =>
+                                'public',
+                        ]
+                    );
+
+            if (! $attachmentModeration['allowed']) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        $attachmentModeration[
+                            'user_message'
+                        ]
+                    );
+            }
+        }
+
         $user->fill($validated);
 
         /*
@@ -165,9 +205,13 @@ class ProfileController extends Controller
         } catch (\Throwable $exception) {
             if (
                 $newPhoto
-                && Storage::disk('public')->exists($newPhoto)
+                && Storage::disk('public')->exists(
+                    $newPhoto
+                )
             ) {
-                Storage::disk('public')->delete($newPhoto);
+                Storage::disk('public')->delete(
+                    $newPhoto
+                );
             }
 
             throw $exception;
@@ -183,9 +227,13 @@ class ProfileController extends Controller
             $newPhoto
             && $oldPhoto
             && $oldPhoto !== $newPhoto
-            && Storage::disk('public')->exists($oldPhoto)
+            && Storage::disk('public')->exists(
+                $oldPhoto
+            )
         ) {
-            Storage::disk('public')->delete($oldPhoto);
+            Storage::disk('public')->delete(
+                $oldPhoto
+            );
         }
 
         return Redirect::route('profile.edit')
