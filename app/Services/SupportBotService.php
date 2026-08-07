@@ -27,7 +27,10 @@ class SupportBotService
         $bestScore = 0;
 
         foreach ($articles as $article) {
-            $score = $this->calculateScore($article, $words);
+            $score = $this->calculateScore(
+                $article,
+                $words
+            );
 
             if ($score > $bestScore) {
                 $bestScore = $score;
@@ -53,16 +56,15 @@ class SupportBotService
         return [
             'article' => $bestArticle,
             'answer' => $bestArticle->answer,
-            'confidence' => round($confidence, 4),
+            'confidence' => round(
+                $confidence,
+                4
+            ),
         ];
     }
 
     /**
-     * سياق شامل للمساعد.
-     *
-     * لا نعتمد فقط على مقالات قاعدة المعرفة؛ بل نضيف خريطة تشغيلية
-     * ثابتة للمنصة حتى يستطيع المساعد الإجابة عن الأسئلة العامة
-     * المتعلقة باستخدام النظام حتى لو لم توجد مقالة مطابقة.
+     * بناء سياق المنصة + مقالات المعرفة ذات الصلة.
      */
     public function buildKnowledgeContext(
         string $message,
@@ -73,41 +75,53 @@ class SupportBotService
             $limit
         );
 
-        $platformContext = $this->buildPlatformContext();
+        $platformContext =
+            $this->buildPlatformContext();
 
-        $articlesContext = $articles->isEmpty()
-            ? 'لا توجد مقالة مطابقة مباشرة في قاعدة المعرفة لهذا السؤال.'
-            : $articles
-                ->values()
-                ->map(
-                    function (
-                        KnowledgeBaseArticle $article,
-                        int $index
-                    ): string {
-                        $number = $index + 1;
+        $articlesContext =
+            $articles->isEmpty()
+                ? 'لا توجد مقالة مطابقة مباشرة في قاعدة المعرفة لهذا السؤال.'
+                : $articles
+                    ->values()
+                    ->map(
+                        function (
+                            KnowledgeBaseArticle $article,
+                            int $index
+                        ): string {
+                            $number = $index + 1;
 
-                        $keywords = $this->normalizeKeywords(
-                            $article->keywords
-                        );
+                            $keywords =
+                                $this->normalizeKeywords(
+                                    $article->keywords
+                                );
 
-                        return implode("\n", [
-                            "المعلومة رقم {$number}:",
-                            'السؤال: ' .
-                                trim((string) $article->question),
-                            'الإجابة المعتمدة: ' .
-                                trim((string) $article->answer),
-                            'الكلمات المفتاحية: ' .
-                                ($keywords !== ''
-                                    ? $keywords
-                                    : 'غير محددة'),
-                            'التصنيف: ' .
-                                ($article->category ?? 'عام'),
-                        ]);
-                    }
-                )
-                ->implode(
-                    "\n\n--------------------\n\n"
-                );
+                            return implode("\n", [
+                                "المعلومة رقم {$number}:",
+                                'السؤال: ' .
+                                    trim(
+                                        (string) $article->question
+                                    ),
+                                'الإجابة المعتمدة: ' .
+                                    trim(
+                                        (string) $article->answer
+                                    ),
+                                'الكلمات المفتاحية: ' .
+                                    (
+                                        $keywords !== ''
+                                            ? $keywords
+                                            : 'غير محددة'
+                                    ),
+                                'التصنيف: ' .
+                                    (
+                                        $article->category
+                                        ?? 'عام'
+                                    ),
+                            ]);
+                        }
+                    )
+                    ->implode(
+                        "\n\n--------------------\n\n"
+                    );
 
         return <<<TEXT
 أنت "مساعد الوليد الهندسي"، المساعد الرسمي داخل منصة الوليد الهندسي.
@@ -119,8 +133,8 @@ class SupportBotService
 - استخدم خريطة المنصة أدناه للإجابة عن الأسئلة التشغيلية العامة.
 - استخدم مقالات قاعدة المعرفة باعتبارها معلومات معتمدة ذات أولوية أعلى.
 - إذا تعارضت مقالة مع معلومة عامة، اتبع المقالة المعتمدة.
-- لا تخترع أرقام أسعار أو مدد أو حالات فعلية غير موجودة في السياق.
-- إذا كان السؤال يحتاج معرفة بيانات الحساب الحالية أو حالة طلب بعينه ولم تُرسل هذه البيانات في السياق، اشرح للمستخدم أين يتابعها داخل المنصة ولا تدّعِ أنك شاهدتها.
+- لا تخترع أسعارًا أو مددًا أو حالات فعلية غير موجودة في السياق.
+- إذا كان السؤال يحتاج معرفة بيانات الحساب الحالية أو حالة طلب بعينه ولم تُرسل هذه البيانات، اشرح للمستخدم أين يتابعها داخل المنصة ولا تدّعِ أنك شاهدتها.
 - أعطِ خطوات عملية وواضحة وبالعربية السهلة.
 - افهم اللهجة الفلسطينية/الشامية والعربية الفصحى.
 - لا تحوّل المستخدم لموظف الدعم لمجرد أنك غير متأكد من صياغة الجواب؛ حاول أولًا مساعدته من خريطة النظام ومقالات المعرفة.
@@ -138,6 +152,34 @@ class SupportBotService
 خريطة منصة الوليد الهندسي
 ====================
 
+{$platformContext}
+
+====================
+مقالات قاعدة المعرفة ذات الصلة
+====================
+
+{$articlesContext}
+
+====================
+تعليمات الإجابة
+====================
+
+أجب كموظف مساعدة رقمي فاهم للمنصة:
+1. افهم مقصد المستخدم حتى لو كتب باللهجة.
+2. جاوب مباشرة.
+3. أعطه الخطوات داخل المنصة.
+4. لا تستخدم عبارة "ما عندي معلومات" إلا إذا كان المطلوب معلومة فعلية خاصة بالحساب ولم يزودك النظام بها.
+5. في هذه الحالة لا تنهِ المساعدة؛ وضح أين يمكنه معرفة المعلومة أو ما الذي يجب فعله.
+6. إذا كانت المشكلة أمنية أو حساسة، أو تحتاج تدخلًا بشريًا فعليًا، اطلب التحويل إلى موظف الدعم.
+TEXT;
+    }
+
+    /**
+     * خريطة تشغيلية عامة للمنصة.
+     */
+    private function buildPlatformContext(): string
+    {
+        return <<<'TEXT'
 1) الحسابات والأدوار
 - يوجد مستخدمون مثل: عميل، مهندس، موظف، مدير.
 - لكل مستخدم لوحة تحكم حسب دوره وصلاحياته.
@@ -157,12 +199,12 @@ class SupportBotService
 3) اختيار المهندس
 - يمكن للعميل تصفح أعمال المهندسين واختيار مهندس مناسب.
 - يمكن عرض أعمال المهندس وإنجازاته المنشورة.
-- المهندس يستطيع إضافة أعماله وصوره وملفاته، وتخضع للمراجعة والرقابة قبل أو أثناء النشر حسب النظام.
+- المهندس يستطيع إضافة أعماله وصوره وملفاته، وتخضع للمراجعة والرقابة حسب النظام.
 
 4) طلب الانضمام كمهندس وتجديد الاشتراك
 - العميل يستطيع تقديم طلب للانضمام كمهندس.
 - الطلب قد يتضمن التخصص والشهادة الهندسية والسيرة الذاتية وإيصال الدفع.
-- المهندس الحالي يستطيع تقديم طلب تجديد عند انتهاء أو قرب انتهاء عضويته حسب النظام.
+- المهندس الحالي يستطيع تقديم طلب تجديد.
 - الإدارة تراجع الطلب والدفع وتحدد مدة التفعيل.
 - بعد الموافقة تصبح صلاحيات المهندس فعالة حتى تاريخ انتهاء الاشتراك.
 
@@ -192,7 +234,7 @@ class SupportBotService
 - المحتوى المخالف قد يُرفض قبل الحفظ.
 - المخالفات قد تسجل تحذيرًا على الحساب.
 - تكرار المخالفات قد يؤدي إلى تعليق الحساب.
-- المستخدم يستطيع رؤية حالة حسابه وعدد التحذيرات والمخالفات والمتبقي حتى الحظر من لوحة التحكم عندما تكون هذه الميزة مفعلة.
+- المستخدم يستطيع رؤية حالة حسابه وعدد التحذيرات والمخالفات والمتبقي حتى الحظر من لوحة التحكم.
 - الحساب المعلق يستطيع استخدام مسار الاعتراض المخصص.
 
 9) الدعم الفني
@@ -216,41 +258,19 @@ class SupportBotService
 12) قاعدة مهمة للإجابات
 - الأسئلة العامة عن "كيف أعمل؟ أين أجد؟ ما الخطوة التالية؟" أجب عنها مباشرة.
 - الأسئلة التي تحتاج بيانات فعلية مثل "هل تم قبول دفعتي؟ من المهندس المسند لي؟" لا تخترع الإجابة.
-  وجّه المستخدم إلى الصفحة المناسبة، أو استخدم بيانات الحساب إذا كانت ممررة لك من النظام.
+- وجّه المستخدم إلى الصفحة المناسبة، أو استخدم بيانات الحساب إذا كانت ممررة لك من النظام.
 - لا تحول للدعم إلا عندما تكون هناك حاجة فعلية، أو يطلب المستخدم ذلك، أو تكون المشكلة أمنية/حساسة.
-
-====================
-مقالات قاعدة المعرفة ذات الصلة
-====================
-
-{$articlesContext}
-
-====================
-تعليمات الإجابة
-====================
-
-أجب كموظف مساعدة رقمي فاهم للمنصة:
-1. افهم مقصد المستخدم حتى لو كتب باللهجة.
-2. جاوب مباشرة.
-3. أعطه الخطوات داخل المنصة.
-4. لا تستخدم عبارة "ما عندي معلومات" إلا إذا كان المطلوب معلومة فعلية خاصة بالحساب ولم يزودك النظام بها.
-5. في هذه الحالة لا تنهِ المساعدة؛ وضح أين يمكنه معرفة المعلومة أو ما الذي يجب فعله.
-6. إذا كانت المشكلة أمنية أو حساسة، أو تحتاج تدخلًا بشريًا فعليًا، اطلب التحويل إلى موظف الدعم.
 TEXT;
     }
 
     /**
      * يحدد هل النص يبدو كحادث أمني يحتاج موظف دعم.
-     *
-     * يمكن للـ Controller استخدام هذه الدالة قبل طلب Gemini
-     * لتحويل الحالات الأمنية مباشرة.
      */
     public function requiresSecurityEscalation(
         string $message
     ): bool {
-        $normalized = $this->normalizeArabicText(
-            $message
-        );
+        $normalized =
+            $this->normalizeArabicText($message);
 
         $securityPatterns = [
             'انسرق حساب',
@@ -265,7 +285,6 @@ TEXT;
             'دخول غير مصرح',
             'مش انا دخلت',
             'تسجيل دخول غريب',
-            'غيرت كلمه السر',
             'كلمه السر انسرقت',
             'كلمه المرور انسرقت',
             'الباسورد انسرق',
@@ -296,7 +315,9 @@ TEXT;
             if (
                 Str::contains(
                     $normalized,
-                    $this->normalizeArabicText($pattern)
+                    $this->normalizeArabicText(
+                        $pattern
+                    )
                 )
             ) {
                 return true;
@@ -307,8 +328,7 @@ TEXT;
     }
 
     /**
-     * معلومات مختصرة يمكن تمريرها للمساعد عن المستخدم الحالي
-     * من الـ Controller، بدون كشف بيانات حساسة.
+     * معلومات مختصرة عن المستخدم الحالي بدون بيانات حساسة.
      */
     public function buildUserContext(
         mixed $user
@@ -331,10 +351,14 @@ TEXT;
 
         return implode("\n", [
             'المستخدم مسجل الدخول.',
-            'الدور: ' . ($user->role ?? 'غير محدد'),
-            'حالة الحساب: ' . ($user->status ?? 'غير محددة'),
-            'عدد المخالفات المؤكدة: ' . $warningsCount,
-            'المتبقي حتى حد التعليق: ' . $remaining,
+            'الدور: ' .
+                ($user->role ?? 'غير محدد'),
+            'حالة الحساب: ' .
+                ($user->status ?? 'غير محددة'),
+            'عدد المخالفات المؤكدة: ' .
+                $warningsCount,
+            'المتبقي حتى حد التعليق: ' .
+                $remaining,
             'لا تكشف أي بيانات حساسة أو معلومات لا تخص هذا المستخدم.',
         ]);
     }
@@ -367,10 +391,11 @@ TEXT;
             ) use ($words) {
                 return [
                     'article' => $article,
-                    'score' => $this->calculateScore(
-                        $article,
-                        $words
-                    ),
+                    'score' =>
+                        $this->calculateScore(
+                            $article,
+                            $words
+                        ),
                 ];
             })
             ->filter(
@@ -383,26 +408,26 @@ TEXT;
             ->values();
     }
 
-    /**
-     * حساب درجة ارتباط المقالة بالسؤال.
-     */
     private function calculateScore(
         KnowledgeBaseArticle $article,
         Collection $words
     ): float {
-        $questionText = $this->normalizeArabicText(
-            (string) $article->question
-        );
+        $questionText =
+            $this->normalizeArabicText(
+                (string) $article->question
+            );
 
-        $keywordsText = $this->normalizeArabicText(
-            $this->normalizeKeywords(
-                $article->keywords
-            )
-        );
+        $keywordsText =
+            $this->normalizeArabicText(
+                $this->normalizeKeywords(
+                    $article->keywords
+                )
+            );
 
-        $answerText = $this->normalizeArabicText(
-            (string) $article->answer
-        );
+        $answerText =
+            $this->normalizeArabicText(
+                (string) $article->answer
+            );
 
         $score = 0;
 
@@ -446,9 +471,6 @@ TEXT;
         return $score;
     }
 
-    /**
-     * تحويل الكلمات المفتاحية إلى نص.
-     */
     private function normalizeKeywords(
         mixed $keywords
     ): string {
@@ -494,15 +516,13 @@ TEXT;
         return $keywords;
     }
 
-    /**
-     * استخراج الكلمات المهمة من سؤال المستخدم.
-     */
     private function extractWords(
         string $message
     ): Collection {
-        $message = $this->normalizeArabicText(
-            $message
-        );
+        $message =
+            $this->normalizeArabicText(
+                $message
+            );
 
         $message = preg_replace(
             '/[^\p{Arabic}\p{L}\p{N}\s]/u',
@@ -570,9 +590,6 @@ TEXT;
             ->values();
     }
 
-    /**
-     * توحيد الكتابة العربية لتقوية البحث والتعرف على النوايا.
-     */
     private function normalizeArabicText(
         string $text
     ): string {
