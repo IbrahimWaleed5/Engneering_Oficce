@@ -37,6 +37,33 @@ public function guestAsk(
     $normalized = Str::lower($message);
 
     /*
+     * الحالات الأمنية للزائر تحتاج تسجيل الدخول
+     * حتى يمكن فتح تذكرة وربطها بالحساب وتحويلها لموظف الدعم.
+     */
+    if ($botService->requiresSecurityEscalation($message)) {
+        return response()->json([
+            'success' => true,
+            'handled_by' => 'security_escalation',
+            'requires_login' => true,
+            'show_login_hint' => true,
+            'login_url' => route('login'),
+            'register_url' => route('register'),
+
+            'message' => [
+                'sender_type' => 'bot',
+
+                'message' =>
+                    'هذه حالة أمنية وتحتاج متابعة مباشرة من موظف الدعم. '
+                    . 'سجّل الدخول إلى حسابك حتى يتم ربط البلاغ بحسابك وتحويله للدعم. '
+                    . 'لا ترسل كلمة المرور أو رمز التحقق أو بيانات البطاقة داخل المحادثة.',
+
+                'created_at' =>
+                    now()->toISOString(),
+            ],
+        ]);
+    }
+
+    /*
      * الزائر يستطيع استخدام المساعد الذكي،
      * لكن التحويل إلى موظف يتطلب تسجيل الدخول.
      */
@@ -88,10 +115,14 @@ public function guestAsk(
      * نرسل السؤال إلى Gemini.
      * الزائر لا يملك محادثة محفوظة، لذلك نرسل مصفوفة فارغة.
      */
+    $userContext =
+        $botService->buildUserContext(null);
+
     $aiAnswer = $geminiService->answer(
-        $message,
-        $knowledgeContext,
-        []
+        question: $message,
+        knowledgeContext: $knowledgeContext,
+        conversation: [],
+        userContext: $userContext
     );
 
     /*
@@ -132,7 +163,8 @@ public function guestAsk(
             'sender_type' => 'bot',
 
             'message' =>
-                'لم أجد إجابة مؤكدة. أعد صياغة السؤال، أو سجّل الدخول للتواصل مع موظف الدعم.',
+                'تعذر تشغيل المساعد الذكي بشكل كامل الآن. '
+                . 'يمكنك إعادة المحاولة، أو تسجيل الدخول إذا احتجت متابعة مباشرة مع موظف الدعم.',
 
             'created_at' =>
                 now()->toISOString(),
@@ -285,6 +317,33 @@ public function send(
         ], 422);
     }
 
+    $normalizedMessage =
+        Str::lower($messageText);
+
+    $employeePhrases = [
+        'موظف',
+        'الدعم الفني',
+        'خدمة العملاء',
+        'شخص حقيقي',
+        'حولني',
+        'حوّلني',
+        'تحويل لموظف',
+        'تواصل مع الدعم',
+        'اكلم الدعم',
+        'أكلم الدعم',
+    ];
+
+    $wantsEmployee =
+        Str::contains(
+            $normalizedMessage,
+            $employeePhrases
+        );
+
+    $requiresSecurityEscalation =
+        $botService->requiresSecurityEscalation(
+            $messageText
+        );
+
     /*
      * حفظ رسالة العميل.
      */
@@ -317,6 +376,70 @@ public function send(
                 ? 'in_progress'
                 : $ticket->status,
     ]);
+
+    /*
+     * التحويل المباشر:
+     * - إذا طلب المستخدم موظفًا صراحة.
+     * - إذا اكتشفنا حالة أمنية حساسة.
+     */
+    if (
+        $ticket->support_mode === 'bot'
+        && (
+            $wantsEmployee
+            || $requiresSecurityEscalation
+        )
+    ) {
+        $assignmentService =
+            app(SupportAssignmentService::class);
+
+        $employee =
+            $this->assignTicketToEmployee(
+                $ticket,
+                $assignmentService,
+                $requiresSecurityEscalation
+                    ? 'security'
+                    : 'requested'
+            );
+
+        $ticket->refresh();
+
+        $notice = $requiresSecurityEscalation
+            ? (
+                $employee
+                    ? 'تم تحويل الحالة الأمنية مباشرة إلى موظف الدعم. '
+                        . 'لا ترسل كلمة المرور أو رمز التحقق أو بيانات البطاقة.'
+                    : 'تم تسجيل الحالة الأمنية وإضافتها إلى قائمة انتظار الدعم. '
+                        . 'لا ترسل كلمة المرور أو رمز التحقق أو بيانات البطاقة.'
+            )
+            : (
+                $employee
+                    ? 'تم تحويلك إلى موظف الدعم.'
+                    : 'تمت إضافة المحادثة إلى قائمة انتظار الدعم.'
+            );
+
+        return response()->json([
+            'success' => true,
+            'handled_by' =>
+                $employee
+                    ? 'employee'
+                    : 'waiting_employee',
+
+            'customer_message_id' =>
+                $customerMessage->id,
+
+            'ticket' =>
+                $this->ticketPayload($ticket),
+
+            'notice' =>
+                $notice,
+
+            'security_escalation' =>
+                $requiresSecurityEscalation,
+
+            'show_transfer_button' =>
+                false,
+        ]);
+    }
 
     /*
      * إذا كانت المحادثة مع موظف،
@@ -382,12 +505,22 @@ public function send(
         ->all();
 
     /*
-     * إرسال السؤال والسياق إلى Gemini.
+     * تمرير سياق المستخدم الحالي إلى المساعد
+     * حتى يراعي الدور وحالة الحساب والتحذيرات.
+     */
+    $userContext =
+        $botService->buildUserContext(
+            $request->user()
+        );
+
+    /*
+     * إرسال السؤال وسياق المنصة والمستخدم والمحادثة إلى Gemini.
      */
     $aiAnswer = $geminiService->answer(
-        $messageText,
-        $knowledgeContext,
-        $conversation
+        question: $messageText,
+        knowledgeContext: $knowledgeContext,
+        conversation: $conversation,
+        userContext: $userContext
     );
 
     /*
@@ -420,7 +553,8 @@ public function send(
                 'sender_type' => 'bot',
 
                 'message' =>
-                    'لم أتمكن من إيجاد حل مؤكد. هل ترغب بتحويل المحادثة إلى موظف الدعم؟',
+                    'تعذر تشغيل المساعد الذكي بشكل كامل الآن. '
+                    . 'يمكنك إعادة المحاولة، أو تحويل المحادثة إلى موظف الدعم.',
 
                 'message_type' => 'text',
                 'is_internal' => false,
@@ -722,36 +856,12 @@ public function send(
             ]);
         }
 
-        $employee = DB::transaction(
-            function () use (
+        $employee =
+            $this->assignTicketToEmployee(
                 $ticket,
-                $assignmentService
-            ) {
-                $employee =
-                    $assignmentService->assignEmployee(
-                        $ticket
-                    );
-
-                SupportMessage::create([
-                    'support_ticket_id' => $ticket->id,
-                    'sender_id' => null,
-                    'sender_type' => 'system',
-
-                    'message' => $employee
-                        ? "تم تحويل المحادثة إلى موظف الدعم {$employee->name}."
-                        : 'تم تحويل التذكرة إلى قائمة انتظار الدعم.',
-
-                    'message_type' => 'text',
-                    'is_internal' => false,
-                ]);
-
-                $ticket->update([
-                    'last_message_at' => now(),
-                ]);
-
-                return $employee;
-            }
-        );
+                $assignmentService,
+                'requested'
+            );
 
         $ticket->refresh();
 
@@ -774,6 +884,68 @@ public function send(
                 ? 'تم تحويلك إلى موظف الدعم.'
                 : 'لا يوجد موظف متاح حاليًا، وتمت إضافة التذكرة لقائمة الانتظار.',
         ]);
+    }
+
+    /**
+     * إسناد التذكرة إلى موظف أو وضعها في قائمة الانتظار.
+     */
+    private function assignTicketToEmployee(
+        SupportTicket $ticket,
+        SupportAssignmentService $assignmentService,
+        string $reason = 'requested'
+    ): mixed {
+        return DB::transaction(
+            function () use (
+                $ticket,
+                $assignmentService,
+                $reason
+            ) {
+                $employee =
+                    $assignmentService->assignEmployee(
+                        $ticket
+                    );
+
+                $systemMessage =
+                    $reason === 'security'
+                        ? (
+                            $employee
+                                ? "تم تحويل الحالة الأمنية إلى موظف الدعم {$employee->name}."
+                                : 'تم تسجيل الحالة الأمنية وتحويلها إلى قائمة انتظار الدعم.'
+                        )
+                        : (
+                            $employee
+                                ? "تم تحويل المحادثة إلى موظف الدعم {$employee->name}."
+                                : 'تم تحويل التذكرة إلى قائمة انتظار الدعم.'
+                        );
+
+                SupportMessage::create([
+                    'support_ticket_id' =>
+                        $ticket->id,
+
+                    'sender_id' =>
+                        null,
+
+                    'sender_type' =>
+                        'system',
+
+                    'message' =>
+                        $systemMessage,
+
+                    'message_type' =>
+                        'text',
+
+                    'is_internal' =>
+                        false,
+                ]);
+
+                $ticket->update([
+                    'last_message_at' =>
+                        now(),
+                ]);
+
+                return $employee;
+            }
+        );
     }
 
     /**
