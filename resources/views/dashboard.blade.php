@@ -45,6 +45,82 @@
             $managedOffice = $managedOfficeMembership?->office;
 
             /*
+             * حالة الحساب والتحذيرات والمخالفات للمستخدم الحالي.
+             */
+            $accountWarningLimit = 3;
+
+            $accountWarningsCount =
+                (int) ($currentUser->warnings_count ?? 0);
+
+            $accountWarningsRemaining = max(
+                0,
+                $accountWarningLimit - $accountWarningsCount
+            );
+
+            $accountTotalWarnings = 0;
+            $accountRejectedViolations = 0;
+
+            if (
+                \Illuminate\Support\Facades\Schema::hasTable('user_warnings')
+            ) {
+                $accountTotalWarnings =
+                    \App\Models\UserWarning::query()
+                        ->where(
+                            'user_id',
+                            $currentUser->id
+                        )
+                        ->count();
+            }
+
+            if (
+                \Illuminate\Support\Facades\Schema::hasTable('content_moderations')
+            ) {
+                $accountRejectedViolations =
+                    \App\Models\ContentModeration::query()
+                        ->where(
+                            'user_id',
+                            $currentUser->id
+                        )
+                        ->where(
+                            'decision',
+                            'rejected'
+                        )
+                        ->count();
+            }
+
+            $accountStatusLabel = match ($currentUser->status) {
+                'active' =>
+                    'نشط',
+
+                'inactive' =>
+                    'غير نشط',
+
+                'suspended' =>
+                    'معلّق',
+
+                'suspended_pending_review' =>
+                    'معلّق بانتظار المراجعة',
+
+                default =>
+                    $currentUser->status ?: 'غير محدد',
+            };
+
+            $accountStatusClasses = match ($currentUser->status) {
+                'active' =>
+                    'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+
+                'inactive' =>
+                    'border-slate-500/30 bg-slate-500/10 text-slate-200',
+
+                'suspended',
+                'suspended_pending_review' =>
+                    'border-red-500/30 bg-red-500/10 text-red-200',
+
+                default =>
+                    'border-amber-500/30 bg-amber-500/10 text-amber-200',
+            };
+
+            /*
              * إحصائيات رقابة المحتوى للمدير فقط.
              * نتحقق من وجود الجداول حتى لا تتعطل لوحة التحكم
              * في حال لم تُشغّل الـ migrations على بيئة معينة بعد.
@@ -157,6 +233,158 @@
 
                     </div>
 
+                </div>
+
+                {{-- حالة الحساب والتحذيرات --}}
+                <div
+                    class="p-6 mb-6 border shadow-xl rounded-2xl bg-slate-900 border-slate-800"
+                >
+                    <div
+                        class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"
+                    >
+                        <div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <h2 class="text-xl font-black text-white">
+                                    🛡️ حالة الحساب
+                                </h2>
+
+                                <span
+                                    class="inline-flex items-center px-3 py-1 text-sm font-black border rounded-full {{ $accountStatusClasses }}"
+                                >
+                                    {{ $accountStatusLabel }}
+                                </span>
+                            </div>
+
+                            <p class="mt-2 text-sm leading-7 text-slate-400">
+                                يتم تعليق الحساب تلقائيًا عند الوصول إلى
+                                {{ $accountWarningLimit }}
+                                مخالفات مؤكدة.
+                            </p>
+                        </div>
+
+                        @if (
+                            in_array(
+                                $currentUser->status,
+                                [
+                                    'suspended',
+                                    'suspended_pending_review',
+                                ],
+                                true
+                            )
+                            && Route::has('moderation.appeal.create')
+                        )
+                            <a
+                                href="{{ route('moderation.appeal.create') }}"
+                                class="inline-flex items-center justify-center px-5 py-3 font-black text-white transition bg-red-600 rounded-xl hover:bg-red-500"
+                            >
+                                تقديم اعتراض
+                            </a>
+                        @endif
+                    </div>
+
+                    <div
+                        class="grid grid-cols-1 gap-4 mt-6 sm:grid-cols-2 lg:grid-cols-4"
+                    >
+                        <div
+                            class="p-4 border rounded-xl border-slate-700 bg-slate-950/50"
+                        >
+                            <p class="text-sm text-slate-400">
+                                التحذيرات المسجلة
+                            </p>
+
+                            <p class="mt-2 text-2xl font-black text-white">
+                                {{ $accountTotalWarnings }}
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 border rounded-xl border-slate-700 bg-slate-950/50"
+                        >
+                            <p class="text-sm text-slate-400">
+                                المخالفات المؤكدة
+                            </p>
+
+                            <p class="mt-2 text-2xl font-black text-white">
+                                {{ $accountWarningsCount }}
+                                <span class="text-sm font-bold text-slate-500">
+                                    / {{ $accountWarningLimit }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 border rounded-xl border-slate-700 bg-slate-950/50"
+                        >
+                            <p class="text-sm text-slate-400">
+                                المحتوى المرفوض
+                            </p>
+
+                            <p class="mt-2 text-2xl font-black text-white">
+                                {{ $accountRejectedViolations }}
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 border rounded-xl
+                                {{ $accountWarningsRemaining > 1
+                                    ? 'border-emerald-500/30 bg-emerald-500/10'
+                                    : ($accountWarningsRemaining === 1
+                                        ? 'border-amber-500/30 bg-amber-500/10'
+                                        : 'border-red-500/30 bg-red-500/10') }}"
+                        >
+                            <p class="text-sm text-slate-300">
+                                المتبقي حتى الحظر
+                            </p>
+
+                            <p
+                                class="mt-2 text-2xl font-black
+                                    {{ $accountWarningsRemaining > 1
+                                        ? 'text-emerald-200'
+                                        : ($accountWarningsRemaining === 1
+                                            ? 'text-amber-200'
+                                            : 'text-red-200') }}"
+                            >
+                                @if ($accountWarningsRemaining === 0)
+                                    تم بلوغ الحد
+                                @elseif ($accountWarningsRemaining === 1)
+                                    مخالفة واحدة
+                                @elseif ($accountWarningsRemaining === 2)
+                                    مخالفتان
+                                @else
+                                    {{ $accountWarningsRemaining }} مخالفات
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <div
+                            class="flex items-center justify-between mb-2 text-xs font-bold text-slate-400"
+                        >
+                            <span>مستوى المخالفات</span>
+                            <span>
+                                {{ min($accountWarningsCount, $accountWarningLimit) }}
+                                / {{ $accountWarningLimit }}
+                            </span>
+                        </div>
+
+                        <div
+                            class="h-2 overflow-hidden rounded-full bg-slate-800"
+                        >
+                            <div
+                                class="h-full rounded-full transition-all
+                                    {{ $accountWarningsCount >= 3
+                                        ? 'bg-red-500'
+                                        : ($accountWarningsCount === 2
+                                            ? 'bg-amber-500'
+                                            : 'bg-emerald-500') }}"
+                                style="width: {{ min(
+                                    100,
+                                    ($accountWarningsCount / $accountWarningLimit) * 100
+                                ) }}%"
+                            ></div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- حالة اشتراك المهندس --}}
