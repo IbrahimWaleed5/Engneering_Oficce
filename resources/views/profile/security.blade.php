@@ -125,7 +125,7 @@
                                 @if (! $user->email_two_factor_enabled)
                                     @if (session('email_2fa_setup_pending'))
                                         <div
-                                            class="p-4 mb-4 text-cyan-100 border rounded-2xl border-cyan-500/20 bg-cyan-500/10"
+                                            class="p-4 mb-4 border text-cyan-100 rounded-2xl border-cyan-500/20 bg-cyan-500/10"
                                         >
                                             تم إرسال رمز التفعيل إلى بريدك.
                                         </div>
@@ -230,7 +230,7 @@
                                     @endif
                                 @else
                                     <div
-                                        class="p-4 mb-4 font-bold text-emerald-200 border rounded-2xl border-emerald-500/20 bg-emerald-500/10"
+                                        class="p-4 mb-4 font-bold border text-emerald-200 rounded-2xl border-emerald-500/20 bg-emerald-500/10"
                                     >
                                         ✅ التحقق بخطوتين عبر البريد مفعّل.
                                     </div>
@@ -270,7 +270,7 @@
 
                                         <button
                                             type="submit"
-                                            class="w-full px-5 py-4 font-black transition border rounded-2xl border-red-500/20 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+                                            class="w-full px-5 py-4 font-black text-red-200 transition border rounded-2xl border-red-500/20 bg-red-500/10 hover:bg-red-500/20"
                                         >
                                             تعطيل التحقق بخطوتين
                                         </button>
@@ -280,6 +280,7 @@
                         </div>
                     </div>
 
+                    @if ($user->email_two_factor_enabled)
                     {{-- Passkeys --}}
                     <div
                         class="p-5 border sm:p-6 rounded-3xl border-white/10 bg-slate-900/50"
@@ -325,6 +326,9 @@
                             class="hidden p-4 mt-5 text-sm font-bold border rounded-2xl"
                         ></div>
                     </div>
+
+
+                    @endif
 
                 </div>
             </section>
