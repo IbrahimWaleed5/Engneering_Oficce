@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     observer.unobserve(entry.target);
                 });
             },
-            { threshold: 0.12 }
+            {
+                threshold: 0.12,
+            }
         );
 
         animatedElements.forEach((element) => {
@@ -35,7 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const counters = document.querySelectorAll('[data-counter]');
+    const counters = document.querySelectorAll(
+        '[data-counter]'
+    );
 
     if (!('IntersectionObserver' in window)) {
         return;
@@ -49,13 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const element = entry.target;
-                const target = Number(element.dataset.counter || 0);
+
+                const target = Number(
+                    element.dataset.counter || 0
+                );
+
                 const duration = 1200;
                 const startTime = performance.now();
 
                 const updateCounter = (currentTime) => {
                     const progress = Math.min(
-                        (currentTime - startTime) / duration,
+                        (currentTime - startTime) /
+                            duration,
                         1
                     );
 
@@ -67,17 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
 
                     if (progress < 1) {
-                        requestAnimationFrame(updateCounter);
+                        requestAnimationFrame(
+                            updateCounter
+                        );
                     } else {
                         element.textContent = target;
                     }
                 };
 
                 requestAnimationFrame(updateCounter);
+
                 observer.unobserve(element);
             });
         },
-        { threshold: 0.5 }
+        {
+            threshold: 0.5,
+        }
     );
 
     counters.forEach((counter) => {
