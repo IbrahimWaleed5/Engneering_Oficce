@@ -149,6 +149,15 @@ Route::middleware(['auth', 'not.suspended'])->group(function () {
         ->name('profile.email-2fa.enable');
 
 
+    Route::get(
+        '/profile/security/email-two-factor/confirm',
+        [
+            ProfileController::class,
+            'showEmailTwoFactorConfirmation',
+        ]
+    )->name('profile.email-2fa.confirm.form');
+
+
     Route::post(
         '/profile/security/email-two-factor/confirm',
         [
