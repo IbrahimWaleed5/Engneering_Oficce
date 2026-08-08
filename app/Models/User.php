@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\EngineerReview;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,59 +9,105 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     use HasFactory;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use PasskeyAuthenticatable;
 
-   protected $fillable = [
-    'name',
-    'country_code',
-    'dial_code',
-    'phone',
-    'phone_verified_at',
-    'email',
-    'password',
-    'profile_photo',
-    'role',
-    'status',
+    protected $fillable = [
+        'name',
+        'country_code',
+        'dial_code',
+        'phone',
+        'phone_verified_at',
+        'email',
+        'password',
+        'profile_photo',
+        'role',
+        'status',
 
-    'warnings_count',
-    'suspended_at',
-    'suspension_reason',
-    'suspension_source',
+        /*
+         * Email 2FA
+         */
+        'email_two_factor_enabled',
+        'email_two_factor_verified_at',
 
-    'engineer_membership_status',
-    'engineer_active_until',
-];
+        /*
+         * Moderation
+         */
+        'warnings_count',
+        'suspended_at',
+        'suspension_reason',
+        'suspension_source',
+
+        /*
+         * Engineer membership
+         */
+        'engineer_membership_status',
+        'engineer_active_until',
+    ];
 
     protected $hidden = [
         'password',
         'remember_token',
+
+        /*
+         * Fortify TOTP
+         */
         'two_factor_secret',
         'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
-{
-    return [
-        'email_verified_at' => 'datetime',
-        'phone_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'engineer_active_until' => 'datetime',
-        'two_factor_confirmed_at' => 'datetime',
-        'warnings_count' => 'integer',
-        'suspended_at' => 'datetime',
-    ];
-}
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'password' => 'hashed',
+
+            'engineer_active_until' => 'datetime',
+
+            /*
+             * Fortify TOTP
+             */
+            'two_factor_confirmed_at' => 'datetime',
+
+            /*
+             * Email OTP 2FA
+             */
+            'email_two_factor_enabled' => 'boolean',
+            'email_two_factor_verified_at' => 'datetime',
+
+            /*
+             * Moderation
+             */
+            'warnings_count' => 'integer',
+            'suspended_at' => 'datetime',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Employee
+    |--------------------------------------------------------------------------
+    */
 
     public function employeeProfile()
     {
         return $this->hasOne(EmployeeProfile::class);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Consultations
+    |--------------------------------------------------------------------------
+    */
 
     public function consultations()
     {
@@ -87,6 +132,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'engineer_id'
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Engineer
+    |--------------------------------------------------------------------------
+    */
 
     public function engineerWorks()
     {
@@ -116,6 +167,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'engineer'
             && ! $this->hasActiveEngineerMembership();
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Engineer Reviews
+    |--------------------------------------------------------------------------
+    */
 
     public function receivedEngineerReviews()
     {
@@ -160,7 +217,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /*
     |--------------------------------------------------------------------------
-    | المكاتب الهندسية
+    | Engineering Offices
     |--------------------------------------------------------------------------
     */
 
@@ -208,9 +265,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->officeMemberships()
             ->whereIn(
                 'office_role',
-                ['owner', 'manager']
+                [
+                    'owner',
+                    'manager',
+                ]
             )
-            ->where('status', 'active');
+            ->where(
+                'status',
+                'active'
+            );
     }
 
     public function isOfficeOwner(): bool
@@ -221,7 +284,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /*
     |--------------------------------------------------------------------------
-    | المحادثات العامة
+    | General Conversations
     |--------------------------------------------------------------------------
     */
 
@@ -261,46 +324,62 @@ class User extends Authenticatable implements MustVerifyEmail
             'created_by'
         );
     }
-    /*
-|--------------------------------------------------------------------------
-| الدعم الفني
-|--------------------------------------------------------------------------
-*/
 
-public function supportTickets(): HasMany
-{
-    return $this->hasMany(
-        SupportTicket::class,
-        'user_id'
-    );
-}
-
-public function assignedSupportTickets(): HasMany
-{
-    return $this->hasMany(
-        SupportTicket::class,
-        'assigned_employee_id'
-    );
-}
-
-public function supportMessages(): HasMany
-{
-    return $this->hasMany(
-        SupportMessage::class,
-        'sender_id'
-    );
-}
-
-public function createdKnowledgeBaseArticles(): HasMany
-{
-    return $this->hasMany(
-        KnowledgeBaseArticle::class,
-        'created_by'
-    );
-}
     /*
     |--------------------------------------------------------------------------
-    | فحص المحتوى والتحذيرات
+    | Technical Support
+    |--------------------------------------------------------------------------
+    */
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(
+            SupportTicket::class,
+            'user_id'
+        );
+    }
+
+    public function assignedSupportTickets(): HasMany
+    {
+        return $this->hasMany(
+            SupportTicket::class,
+            'assigned_employee_id'
+        );
+    }
+
+    public function supportMessages(): HasMany
+    {
+        return $this->hasMany(
+            SupportMessage::class,
+            'sender_id'
+        );
+    }
+
+    public function createdKnowledgeBaseArticles(): HasMany
+    {
+        return $this->hasMany(
+            KnowledgeBaseArticle::class,
+            'created_by'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Two-Factor Authentication
+    |--------------------------------------------------------------------------
+    */
+
+    public function emailTwoFactorCodes(): HasMany
+    {
+        return $this->hasMany(
+            EmailTwoFactorCode::class,
+            'user_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content Moderation / Warnings
     |--------------------------------------------------------------------------
     */
 
@@ -360,7 +439,8 @@ public function createdKnowledgeBaseArticles(): HasMany
 
     public function activeWarningsCount(): int
     {
-        return $this->activeWarnings()
+        return $this
+            ->activeWarnings()
             ->count();
     }
 
@@ -386,28 +466,39 @@ public function createdKnowledgeBaseArticles(): HasMany
             true
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Moderation Appeals
+    |--------------------------------------------------------------------------
+    */
+
     public function moderationAppeals(): HasMany
-{
-    return $this->hasMany(
-        ModerationAppeal::class
-    );
-}
+    {
+        return $this->hasMany(
+            ModerationAppeal::class
+        );
+    }
 
-public function reviewedModerationAppeals(): HasMany
-{
-    return $this->hasMany(
-        ModerationAppeal::class,
-        'reviewed_by'
-    );
-}
+    public function reviewedModerationAppeals(): HasMany
+    {
+        return $this->hasMany(
+            ModerationAppeal::class,
+            'reviewed_by'
+        );
+    }
 
-public function hasPendingModerationAppeal(): bool
-{
-    return $this->moderationAppeals()
-        ->whereIn('status', [
-            'pending',
-            'under_review',
-        ])
-        ->exists();
-}
+    public function hasPendingModerationAppeal(): bool
+    {
+        return $this
+            ->moderationAppeals()
+            ->whereIn(
+                'status',
+                [
+                    'pending',
+                    'under_review',
+                ]
+            )
+            ->exists();
+    }
 }

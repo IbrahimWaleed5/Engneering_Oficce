@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\AttachmentModerationService;
+use App\Services\EmailTwoFactorService;
 use App\Services\UniversalContentModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -53,6 +56,225 @@ class ProfileController extends Controller
     }
 
     /**
+     * إرسال رمز لتفعيل التحقق بخطوتين عبر البريد.
+     */
+    public function enableEmailTwoFactor(
+        Request $request,
+        EmailTwoFactorService $emailTwoFactorService
+    ): RedirectResponse {
+        $request->validateWithBag(
+            'emailTwoFactor',
+            [
+                'current_password' => [
+                    'required',
+                    'string',
+                ],
+            ],
+            [
+                'current_password.required' =>
+                    'أدخل كلمة المرور الحالية أولًا.',
+            ]
+        );
+
+        $user = $request->user();
+
+        if (
+            ! Hash::check(
+                (string) $request->input('current_password'),
+                $user->password
+            )
+        ) {
+            throw ValidationException::withMessages([
+                'current_password' =>
+                    'كلمة المرور الحالية غير صحيحة.',
+            ])->errorBag('emailTwoFactor');
+        }
+
+        if ($user->email_two_factor_enabled) {
+            return Redirect::route('profile.edit')
+                ->with(
+                    'security-success',
+                    'التحقق بخطوتين مفعّل بالفعل.'
+                );
+        }
+
+        $emailTwoFactorService->send($user);
+
+        $request->session()->put(
+            'email_2fa_setup_user_id',
+            $user->id
+        );
+
+        return Redirect::route('profile.edit')
+            ->with(
+                'email_2fa_setup_pending',
+                true
+            )
+            ->with(
+                'security-success',
+                'تم إرسال رمز التحقق إلى بريدك الإلكتروني.'
+            )
+            ->withFragment('security');
+    }
+
+    /**
+     * تأكيد رمز التفعيل وتشغيل Email 2FA.
+     */
+    public function confirmEmailTwoFactor(
+        Request $request,
+        EmailTwoFactorService $emailTwoFactorService
+    ): RedirectResponse {
+        $request->validateWithBag(
+            'emailTwoFactor',
+            [
+                'code' => [
+                    'required',
+                    'digits:6',
+                ],
+            ],
+            [
+                'code.required' =>
+                    'أدخل رمز التحقق.',
+                'code.digits' =>
+                    'رمز التحقق يجب أن يتكون من 6 أرقام.',
+            ]
+        );
+
+        $user = $request->user();
+
+        if (
+            (int) $request->session()->get(
+                'email_2fa_setup_user_id'
+            ) !== (int) $user->id
+        ) {
+            return Redirect::route('profile.edit')
+                ->with(
+                    'error',
+                    'انتهت جلسة التفعيل. ابدأ عملية التفعيل من جديد.'
+                )
+                ->withFragment('security');
+        }
+
+        if (
+            ! $emailTwoFactorService->verify(
+                $user,
+                (string) $request->input('code')
+            )
+        ) {
+            return Redirect::route('profile.edit')
+                ->withErrors(
+                    [
+                        'code' =>
+                            'رمز التحقق غير صحيح أو منتهي الصلاحية.',
+                    ],
+                    'emailTwoFactor'
+                )
+                ->with(
+                    'email_2fa_setup_pending',
+                    true
+                )
+                ->withFragment('security');
+        }
+
+        $user->forceFill([
+            'email_two_factor_enabled' => true,
+            'email_two_factor_verified_at' => now(),
+        ])->save();
+
+        $request->session()->forget(
+            'email_2fa_setup_user_id'
+        );
+
+        return Redirect::route('profile.edit')
+            ->with(
+                'security-success',
+                'تم تفعيل التحقق بخطوتين عبر البريد الإلكتروني بنجاح.'
+            )
+            ->withFragment('security');
+    }
+
+    /**
+     * إعادة إرسال رمز تفعيل Email 2FA.
+     */
+    public function resendEmailTwoFactor(
+        Request $request,
+        EmailTwoFactorService $emailTwoFactorService
+    ): RedirectResponse {
+        $user = $request->user();
+
+        abort_unless(
+            (int) $request->session()->get(
+                'email_2fa_setup_user_id'
+            ) === (int) $user->id,
+            403
+        );
+
+        $emailTwoFactorService->send($user);
+
+        return Redirect::route('profile.edit')
+            ->with(
+                'email_2fa_setup_pending',
+                true
+            )
+            ->with(
+                'security-success',
+                'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.'
+            )
+            ->withFragment('security');
+    }
+
+    /**
+     * تعطيل التحقق بخطوتين عبر البريد.
+     */
+    public function disableEmailTwoFactor(
+        Request $request
+    ): RedirectResponse {
+        $request->validateWithBag(
+            'emailTwoFactorDisable',
+            [
+                'current_password' => [
+                    'required',
+                    'string',
+                ],
+            ],
+            [
+                'current_password.required' =>
+                    'أدخل كلمة المرور الحالية للتأكيد.',
+            ]
+        );
+
+        $user = $request->user();
+
+        if (
+            ! Hash::check(
+                (string) $request->input('current_password'),
+                $user->password
+            )
+        ) {
+            throw ValidationException::withMessages([
+                'current_password' =>
+                    'كلمة المرور الحالية غير صحيحة.',
+            ])->errorBag('emailTwoFactorDisable');
+        }
+
+        $user->forceFill([
+            'email_two_factor_enabled' => false,
+            'email_two_factor_verified_at' => null,
+        ])->save();
+
+        $request->session()->forget(
+            'email_2fa_setup_user_id'
+        );
+
+        return Redirect::route('profile.edit')
+            ->with(
+                'security-success',
+                'تم تعطيل التحقق بخطوتين عبر البريد الإلكتروني.'
+            )
+            ->withFragment('security');
+    }
+
+    /**
      * تحديث البيانات الشخصية.
      */
     public function update(
@@ -60,22 +282,9 @@ class ProfileController extends Controller
     ): RedirectResponse {
         $user = $request->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | البيانات النصية
-        |--------------------------------------------------------------------------
-        */
-
         $validated = $request->validated();
 
-        // الصورة ملف وليست قيمة نصية.
         unset($validated['profile_photo']);
-
-        /*
-        |--------------------------------------------------------------------------
-        | فحص المحتوى النصي العام قبل رفع الصورة أو الحفظ
-        |--------------------------------------------------------------------------
-        */
 
         $excludedModerationFields = [
             'email',
@@ -106,11 +315,8 @@ class ProfileController extends Controller
                     sourceType: 'user_profile',
                     sourceId: $user->id,
                     context: [
-                        'content_section' =>
-                            'profile',
-
-                        'recipient_role' =>
-                            'public',
+                        'content_section' => 'profile',
+                        'recipient_role' => 'public',
                     ]
                 );
 
@@ -123,12 +329,6 @@ class ProfileController extends Controller
                     );
             }
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | فحص صورة الملف الشخصي قبل التخزين
-        |--------------------------------------------------------------------------
-        */
 
         if ($request->hasFile('profile_photo')) {
             $attachmentModeration =
@@ -144,7 +344,6 @@ class ProfileController extends Controller
                         context: [
                             'content_section' =>
                                 'profile_photo',
-
                             'recipient_role' =>
                                 'public',
                         ]
@@ -165,20 +364,18 @@ class ProfileController extends Controller
         $user->fill($validated);
 
         /*
-        |--------------------------------------------------------------------------
-        | إلغاء التحقق عند تغيير البريد
-        |--------------------------------------------------------------------------
-        */
-
+         * تغيير البريد يلغي التحقق من البريد
+         * ويعطّل Email 2FA حتى لا يبقى مربوطًا ببريد سابق.
+         */
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
-        }
+            $user->email_two_factor_enabled = false;
+            $user->email_two_factor_verified_at = null;
 
-        /*
-        |--------------------------------------------------------------------------
-        | رفع الصورة الجديدة
-        |--------------------------------------------------------------------------
-        */
+            $request->session()->forget(
+                'email_2fa_setup_user_id'
+            );
+        }
 
         $oldPhoto = $user->profile_photo;
         $newPhoto = null;
@@ -195,12 +392,6 @@ class ProfileController extends Controller
                 $user->profile_photo = $newPhoto;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | حفظ البيانات
-            |--------------------------------------------------------------------------
-            */
-
             $user->save();
         } catch (\Throwable $exception) {
             if (
@@ -216,12 +407,6 @@ class ProfileController extends Controller
 
             throw $exception;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | حذف الصورة القديمة
-        |--------------------------------------------------------------------------
-        */
 
         if (
             $newPhoto
@@ -261,7 +446,6 @@ class ProfileController extends Controller
             [
                 'password.required' =>
                     'يجب إدخال كلمة المرور للتأكيد.',
-
                 'password.current_password' =>
                     'كلمة المرور التي أدخلتها غير صحيحة.',
             ]
@@ -274,9 +458,6 @@ class ProfileController extends Controller
 
         $user->delete();
 
-        /*
-         * حذف صورة الحساب من التخزين.
-         */
         if (
             $profilePhoto
             && Storage::disk('public')

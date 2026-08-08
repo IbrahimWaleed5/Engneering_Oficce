@@ -39,6 +39,9 @@ use App\Http\Controllers\Employee\SupportTicketController as EmployeeSupportTick
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\ModerationAppealController;
 use App\Http\Controllers\Admin\ModerationAppealController as AdminModerationAppealController;
+use App\Http\Controllers\Auth\EmailTwoFactorChallengeController;
+
+
 /*
 |--------------------------------------------------------------------------
 | الصفحة الرئيسية والصفحات العامة
@@ -124,6 +127,54 @@ Route::middleware(['auth', 'not.suspended'])->group(function () {
         ProfileController::class,
         'destroy',
     ])->name('profile.destroy');
+        /*
+    |--------------------------------------------------------------------------
+    | Email Two-Factor Authentication Settings
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/profile/security/email-two-factor/enable',
+        [
+            ProfileController::class,
+            'enableEmailTwoFactor',
+        ]
+    )
+        ->middleware('throttle:3,1')
+        ->name('profile.email-2fa.enable');
+
+
+    Route::post(
+        '/profile/security/email-two-factor/confirm',
+        [
+            ProfileController::class,
+            'confirmEmailTwoFactor',
+        ]
+    )
+        ->middleware('throttle:5,1')
+        ->name('profile.email-2fa.confirm');
+
+
+    Route::post(
+        '/profile/security/email-two-factor/resend',
+        [
+            ProfileController::class,
+            'resendEmailTwoFactor',
+        ]
+    )
+        ->middleware('throttle:3,1')
+        ->name('profile.email-2fa.resend');
+
+
+    Route::delete(
+        '/profile/security/email-two-factor',
+        [
+            ProfileController::class,
+            'disableEmailTwoFactor',
+        ]
+    )
+        ->middleware('throttle:5,1')
+        ->name('profile.email-2fa.disable');
 });
 
 /*
@@ -1543,4 +1594,25 @@ Route::middleware([
             ]
         )->name('reject');
     });
+    Route::middleware('guest')->group(function () {
+    Route::get(
+        '/email-two-factor-challenge',
+        [EmailTwoFactorChallengeController::class, 'create']
+    )->name('email-2fa.challenge');
+
+    Route::post(
+        '/email-two-factor-challenge',
+        [EmailTwoFactorChallengeController::class, 'store']
+    )->name('email-2fa.verify');
+
+    Route::post(
+        '/email-two-factor-challenge/resend',
+        [EmailTwoFactorChallengeController::class, 'resend']
+    )
+        ->middleware('throttle:3,1')
+        ->name('email-2fa.resend');
+});
+
 require __DIR__.'/auth.php';
+
+
