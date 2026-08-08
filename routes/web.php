@@ -113,6 +113,11 @@ Route::middleware(['auth', 'not.suspended'])->group(function () {
         'editPassword',
     ])->name('profile.password.edit');
 
+    Route::get('/profile/security', [
+        ProfileController::class,
+        'security',
+    ])->name('profile.security');
+
     Route::get('/profile/delete', [
         ProfileController::class,
         'deleteAccount',
@@ -1614,5 +1619,3 @@ Route::middleware([
 });
 
 require __DIR__.'/auth.php';
-
-

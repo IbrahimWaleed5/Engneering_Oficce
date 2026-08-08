@@ -1,9 +1,12 @@
 import './bootstrap';
 import './phone-input';
 import './profile-photo-cropper';
+
 import Alpine from 'alpinejs';
+import { Passkeys } from '@laravel/passkeys';
 
 window.Alpine = Alpine;
+window.AlwaleedPasskeys = Passkeys;
 
 Alpine.start();
 
@@ -24,9 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     observer.unobserve(entry.target);
                 });
             },
-            {
-                threshold: 0.12,
-            }
+            { threshold: 0.12 }
         );
 
         animatedElements.forEach((element) => {
@@ -34,8 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const counters =
-        document.querySelectorAll('[data-counter]');
+    const counters = document.querySelectorAll('[data-counter]');
 
     if (!('IntersectionObserver' in window)) {
         return;
@@ -49,9 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const element = entry.target;
-                const target =
-                    Number(element.dataset.counter || 0);
-
+                const target = Number(element.dataset.counter || 0);
                 const duration = 1200;
                 const startTime = performance.now();
 
@@ -79,9 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 observer.unobserve(element);
             });
         },
-        {
-            threshold: 0.5,
-        }
+        { threshold: 0.5 }
     );
 
     counters.forEach((counter) => {

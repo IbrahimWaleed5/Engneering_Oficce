@@ -45,6 +45,17 @@ class ProfileController extends Controller
     }
 
     /**
+     * عرض صفحة الأمان وتسجيل الدخول.
+     */
+    public function security(
+        Request $request
+    ): View {
+        return view('profile.security', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
      * عرض صفحة حذف الحساب.
      */
     public function deleteAccount(
@@ -91,7 +102,7 @@ class ProfileController extends Controller
         }
 
         if ($user->email_two_factor_enabled) {
-            return Redirect::route('profile.edit')
+            return Redirect::route('profile.security')
                 ->with(
                     'security-success',
                     'التحقق بخطوتين مفعّل بالفعل.'
@@ -105,7 +116,7 @@ class ProfileController extends Controller
             $user->id
         );
 
-        return Redirect::route('profile.edit')
+        return Redirect::route('profile.security')
             ->with(
                 'email_2fa_setup_pending',
                 true
@@ -113,8 +124,7 @@ class ProfileController extends Controller
             ->with(
                 'security-success',
                 'تم إرسال رمز التحقق إلى بريدك الإلكتروني.'
-            )
-            ->withFragment('security');
+            );
     }
 
     /**
@@ -147,12 +157,11 @@ class ProfileController extends Controller
                 'email_2fa_setup_user_id'
             ) !== (int) $user->id
         ) {
-            return Redirect::route('profile.edit')
+            return Redirect::route('profile.security')
                 ->with(
                     'error',
                     'انتهت جلسة التفعيل. ابدأ عملية التفعيل من جديد.'
-                )
-                ->withFragment('security');
+                );
         }
 
         if (
@@ -161,7 +170,7 @@ class ProfileController extends Controller
                 (string) $request->input('code')
             )
         ) {
-            return Redirect::route('profile.edit')
+            return Redirect::route('profile.security')
                 ->withErrors(
                     [
                         'code' =>
@@ -172,8 +181,7 @@ class ProfileController extends Controller
                 ->with(
                     'email_2fa_setup_pending',
                     true
-                )
-                ->withFragment('security');
+                );
         }
 
         $user->forceFill([
@@ -185,12 +193,11 @@ class ProfileController extends Controller
             'email_2fa_setup_user_id'
         );
 
-        return Redirect::route('profile.edit')
+        return Redirect::route('profile.security')
             ->with(
                 'security-success',
                 'تم تفعيل التحقق بخطوتين عبر البريد الإلكتروني بنجاح.'
-            )
-            ->withFragment('security');
+            );
     }
 
     /**
@@ -211,7 +218,7 @@ class ProfileController extends Controller
 
         $emailTwoFactorService->send($user);
 
-        return Redirect::route('profile.edit')
+        return Redirect::route('profile.security')
             ->with(
                 'email_2fa_setup_pending',
                 true
@@ -219,8 +226,7 @@ class ProfileController extends Controller
             ->with(
                 'security-success',
                 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.'
-            )
-            ->withFragment('security');
+            );
     }
 
     /**
@@ -266,12 +272,11 @@ class ProfileController extends Controller
             'email_2fa_setup_user_id'
         );
 
-        return Redirect::route('profile.edit')
+        return Redirect::route('profile.security')
             ->with(
                 'security-success',
                 'تم تعطيل التحقق بخطوتين عبر البريد الإلكتروني.'
-            )
-            ->withFragment('security');
+            );
     }
 
     /**
