@@ -367,19 +367,72 @@
                     return;
                 }
 
-                const defaultName =
-                    navigator.userAgentData?.platform
-                    || navigator.platform
-                    || 'جهازي';
+                function getAutomaticDeviceName() {
+                    const ua = navigator.userAgent || '';
+                    const platform =
+                        navigator.userAgentData?.platform
+                        || navigator.platform
+                        || '';
 
-                const name = window.prompt(
-                    'اكتب اسمًا لهذا الجهاز:',
-                    defaultName
-                );
+                    if (/Android/i.test(ua)) {
+                        const modelMatch = ua.match(
+                            /Android[^;]*;\s*([^;)]+?)(?:\s+Build\/[^;)]+)?[;) ]/i
+                        );
 
-                if (! name) {
-                    return;
+                        const model = modelMatch?.[1]
+                            ?.replace(/\s+Build\/.*$/i, '')
+                            ?.trim();
+
+                        if (
+                            model
+                            && ! /^(wv|Mobile|Android)$/i.test(model)
+                        ) {
+                            return `Android - ${model}`;
+                        }
+
+                        return 'Android';
+                    }
+
+                    if (/iPad/i.test(ua)) {
+                        return 'iPad';
+                    }
+
+                    if (
+                        /iPhone|iPod/i.test(ua)
+                        || (
+                            /Mac/i.test(platform)
+                            && navigator.maxTouchPoints > 1
+                        )
+                    ) {
+                        return 'iPhone';
+                    }
+
+                    if (
+                        /Windows/i.test(platform)
+                        || /Windows/i.test(ua)
+                    ) {
+                        return 'Windows';
+                    }
+
+                    if (
+                        /Mac/i.test(platform)
+                        || /Macintosh/i.test(ua)
+                    ) {
+                        return 'macOS';
+                    }
+
+                    if (
+                        /Linux/i.test(platform)
+                        || /Linux/i.test(ua)
+                    ) {
+                        return 'Linux';
+                    }
+
+                    return 'جهازي';
                 }
+
+                const deviceName =
+                    getAutomaticDeviceName();
 
                 button.disabled = true;
                 button.classList.add(
@@ -389,7 +442,7 @@
 
                 try {
                     await window.AlwaleedPasskeys.register({
-                        name: name.trim(),
+                        name: deviceName,
                     });
 
                     showMessage(
