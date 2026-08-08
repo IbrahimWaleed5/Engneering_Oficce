@@ -118,6 +118,12 @@ Route::middleware(['auth', 'not.suspended'])->group(function () {
         'security',
     ])->name('profile.security');
 
+
+    Route::get('/profile/account-status', [
+        ProfileController::class,
+        'accountStatus',
+    ])->name('profile.account-status');
+
     Route::get('/profile/delete', [
         ProfileController::class,
         'deleteAccount',

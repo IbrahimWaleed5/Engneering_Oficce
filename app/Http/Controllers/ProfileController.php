@@ -56,6 +56,88 @@ class ProfileController extends Controller
     }
 
     /**
+     * عرض صفحة حالة الحساب والتحذيرات.
+     */
+    public function accountStatus(
+        Request $request
+    ): View {
+        $user = $request->user();
+
+        $accountWarningLimit = 3;
+
+        $accountWarningsCount =
+            (int) ($user->warnings_count ?? 0);
+
+        $accountWarningsRemaining = max(
+            0,
+            $accountWarningLimit - $accountWarningsCount
+        );
+
+        $accountTotalWarnings = 0;
+        $accountRejectedViolations = 0;
+
+        if (
+            \Illuminate\Support\Facades\Schema::hasTable(
+                'user_warnings'
+            )
+        ) {
+            $accountTotalWarnings =
+                \App\Models\UserWarning::query()
+                    ->where('user_id', $user->id)
+                    ->count();
+        }
+
+        if (
+            \Illuminate\Support\Facades\Schema::hasTable(
+                'content_moderations'
+            )
+        ) {
+            $accountRejectedViolations =
+                \App\Models\ContentModeration::query()
+                    ->where('user_id', $user->id)
+                    ->where('decision', 'rejected')
+                    ->count();
+        }
+
+        $accountStatusLabel = match ($user->status) {
+            'active' => 'نشط',
+            'inactive' => 'غير نشط',
+            'suspended' => 'معلّق',
+            'suspended_pending_review' =>
+                'معلّق بانتظار المراجعة',
+            default => $user->status ?: 'غير محدد',
+        };
+
+        $accountStatusClasses = match ($user->status) {
+            'active' =>
+                'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+
+            'inactive' =>
+                'border-slate-500/30 bg-slate-500/10 text-slate-200',
+
+            'suspended',
+            'suspended_pending_review' =>
+                'border-red-500/30 bg-red-500/10 text-red-200',
+
+            default =>
+                'border-amber-500/30 bg-amber-500/10 text-amber-200',
+        };
+
+        return view('profile.account-status', [
+            'user' => $user,
+            'accountWarningLimit' => $accountWarningLimit,
+            'accountWarningsCount' => $accountWarningsCount,
+            'accountWarningsRemaining' =>
+                $accountWarningsRemaining,
+            'accountTotalWarnings' => $accountTotalWarnings,
+            'accountRejectedViolations' =>
+                $accountRejectedViolations,
+            'accountStatusLabel' => $accountStatusLabel,
+            'accountStatusClasses' => $accountStatusClasses,
+        ]);
+    }
+
+    /**
      * عرض صفحة حذف الحساب.
      */
     public function deleteAccount(

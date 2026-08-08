@@ -2,7 +2,7 @@
     class="p-3 mb-8 border rounded-3xl border-white/10 bg-slate-950/40 backdrop-blur-xl"
     dir="rtl"
 >
-    <div class="grid gap-3 md:grid-cols-5">
+    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
 
         {{-- البيانات الشخصية --}}
         <a
@@ -38,6 +38,18 @@
         >
             <span>🛡️</span>
             <span>الأمان</span>
+        </a>
+
+        {{-- حالة الحساب --}}
+        <a
+            href="{{ route('profile.account-status') }}"
+            class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold transition-all border rounded-2xl
+            {{ request()->routeIs('profile.account-status')
+                ? 'text-white border-cyan-400/30 bg-gradient-to-l from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20'
+                : 'text-slate-300 border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:text-white' }}"
+        >
+            <span>📊</span>
+            <span>حالة الحساب</span>
         </a>
 
         {{-- التخصص والنبذة --}}
