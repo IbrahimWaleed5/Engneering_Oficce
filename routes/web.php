@@ -1620,10 +1620,40 @@ Route::middleware([
         [EmailTwoFactorChallengeController::class, 'create']
     )->name('email-2fa.challenge');
 
+    /*
+     * Passkey-first challenge after email + password.
+     */
+    Route::get(
+        '/email-two-factor-challenge/passkey/options',
+        [EmailTwoFactorChallengeController::class, 'passkeyOptions']
+    )
+        ->middleware('throttle:12,1')
+        ->name('email-2fa.passkey.options');
+
+    Route::post(
+        '/email-two-factor-challenge/passkey/verify',
+        [EmailTwoFactorChallengeController::class, 'verifyPasskey']
+    )
+        ->middleware('throttle:12,1')
+        ->name('email-2fa.passkey.verify');
+
+    /*
+     * Fallback: المستخدم لا يستطيع الوصول إلى Passkey.
+     * هنا فقط نرسل Email OTP.
+     */
+    Route::post(
+        '/email-two-factor-challenge/use-email',
+        [EmailTwoFactorChallengeController::class, 'useEmail']
+    )
+        ->middleware('throttle:3,1')
+        ->name('email-2fa.use-email');
+
     Route::post(
         '/email-two-factor-challenge',
         [EmailTwoFactorChallengeController::class, 'store']
-    )->name('email-2fa.verify');
+    )
+        ->middleware('throttle:6,1')
+        ->name('email-2fa.verify');
 
     Route::post(
         '/email-two-factor-challenge/resend',
